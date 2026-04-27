@@ -1,0 +1,5498 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "yapbay-api",
+    "version": "0.0.0",
+    "description": "Financial P2P crypto escrow API. See docs/api-ref.md for the human-readable contract; this document is machine-generated from Zod schemas where registered.",
+    "contact": {
+      "name": "YapBay",
+      "url": "https://app.yapbay.com"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.yapbay.com",
+      "description": "Production"
+    },
+    {
+      "url": "http://localhost:3011",
+      "description": "Local dev"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Bearer JWT."
+      }
+    },
+    "schemas": {
+      "HealthLiveResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ]
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "status",
+          "timestamp"
+        ],
+        "description": "Liveness probe response."
+      },
+      "HealthReadyResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "not_ready"
+            ]
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "checks": {
+            "type": "object",
+            "properties": {
+              "db": {
+                "type": "object",
+                "properties": {
+                  "ok": {
+                    "type": "boolean"
+                  },
+                  "detail": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "ok"
+                ]
+              },
+              "listener": {
+                "type": "object",
+                "properties": {
+                  "ok": {
+                    "type": "boolean"
+                  },
+                  "detail": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "ok"
+                ]
+              }
+            },
+            "required": [
+              "db",
+              "listener"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "timestamp",
+          "checks"
+        ],
+        "description": "Readiness probe response. 503 when not ready."
+      },
+      "IdempotencyConflictResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "enum": [
+              "idempotency_key_conflict"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "message"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "description": "Standard error envelope.",
+        "example": {
+          "error": "invalid_value",
+          "message": "A value failed validation."
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "page",
+          "limit",
+          "total"
+        ],
+        "description": "Page/limit/total pagination metadata."
+      },
+      "PricesResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "success"
+            ]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "USDC": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "price": {
+                      "type": "string"
+                    },
+                    "timestamp": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    }
+                  },
+                  "required": [
+                    "price",
+                    "timestamp"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "USDC"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "data"
+        ],
+        "description": "Current USDC prices in supported fiat currencies.",
+        "example": {
+          "status": "success",
+          "data": {
+            "USDC": {
+              "USD": {
+                "price": "1.00",
+                "timestamp": 1700000000
+              }
+            }
+          }
+        }
+      },
+      "AdminLoginRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 1
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ]
+      },
+      "AdminLoginResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "expiresIn": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": [
+          "token",
+          "expiresIn"
+        ]
+      },
+      "AdminTradesResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "leg1_offer_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "leg2_offer_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "overall_status": {
+                  "type": "string"
+                },
+                "from_fiat_currency": {
+                  "type": "string"
+                },
+                "destination_fiat_currency": {
+                  "type": "string"
+                },
+                "from_bank": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "destination_bank": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg1_state": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg2_state": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg1_seller_account_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "leg1_buyer_account_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "leg2_seller_account_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "leg2_buyer_account_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "leg1_crypto_amount": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg2_crypto_amount": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg1_crypto_token": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg2_crypto_token": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg1_fiat_amount": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg2_fiat_amount": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "completed": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "completed_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "cancelled": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "cancelled_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updated_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "leg1_offer_id",
+                "leg2_offer_id",
+                "overall_status",
+                "from_fiat_currency",
+                "destination_fiat_currency",
+                "from_bank",
+                "destination_bank",
+                "leg1_state",
+                "leg2_state",
+                "leg1_seller_account_id",
+                "leg1_buyer_account_id",
+                "leg2_seller_account_id",
+                "leg2_buyer_account_id",
+                "leg1_crypto_amount",
+                "leg2_crypto_amount",
+                "leg1_crypto_token",
+                "leg2_crypto_token",
+                "leg1_fiat_amount",
+                "leg2_fiat_amount",
+                "completed",
+                "completed_at",
+                "cancelled",
+                "cancelled_at",
+                "created_at",
+                "updated_at"
+              ],
+              "description": "Trade row as stored in the trades table."
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "AdminEscrowsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "trade_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "network_id": {
+                  "type": "integer"
+                },
+                "onchain_escrow_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "state": {
+                  "type": "string"
+                },
+                "current_balance": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "seller_address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "buyer_address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "arbitrator_address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "amount": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "token_type": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "deposit_deadline": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "fiat_deadline": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "fiat_paid": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "completed_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updated_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "trade_id",
+                "network_id",
+                "onchain_escrow_id",
+                "state",
+                "current_balance",
+                "seller_address",
+                "buyer_address",
+                "arbitrator_address",
+                "amount",
+                "token_type",
+                "deposit_deadline",
+                "fiat_deadline",
+                "fiat_paid",
+                "completed_at",
+                "created_at",
+                "updated_at"
+              ],
+              "description": "Escrow row as stored in the escrows table."
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "DeadlineStatsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {},
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "success",
+          "timestamp"
+        ]
+      },
+      "CreateAccountRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 100,
+            "format": "email"
+          },
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "wallet_address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "string",
+                "minLength": 1
+              }
+            ]
+          }
+        },
+        "required": [
+          "email",
+          "username",
+          "wallet_address"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateAccountRequest": {
+        "type": "object",
+        "properties": {
+          "available_from": {
+            "type": "string"
+          },
+          "available_to": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 100,
+            "format": "email"
+          },
+          "phone_country_code": {
+            "type": "string",
+            "maxLength": 5
+          },
+          "phone_number": {
+            "type": "string",
+            "maxLength": 15
+          },
+          "profile_photo_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "telegram_id": {
+            "type": "integer"
+          },
+          "telegram_username": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "timezone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          }
+        },
+        "additionalProperties": false
+      },
+      "AccountMutationResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "AccountFullResponse": {
+        "type": "object",
+        "properties": {
+          "available_from": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^\\d{2}:\\d{2}:\\d{2}"
+          },
+          "available_to": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^\\d{2}:\\d{2}:\\d{2}"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "email": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "phone_country_code": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "phone_number": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "profile_photo_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "admin"
+            ]
+          },
+          "telegram_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "telegram_username": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "timezone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "username": {
+            "type": "string"
+          },
+          "wallet_address": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "available_from",
+          "available_to",
+          "created_at",
+          "email",
+          "id",
+          "phone_country_code",
+          "phone_number",
+          "profile_photo_url",
+          "role",
+          "telegram_id",
+          "telegram_username",
+          "timezone",
+          "updated_at",
+          "username",
+          "wallet_address"
+        ],
+        "additionalProperties": false
+      },
+      "AccountGetByIdResponse": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "available_from": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^\\d{2}:\\d{2}:\\d{2}"
+              },
+              "available_to": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^\\d{2}:\\d{2}:\\d{2}"
+              },
+              "created_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "email": {
+                "type": "string"
+              },
+              "id": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              "phone_country_code": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "phone_number": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "profile_photo_url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "user",
+                  "admin"
+                ]
+              },
+              "telegram_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "telegram_username": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "timezone": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "updated_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "username": {
+                "type": "string"
+              },
+              "wallet_address": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "available_from",
+              "available_to",
+              "created_at",
+              "email",
+              "id",
+              "phone_country_code",
+              "phone_number",
+              "profile_photo_url",
+              "role",
+              "telegram_id",
+              "telegram_username",
+              "timezone",
+              "updated_at",
+              "username",
+              "wallet_address"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "available_from": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^\\d{2}:\\d{2}:\\d{2}"
+              },
+              "available_to": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^\\d{2}:\\d{2}:\\d{2}"
+              },
+              "created_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "id": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              "profile_photo_url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "telegram_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "telegram_username": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "timezone": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "username": {
+                "type": "string"
+              },
+              "wallet_address": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "available_from",
+              "available_to",
+              "created_at",
+              "id",
+              "profile_photo_url",
+              "telegram_id",
+              "telegram_username",
+              "timezone",
+              "username",
+              "wallet_address"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "ListOffersResponse": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string",
+            "enum": [
+              "celo-alfajores",
+              "celo-mainnet",
+              "solana-devnet",
+              "solana-mainnet"
+            ]
+          },
+          "offers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "created_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "creator_account_id": {
+                  "type": "integer"
+                },
+                "escrow_deposit_time_limit": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "fiat_currency": {
+                  "type": "string"
+                },
+                "fiat_payment_time_limit": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0
+                },
+                "max_amount": {
+                  "type": "string"
+                },
+                "min_amount": {
+                  "type": "string"
+                },
+                "network_id": {
+                  "type": "integer"
+                },
+                "offer_type": {
+                  "type": "string"
+                },
+                "rate_adjustment": {
+                  "type": "string"
+                },
+                "terms": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "token": {
+                  "type": "string"
+                },
+                "total_available_amount": {
+                  "type": "string"
+                },
+                "updated_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "created_at",
+                "creator_account_id",
+                "escrow_deposit_time_limit",
+                "fiat_currency",
+                "fiat_payment_time_limit",
+                "id",
+                "max_amount",
+                "min_amount",
+                "network_id",
+                "offer_type",
+                "rate_adjustment",
+                "terms",
+                "token",
+                "total_available_amount",
+                "updated_at"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "network",
+          "offers"
+        ],
+        "additionalProperties": false
+      },
+      "GetOfferResponse": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string",
+            "enum": [
+              "celo-alfajores",
+              "celo-mainnet",
+              "solana-devnet",
+              "solana-mainnet"
+            ]
+          },
+          "offer": {
+            "type": "object",
+            "properties": {
+              "created_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "creator_account_id": {
+                "type": "integer"
+              },
+              "escrow_deposit_time_limit": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fiat_currency": {
+                "type": "string"
+              },
+              "fiat_payment_time_limit": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              "max_amount": {
+                "type": "string"
+              },
+              "min_amount": {
+                "type": "string"
+              },
+              "network_id": {
+                "type": "integer"
+              },
+              "offer_type": {
+                "type": "string"
+              },
+              "rate_adjustment": {
+                "type": "string"
+              },
+              "terms": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "token": {
+                "type": "string"
+              },
+              "total_available_amount": {
+                "type": "string"
+              },
+              "updated_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "created_at",
+              "creator_account_id",
+              "escrow_deposit_time_limit",
+              "fiat_currency",
+              "fiat_payment_time_limit",
+              "id",
+              "max_amount",
+              "min_amount",
+              "network_id",
+              "offer_type",
+              "rate_adjustment",
+              "terms",
+              "token",
+              "total_available_amount",
+              "updated_at"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "network",
+          "offer"
+        ],
+        "additionalProperties": false
+      },
+      "CreateOfferRequest": {
+        "type": "object",
+        "properties": {
+          "creator_account_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "escrow_deposit_time_limit": {
+            "type": "string"
+          },
+          "fiat_currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$",
+            "default": "USD"
+          },
+          "fiat_payment_time_limit": {
+            "type": "string"
+          },
+          "max_amount": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)(\\.\\d{1,6})?$"
+          },
+          "min_amount": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)(\\.\\d{1,6})?$"
+          },
+          "offer_type": {
+            "type": "string",
+            "enum": [
+              "BUY",
+              "SELL"
+            ]
+          },
+          "rate_adjustment": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "terms": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string",
+            "enum": [
+              "USDC"
+            ]
+          },
+          "total_available_amount": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)(\\.\\d{1,6})?$"
+          }
+        },
+        "required": [
+          "creator_account_id",
+          "min_amount",
+          "offer_type"
+        ],
+        "additionalProperties": false
+      },
+      "CreateOfferResponse": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string",
+            "enum": [
+              "celo-alfajores",
+              "celo-mainnet",
+              "solana-devnet",
+              "solana-mainnet"
+            ]
+          },
+          "offer": {
+            "type": "object",
+            "properties": {
+              "created_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "creator_account_id": {
+                "type": "integer"
+              },
+              "escrow_deposit_time_limit": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fiat_currency": {
+                "type": "string"
+              },
+              "fiat_payment_time_limit": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              "max_amount": {
+                "type": "string"
+              },
+              "min_amount": {
+                "type": "string"
+              },
+              "network_id": {
+                "type": "integer"
+              },
+              "offer_type": {
+                "type": "string"
+              },
+              "rate_adjustment": {
+                "type": "string"
+              },
+              "terms": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "token": {
+                "type": "string"
+              },
+              "total_available_amount": {
+                "type": "string"
+              },
+              "updated_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "created_at",
+              "creator_account_id",
+              "escrow_deposit_time_limit",
+              "fiat_currency",
+              "fiat_payment_time_limit",
+              "id",
+              "max_amount",
+              "min_amount",
+              "network_id",
+              "offer_type",
+              "rate_adjustment",
+              "terms",
+              "token",
+              "total_available_amount",
+              "updated_at"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "network",
+          "offer"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateOfferRequest": {
+        "type": "object",
+        "properties": {
+          "escrow_deposit_time_limit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "minutes": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "required": [
+                  "minutes"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "fiat_currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "fiat_payment_time_limit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "minutes": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "required": [
+                  "minutes"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "max_amount": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)(\\.\\d{1,6})?$"
+          },
+          "min_amount": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)(\\.\\d{1,6})?$"
+          },
+          "offer_type": {
+            "type": "string",
+            "enum": [
+              "BUY",
+              "SELL"
+            ]
+          },
+          "rate_adjustment": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "terms": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string",
+            "enum": [
+              "USDC"
+            ]
+          },
+          "total_available_amount": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)(\\.\\d{1,6})?$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateOfferResponse": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string",
+            "enum": [
+              "celo-alfajores",
+              "celo-mainnet",
+              "solana-devnet",
+              "solana-mainnet"
+            ]
+          },
+          "offer": {
+            "type": "object",
+            "properties": {
+              "created_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "creator_account_id": {
+                "type": "integer"
+              },
+              "escrow_deposit_time_limit": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fiat_currency": {
+                "type": "string"
+              },
+              "fiat_payment_time_limit": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              "max_amount": {
+                "type": "string"
+              },
+              "min_amount": {
+                "type": "string"
+              },
+              "network_id": {
+                "type": "integer"
+              },
+              "offer_type": {
+                "type": "string"
+              },
+              "rate_adjustment": {
+                "type": "string"
+              },
+              "terms": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "token": {
+                "type": "string"
+              },
+              "total_available_amount": {
+                "type": "string"
+              },
+              "updated_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "created_at",
+              "creator_account_id",
+              "escrow_deposit_time_limit",
+              "fiat_currency",
+              "fiat_payment_time_limit",
+              "id",
+              "max_amount",
+              "min_amount",
+              "network_id",
+              "offer_type",
+              "rate_adjustment",
+              "terms",
+              "token",
+              "total_available_amount",
+              "updated_at"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "network",
+          "offer"
+        ],
+        "additionalProperties": false
+      },
+      "DeleteOfferResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "enum": [
+              "Offer deleted"
+            ]
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "additionalProperties": false
+      },
+      "CreateTradeRequest": {
+        "type": "object",
+        "properties": {
+          "destination_bank": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "destination_fiat_currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "from_bank": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "from_fiat_currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "leg1_crypto_amount": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)(\\.\\d{1,6})?$"
+          },
+          "leg1_fiat_amount": {
+            "type": "string",
+            "pattern": "^\\d+(\\.\\d{1,2})?$"
+          },
+          "leg1_offer_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "leg2_offer_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": [
+          "leg1_offer_id"
+        ],
+        "additionalProperties": false
+      },
+      "CreateTradeResponse": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string",
+            "enum": [
+              "celo-alfajores",
+              "celo-mainnet",
+              "solana-devnet",
+              "solana-mainnet"
+            ]
+          },
+          "trade": {
+            "type": "object",
+            "properties": {
+              "cancelled": {
+                "type": "boolean"
+              },
+              "cancelled_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "completed": {
+                "type": "boolean"
+              },
+              "completed_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "created_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "destination_bank": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "destination_fiat_currency": {
+                "type": "string"
+              },
+              "from_bank": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "from_fiat_currency": {
+                "type": "string"
+              },
+              "id": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              "leg1_offer_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "leg2_offer_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "network_id": {
+                "type": "integer"
+              },
+              "overall_status": {
+                "type": "string"
+              },
+              "updated_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "leg1_buyer_account_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "leg1_cancelled_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg1_cancelled_by": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg1_created_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "leg1_crypto_amount": {
+                "type": "string"
+              },
+              "leg1_crypto_token": {
+                "type": "string"
+              },
+              "leg1_dispute_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "leg1_escrow_address": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg1_escrow_deposit_deadline": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg1_escrow_onchain_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg1_fiat_amount": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg1_fiat_currency": {
+                "type": "string"
+              },
+              "leg1_fiat_paid_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg1_fiat_payment_deadline": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg1_released_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg1_seller_account_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "leg1_state": {
+                "type": "string"
+              },
+              "leg2_buyer_account_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "leg2_cancelled_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg2_cancelled_by": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg2_created_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg2_crypto_amount": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg2_crypto_token": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg2_dispute_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "leg2_escrow_address": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg2_escrow_deposit_deadline": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg2_escrow_onchain_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg2_fiat_amount": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg2_fiat_currency": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg2_fiat_paid_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg2_fiat_payment_deadline": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg2_released_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg2_seller_account_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "leg2_state": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "cancelled",
+              "completed",
+              "created_at",
+              "destination_bank",
+              "destination_fiat_currency",
+              "from_bank",
+              "from_fiat_currency",
+              "id",
+              "leg1_offer_id",
+              "leg2_offer_id",
+              "network_id",
+              "overall_status",
+              "updated_at",
+              "leg1_buyer_account_id",
+              "leg1_created_at",
+              "leg1_crypto_amount",
+              "leg1_crypto_token",
+              "leg1_fiat_amount",
+              "leg1_fiat_currency",
+              "leg1_seller_account_id",
+              "leg1_state"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "network",
+          "trade"
+        ],
+        "additionalProperties": false
+      },
+      "GetTradeResponse": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string",
+            "enum": [
+              "celo-alfajores",
+              "celo-mainnet",
+              "solana-devnet",
+              "solana-mainnet"
+            ]
+          },
+          "trade": {
+            "type": "object",
+            "properties": {
+              "cancelled": {
+                "type": "boolean"
+              },
+              "cancelled_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "completed": {
+                "type": "boolean"
+              },
+              "completed_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "created_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "destination_bank": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "destination_fiat_currency": {
+                "type": "string"
+              },
+              "from_bank": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "from_fiat_currency": {
+                "type": "string"
+              },
+              "id": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              "leg1_offer_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "leg2_offer_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "network_id": {
+                "type": "integer"
+              },
+              "overall_status": {
+                "type": "string"
+              },
+              "updated_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "leg1_buyer_account_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "leg1_cancelled_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg1_cancelled_by": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg1_created_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "leg1_crypto_amount": {
+                "type": "string"
+              },
+              "leg1_crypto_token": {
+                "type": "string"
+              },
+              "leg1_dispute_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "leg1_escrow_address": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg1_escrow_deposit_deadline": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg1_escrow_onchain_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg1_fiat_amount": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg1_fiat_currency": {
+                "type": "string"
+              },
+              "leg1_fiat_paid_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg1_fiat_payment_deadline": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg1_released_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg1_seller_account_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "leg1_state": {
+                "type": "string"
+              },
+              "leg2_buyer_account_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "leg2_cancelled_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg2_cancelled_by": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg2_created_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg2_crypto_amount": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg2_crypto_token": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg2_dispute_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "leg2_escrow_address": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg2_escrow_deposit_deadline": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg2_escrow_onchain_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg2_fiat_amount": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg2_fiat_currency": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leg2_fiat_paid_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg2_fiat_payment_deadline": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg2_released_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "leg2_seller_account_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "leg2_state": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "cancelled",
+              "completed",
+              "created_at",
+              "destination_bank",
+              "destination_fiat_currency",
+              "from_bank",
+              "from_fiat_currency",
+              "id",
+              "leg1_offer_id",
+              "leg2_offer_id",
+              "network_id",
+              "overall_status",
+              "updated_at",
+              "leg1_buyer_account_id",
+              "leg1_created_at",
+              "leg1_crypto_amount",
+              "leg1_crypto_token",
+              "leg1_fiat_amount",
+              "leg1_fiat_currency",
+              "leg1_seller_account_id",
+              "leg1_state"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "network",
+          "trade"
+        ],
+        "additionalProperties": false
+      },
+      "ListMyTradesResponse": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string",
+            "enum": [
+              "celo-alfajores",
+              "celo-mainnet",
+              "solana-devnet",
+              "solana-mainnet"
+            ]
+          },
+          "trades": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "cancelled": {
+                  "type": "boolean"
+                },
+                "cancelled_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "completed": {
+                  "type": "boolean"
+                },
+                "completed_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "created_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "destination_bank": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "destination_fiat_currency": {
+                  "type": "string"
+                },
+                "from_bank": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "from_fiat_currency": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0
+                },
+                "leg1_offer_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "leg2_offer_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "network_id": {
+                  "type": "integer"
+                },
+                "overall_status": {
+                  "type": "string"
+                },
+                "updated_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "leg1_buyer_account_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "leg1_cancelled_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "leg1_cancelled_by": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg1_created_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "leg1_crypto_amount": {
+                  "type": "string"
+                },
+                "leg1_crypto_token": {
+                  "type": "string"
+                },
+                "leg1_dispute_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "leg1_escrow_address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg1_escrow_deposit_deadline": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "leg1_escrow_onchain_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg1_fiat_amount": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg1_fiat_currency": {
+                  "type": "string"
+                },
+                "leg1_fiat_paid_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "leg1_fiat_payment_deadline": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "leg1_released_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "leg1_seller_account_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "leg1_state": {
+                  "type": "string"
+                },
+                "leg2_buyer_account_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "leg2_cancelled_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "leg2_cancelled_by": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg2_created_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "leg2_crypto_amount": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg2_crypto_token": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg2_dispute_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "leg2_escrow_address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg2_escrow_deposit_deadline": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "leg2_escrow_onchain_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg2_fiat_amount": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg2_fiat_currency": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "leg2_fiat_paid_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "leg2_fiat_payment_deadline": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "leg2_released_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "leg2_seller_account_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "leg2_state": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "cancelled",
+                "completed",
+                "created_at",
+                "destination_bank",
+                "destination_fiat_currency",
+                "from_bank",
+                "from_fiat_currency",
+                "id",
+                "leg1_offer_id",
+                "leg2_offer_id",
+                "network_id",
+                "overall_status",
+                "updated_at",
+                "leg1_buyer_account_id",
+                "leg1_created_at",
+                "leg1_crypto_amount",
+                "leg1_crypto_token",
+                "leg1_fiat_amount",
+                "leg1_fiat_currency",
+                "leg1_seller_account_id",
+                "leg1_state"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "network",
+          "trades"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateTradeRequest": {
+        "type": "object",
+        "properties": {
+          "fiat_paid": {
+            "type": "boolean"
+          },
+          "leg1_state": {
+            "type": "string",
+            "enum": [
+              "CREATED",
+              "FUNDED",
+              "FIAT_PAID",
+              "RELEASED",
+              "CANCELLED",
+              "DISPUTED",
+              "RESOLVED",
+              "COMPLETED"
+            ]
+          },
+          "overall_status": {
+            "type": "string",
+            "enum": [
+              "IN_PROGRESS",
+              "DISPUTED",
+              "COMPLETED",
+              "CANCELLED"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "TradeUpdateResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "EscrowRecordRequest": {
+        "type": "object",
+        "properties": {
+          "transaction_hash": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string"
+          },
+          "onchain_escrow_id": {
+            "type": "string"
+          },
+          "metadata": {}
+        },
+        "required": [
+          "onchain_escrow_id"
+        ]
+      },
+      "EscrowRecordResponse": {
+        "type": "object",
+        "properties": {
+          "blockExplorerUrl": {
+            "type": "string"
+          },
+          "escrowDbId": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "escrowId": {
+            "type": "string"
+          },
+          "networkFamily": {
+            "type": "string",
+            "enum": [
+              "evm",
+              "solana"
+            ]
+          },
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "txHash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "blockExplorerUrl",
+          "escrowDbId",
+          "escrowId",
+          "networkFamily",
+          "success",
+          "txHash"
+        ],
+        "additionalProperties": false
+      },
+      "ListMyEscrowsResponse": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "string"
+            },
+            "arbitrator_address": {
+              "type": "string"
+            },
+            "buyer_address": {
+              "type": "string"
+            },
+            "completed_at": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "counter": {
+              "type": "integer"
+            },
+            "created_at": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "current_balance": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "deposit_deadline": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "dispute_id": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "escrow_address": {
+              "type": "string"
+            },
+            "escrow_onchain_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "escrow_pda": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "escrow_token_account": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "fiat_deadline": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fiat_paid": {
+              "type": "boolean"
+            },
+            "id": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "network": {
+              "type": "string"
+            },
+            "network_family": {
+              "type": "string"
+            },
+            "network_id": {
+              "type": "integer"
+            },
+            "onchain_escrow_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "program_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "seller_address": {
+              "type": "string"
+            },
+            "sequential": {
+              "type": "boolean"
+            },
+            "sequential_escrow_address": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "state": {
+              "type": "string"
+            },
+            "token_type": {
+              "type": "string"
+            },
+            "trade_id": {
+              "type": "integer"
+            },
+            "trade_onchain_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "updated_at": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "version": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "amount",
+            "arbitrator_address",
+            "buyer_address",
+            "counter",
+            "created_at",
+            "current_balance",
+            "escrow_address",
+            "fiat_paid",
+            "id",
+            "network_family",
+            "network_id",
+            "seller_address",
+            "sequential",
+            "state",
+            "token_type",
+            "trade_id",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "EscrowBalanceResponse": {
+        "type": "object",
+        "properties": {
+          "balance": {
+            "type": "string"
+          },
+          "escrowId": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string",
+            "enum": [
+              "celo-alfajores",
+              "celo-mainnet",
+              "solana-devnet",
+              "solana-mainnet"
+            ]
+          }
+        },
+        "required": [
+          "balance",
+          "escrowId",
+          "network"
+        ],
+        "additionalProperties": false
+      },
+      "EscrowStoredBalanceResponse": {
+        "type": "object",
+        "properties": {
+          "escrowId": {
+            "type": "string"
+          },
+          "storedBalance": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "escrowId",
+          "storedBalance"
+        ],
+        "additionalProperties": false
+      },
+      "EscrowCalculatedBalanceResponse": {
+        "type": "object",
+        "properties": {
+          "calculatedBalance": {
+            "type": "string"
+          },
+          "escrowId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "calculatedBalance",
+          "escrowId"
+        ],
+        "additionalProperties": false
+      },
+      "EscrowSequentialInfoResponse": {
+        "type": "object",
+        "properties": {
+          "escrowId": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string",
+            "enum": [
+              "celo-alfajores",
+              "celo-mainnet",
+              "solana-devnet",
+              "solana-mainnet"
+            ]
+          },
+          "sequentialInfo": {}
+        },
+        "required": [
+          "escrowId",
+          "network"
+        ],
+        "additionalProperties": false
+      },
+      "EscrowAutoCancelResponse": {
+        "type": "object",
+        "properties": {
+          "escrowId": {
+            "type": "string"
+          },
+          "isEligibleForAutoCancel": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "escrowId",
+          "isEligibleForAutoCancel"
+        ],
+        "additionalProperties": false
+      },
+      "RecordTransactionRequest": {
+        "type": "object",
+        "properties": {
+          "block_number": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "escrow_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "from_address": {
+            "type": "string",
+            "minLength": 1
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "signature": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "SUCCESS",
+              "FAILED"
+            ],
+            "default": "PENDING"
+          },
+          "to_address": {
+            "type": "string"
+          },
+          "trade_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "transaction_hash": {
+            "type": "string"
+          },
+          "transaction_type": {
+            "type": "string",
+            "enum": [
+              "CREATE_ESCROW",
+              "FUND_ESCROW",
+              "RELEASE_ESCROW",
+              "CANCEL_ESCROW",
+              "MARK_FIAT_PAID",
+              "OPEN_DISPUTE",
+              "RESPOND_DISPUTE",
+              "RESOLVE_DISPUTE",
+              "DISPUTE_ESCROW",
+              "OTHER"
+            ]
+          }
+        },
+        "required": [
+          "from_address",
+          "trade_id",
+          "transaction_type"
+        ],
+        "additionalProperties": false
+      },
+      "RecordTransactionResponse": {
+        "type": "object",
+        "properties": {
+          "blockNumber": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "transactionId": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "txHash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "blockNumber",
+          "success",
+          "transactionId",
+          "txHash"
+        ],
+        "additionalProperties": false
+      },
+      "TransactionsByTradeResponse": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "created_at": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "error_message": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "escrow_id": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "from_address": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "gas_used": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "id": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "metadata": {},
+            "network": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "to_address": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "token_type": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "trade_id": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "transaction_hash": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "transaction_type": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "created_at",
+            "error_message",
+            "escrow_id",
+            "from_address",
+            "gas_used",
+            "id",
+            "network",
+            "to_address",
+            "trade_id",
+            "transaction_hash",
+            "transaction_type",
+            "status"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "TransactionsByUserResponse": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "created_at": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "error_message": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "escrow_id": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "from_address": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "gas_used": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "id": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "metadata": {},
+            "network": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "to_address": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "token_type": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "trade_id": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "transaction_hash": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "transaction_type": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "created_at",
+            "error_message",
+            "escrow_id",
+            "from_address",
+            "gas_used",
+            "id",
+            "network",
+            "to_address",
+            "trade_id",
+            "transaction_hash",
+            "transaction_type",
+            "status"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "IdempotencyKey": {
+        "type": "string",
+        "format": "uuid",
+        "description": "UUID v4. See \"Idempotency\" in docs/api-ref.md. Recommended on retryable mutations.",
+        "example": "9d6b9e4c-3a2f-4f1a-8b8d-2b5a6e0f5b21"
+      },
+      "NetworkName": {
+        "type": "string",
+        "description": "Target network identifier (e.g. `solana-devnet`, `celo-alfajores`). Required on chain-aware endpoints.",
+        "example": "solana-devnet"
+      }
+    },
+    "parameters": {
+      "IdempotencyKey": {
+        "schema": {
+          "$ref": "#/components/schemas/IdempotencyKey"
+        },
+        "required": true,
+        "description": "UUID v4. See \"Idempotency\" in docs/api-ref.md. Recommended on retryable mutations.",
+        "name": "Idempotency-Key",
+        "in": "header"
+      },
+      "NetworkName": {
+        "schema": {
+          "$ref": "#/components/schemas/NetworkName"
+        },
+        "required": true,
+        "description": "Target network identifier (e.g. `solana-devnet`, `celo-alfajores`). Required on chain-aware endpoints.",
+        "name": "x-network-name",
+        "in": "header"
+      }
+    }
+  },
+  "paths": {
+    "/health/live": {
+      "get": {
+        "summary": "Liveness probe",
+        "description": "Returns 200 as long as the process is alive. Never touches DB.",
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "Process alive",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthLiveResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "summary": "Readiness probe",
+        "description": "Checks DB and listener dependencies. Returns 503 when any check fails so load balancers drain this instance without triggering a restart.",
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "Ready for traffic",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthReadyResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Not ready — do not route traffic",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthReadyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "summary": "Prometheus scrape endpoint",
+        "description": "Prometheus-format metrics. Requires authentication in production.",
+        "tags": [
+          "Observability"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prometheus exposition format (text/plain)",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials"
+          },
+          "503": {
+            "description": "Endpoint not configured in current environment"
+          }
+        }
+      }
+    },
+    "/prices": {
+      "get": {
+        "summary": "USDC fiat prices",
+        "description": "Returns current USDC prices in supported fiat currencies. Public endpoint.",
+        "tags": [
+          "Public"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter to a single fiat code."
+            },
+            "required": false,
+            "description": "Filter to a single fiat code.",
+            "name": "fiat",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prices fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PricesResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Pricing service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/login": {
+      "post": {
+        "summary": "Admin login",
+        "description": "Exchange admin credentials for a short-lived JWT. Rate-limited to 5 attempts per 15 minutes per IP. Not for regular users — issue JWTs via Dynamic.xyz.",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminLoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/trades": {
+      "get": {
+        "summary": "List all trades (admin)",
+        "description": "Paginated list of every trade. Admin-only.",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "default": 1
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 200,
+              "default": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminTradesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (non-admin)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/escrows/{trade_id}": {
+      "get": {
+        "summary": "Get escrow by trade id (admin)",
+        "description": "Fetch the escrow row for a given trade. Admin-only.",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "required": true,
+            "name": "trade_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminEscrowsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Escrow not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/deadline-stats": {
+      "get": {
+        "summary": "Deadline stats across networks",
+        "description": "Aggregate deadline expiry statistics across every network.",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeadlineStatsResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to fetch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/deadline-stats/{networkId}": {
+      "get": {
+        "summary": "Deadline stats for a single network",
+        "description": "Deadline expiry statistics for a specific network.",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "required": true,
+            "name": "networkId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeadlineStatsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Network not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/accounts": {
+      "post": {
+        "summary": "Create account",
+        "description": "Create an account linked to the authenticated wallet.",
+        "tags": [
+          "Accounts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccountRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMutationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Account already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/accounts/me": {
+      "get": {
+        "summary": "Get my account",
+        "description": "Returns the authenticated wallet's account record.",
+        "tags": [
+          "Accounts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountFullResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/accounts/{id}": {
+      "get": {
+        "summary": "Get account by id",
+        "tags": [
+          "Accounts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountGetByIdResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update account (owner only)",
+        "tags": [
+          "Accounts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccountRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMutationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not owner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offers": {
+      "get": {
+        "summary": "List offers (public)",
+        "description": "List offers filtered by criteria. No auth required.",
+        "tags": [
+          "Offers"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 100000,
+              "default": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "owner",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "token",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "type",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Network identifier (e.g. solana-devnet, celo-alfajores)."
+            },
+            "required": true,
+            "description": "Network identifier (e.g. solana-devnet, celo-alfajores).",
+            "name": "x-network-name",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListOffersResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create offer",
+        "description": "Restricted to the authenticated creator account.",
+        "tags": [
+          "Offers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Network identifier (e.g. solana-devnet, celo-alfajores)."
+            },
+            "required": true,
+            "description": "Network identifier (e.g. solana-devnet, celo-alfajores).",
+            "name": "x-network-name",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOfferRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateOfferResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not owner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offers/{id}": {
+      "get": {
+        "summary": "Get offer by id (public)",
+        "tags": [
+          "Offers"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Network identifier (e.g. solana-devnet, celo-alfajores)."
+            },
+            "required": true,
+            "description": "Network identifier (e.g. solana-devnet, celo-alfajores).",
+            "name": "x-network-name",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetOfferResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update offer (owner only)",
+        "tags": [
+          "Offers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Network identifier (e.g. solana-devnet, celo-alfajores)."
+            },
+            "required": true,
+            "description": "Network identifier (e.g. solana-devnet, celo-alfajores).",
+            "name": "x-network-name",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOfferRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateOfferResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not owner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete offer (owner only)",
+        "tags": [
+          "Offers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Network identifier (e.g. solana-devnet, celo-alfajores)."
+            },
+            "required": true,
+            "description": "Network identifier (e.g. solana-devnet, celo-alfajores).",
+            "name": "x-network-name",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteOfferResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not owner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trades": {
+      "post": {
+        "summary": "Create trade",
+        "description": "Create a trade against an existing offer. Accepts Idempotency-Key for retry-safe creation.",
+        "tags": [
+          "Trades"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTradeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateTradeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Idempotency-Key conflict (different body replayed with same key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trades/my": {
+      "get": {
+        "summary": "List my trades",
+        "description": "Returns trades where the authenticated user is a participant.",
+        "tags": [
+          "Trades"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 100000,
+              "default": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListMyTradesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trades/{id}": {
+      "get": {
+        "summary": "Get trade by id",
+        "tags": [
+          "Trades"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetTradeResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update trade (state transition)",
+        "description": "Transitions the trade state (e.g. MARK_FIAT_PAID). Idempotency-Key recommended — a retry after network failure must not re-mark fiat paid.",
+        "tags": [
+          "Trades"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTradeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TradeUpdateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid state transition",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Idempotency-Key conflict or finalized resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/escrows/record": {
+      "post": {
+        "summary": "Record an escrow creation event",
+        "description": "Notifies the API of an escrow created on-chain. `Idempotency-Key` header (UUID v4) is REQUIRED — double-recording an escrow creates ledger drift. See the Idempotency section of docs/api-ref.md for replay semantics.",
+        "tags": [
+          "Escrows"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target network (e.g. solana-devnet)."
+            },
+            "required": true,
+            "description": "Target network (e.g. solana-devnet).",
+            "name": "x-network-name",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EscrowRecordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscrowRecordResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Idempotency-Key conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/escrows/my": {
+      "get": {
+        "summary": "List my escrows",
+        "tags": [
+          "Escrows"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 100000,
+              "default": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target network (e.g. solana-devnet)."
+            },
+            "required": true,
+            "description": "Target network (e.g. solana-devnet).",
+            "name": "x-network-name",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListMyEscrowsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/escrows/{onchainEscrowId}/balance": {
+      "get": {
+        "summary": "Get on-chain balance for an escrow",
+        "description": "Fetches the current balance directly from the chain via RPC.",
+        "tags": [
+          "Escrows"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "onchainEscrowId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target network (e.g. solana-devnet)."
+            },
+            "required": true,
+            "description": "Target network (e.g. solana-devnet).",
+            "name": "x-network-name",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscrowBalanceResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "RPC unavailable (breaker open)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/escrows/{onchainEscrowId}/stored-balance": {
+      "get": {
+        "summary": "Get cached balance from DB",
+        "tags": [
+          "Escrows"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "onchainEscrowId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target network (e.g. solana-devnet)."
+            },
+            "required": true,
+            "description": "Target network (e.g. solana-devnet).",
+            "name": "x-network-name",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscrowStoredBalanceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/escrows/{onchainEscrowId}/calculated-balance": {
+      "get": {
+        "summary": "Calculated balance (stored + adjustments)",
+        "tags": [
+          "Escrows"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "onchainEscrowId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target network (e.g. solana-devnet)."
+            },
+            "required": true,
+            "description": "Target network (e.g. solana-devnet).",
+            "name": "x-network-name",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscrowCalculatedBalanceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/escrows/{onchainEscrowId}/sequential-info": {
+      "get": {
+        "summary": "Sequential escrow chain info",
+        "tags": [
+          "Escrows"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "onchainEscrowId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target network (e.g. solana-devnet)."
+            },
+            "required": true,
+            "description": "Target network (e.g. solana-devnet).",
+            "name": "x-network-name",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscrowSequentialInfoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/escrows/{onchainEscrowId}/auto-cancel-eligible": {
+      "get": {
+        "summary": "Check auto-cancel eligibility",
+        "tags": [
+          "Escrows"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "onchainEscrowId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Target network (e.g. solana-devnet)."
+            },
+            "required": true,
+            "description": "Target network (e.g. solana-devnet).",
+            "name": "x-network-name",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscrowAutoCancelResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transactions": {
+      "post": {
+        "summary": "Record a blockchain transaction",
+        "description": "Records a confirmed on-chain transaction. `Idempotency-Key` header (UUID v4) is REQUIRED — this is the hottest replay-vulnerable write path and a retry without the key would create a duplicate ledger row. See the Idempotency section of docs/api-ref.md for replay semantics.",
+        "tags": [
+          "Transactions"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordTransactionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordTransactionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Idempotency-Key conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transactions/trade/{id}": {
+      "get": {
+        "summary": "List transactions for a trade",
+        "tags": [
+          "Transactions"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "type",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionsByTradeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transactions/user": {
+      "get": {
+        "summary": "List authenticated user's transactions",
+        "tags": [
+          "Transactions"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 100000,
+              "default": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "type",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionsByUserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
+}

@@ -19,8 +19,12 @@ RUN npm config set fetch-timeout 600000 && \
     npm config set progress true && \
     npm config set loglevel verbose
 
-# Install dependencies with progress indicators
-RUN echo "Starting npm ci at $(date)..." && \
+# Install dependencies. The cache mount persists ~/.npm across container
+# builds so the ~1000 tarballs are only downloaded once per machine — a
+# rebuild after `npm i` lockfile-only changes drops from ~6m to ~30s.
+# `sharing=locked` serializes concurrent builds against the same cache.
+RUN --mount=type=cache,target=/root/.npm,sharing=locked \
+    echo "Starting npm ci at $(date)..." && \
     npm ci --loglevel=info --progress=true && \
     echo "npm ci completed at $(date)"
 

@@ -9,6 +9,10 @@ export const Footer: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // The Footer renders apiVersion / contractVersion / dbStatus, all of
+    // which only the full /health endpoint returns. /health/live is used
+    // by other indicators (Status page liveness panel) for cheap probes;
+    // here we keep /health and rate-limit ourselves to once per 30s.
     const fetchHealth = async () => {
       try {
         const response = await getHealth();
@@ -195,7 +199,7 @@ export const Footer: React.FC = () => {
           </p>
           <p>
             &copy; 2023-{new Date().getFullYear()} A{' '}
-            <a className="panmoni-link" href="https://panmoni.com" target="_blank" rel="noopener">
+            <a className="panmoni-link" href="https://panmoni.com" target="_blank" rel="noopener noreferrer">
               Panmoni
               <img
                 src="/panmoni.svg"

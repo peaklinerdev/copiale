@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getHealth, HealthResponse } from '@/api';
+import { getHealth, getReadiness, HealthResponse, ReadinessResponse } from '@/api';
 import Container from '@/components/Shared/Container';
 import { versionInfo } from '@/utils/version';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
@@ -31,6 +31,26 @@ interface GitHubCommit {
     avatar_url: string;
   } | null;
   html_url: string;
+}
+
+// Build a block-explorer link for an address. The /health response carries
+// `blockExplorerUrl` as a sample `/tx/...` URL; we used to do brittle
+// string-replaces of the embedded sample hash to swap it for `/address/`.
+// Using `new URL` against the explorer's origin is robust to upstream
+// changes in the sample hash and rejects non-http(s) schemes (e.g. an
+// accidentally `javascript:`-prefixed URL won't be navigated to as JS).
+function explorerAddressUrl(
+  blockExplorerUrl: string | null | undefined,
+  address: string | null | undefined,
+): string | null {
+  if (!blockExplorerUrl || !address) return null;
+  try {
+    const base = new URL(blockExplorerUrl);
+    if (base.protocol !== 'http:' && base.protocol !== 'https:') return null;
+    return new URL(`/address/${encodeURIComponent(address)}`, base.origin).href;
+  } catch {
+    return null;
+  }
 }
 
 // Helper function to format wallet address
@@ -77,7 +97,7 @@ async function fetchGitHubCommit(commitHash: string): Promise<GitHubCommit | nul
     }
 
     return await response.json();
-  } catch (error) {
+  } catch {
     // Silently handle errors - 404/422 are expected for short hashes or missing commits
     // Network errors are also handled gracefully
     return null;
@@ -143,25 +163,27 @@ function CommitHashLink({
 export const Status: React.FC = () => {
   const { primaryWallet } = useDynamicContext();
   const [health, setHealth] = useState<HealthResponse | null>(null);
+  const [readiness, setReadiness] = useState<ReadinessResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [apiCommitDetails, setApiCommitDetails] = useState<GitHubCommit | null>(null);
   const [frontendCommitDetails, setFrontendCommitDetails] = useState<GitHubCommit | null>(null);
   const [loadingCommits, setLoadingCommits] = useState(false);
 
-  // Fetch health data
+  // Fetch health + readiness in parallel.
   useEffect(() => {
-    const fetchHealth = async () => {
+    const fetchAll = async () => {
       try {
-        const response = await getHealth();
-        setHealth(response.data);
+        const [h, r] = await Promise.all([getHealth(), getReadiness().catch(() => null)]);
+        setHealth(h.data);
+        setReadiness(r ? r.data : null);
       } catch (err) {
         setError('Failed to fetch system status');
         console.error('Health check failed:', err);
       }
     };
 
-    fetchHealth();
-    const interval = setInterval(fetchHealth, 30000); // Refresh every 30 seconds
+    fetchAll();
+    const interval = setInterval(fetchAll, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -207,6 +229,23 @@ export const Status: React.FC = () => {
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">{error}</div>
         ) : health ? (
           <div className="space-y-4">
+            {/* Readiness panel — driven by /health/ready (M7). */}
+            {readiness && (
+              <section className="p-6">
+                <h2 className="text-xl font-semibold mb-4">Readiness</h2>
+                <p>
+                  <span className="font-semibold">Status:</span> {readiness.status}
+                </p>
+                <ul className="mt-2 ml-4 list-disc text-sm">
+                  {Object.entries(readiness.checks).map(([k, v]) => (
+                    <li key={k}>
+                      {k}: {v?.status ?? 'unknown'}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             {/* Basic Status */}
             <section className="p-6">
               <h2 className="text-xl font-semibold mb-4">System Overview</h2>
@@ -489,70 +528,93 @@ export const Status: React.FC = () => {
                         {network.contractAddress && (
                           <p>
                             <span className="font-semibold">Contract:</span>
-                            <a
-                              href={`${network.blockExplorerUrl?.replace(
-                                '/tx/0x0000000000000000000000000000000000000000000000000000000000000000',
-                                '/address/'
-                              )}${network.contractAddress}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 ml-1"
-                            >
-                              {network.contractAddress}
-                            </a>
+                            {(() => {
+                              const url = explorerAddressUrl(
+                                network.blockExplorerUrl,
+                                network.contractAddress,
+                              );
+                              return url ? (
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 ml-1"
+                                >
+                                  {network.contractAddress}
+                                </a>
+                              ) : (
+                                <span className="ml-1">{network.contractAddress}</span>
+                              );
+                            })()}
                           </p>
                         )}
                         {network.programId && (
                           <p>
                             <span className="font-semibold">Program ID:</span>
-                            <a
-                              href={`${network.blockExplorerUrl?.replace(
-                                '/tx/1111111111111111111111111111111111111111111111111111111111111111',
-                                '/address/'
-                              )}${network.programId}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 ml-1"
-                            >
-                              {network.programId}
-                            </a>
+                            {(() => {
+                              const url = explorerAddressUrl(
+                                network.blockExplorerUrl,
+                                network.programId,
+                              );
+                              return url ? (
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 ml-1"
+                                >
+                                  {network.programId}
+                                </a>
+                              ) : (
+                                <span className="ml-1">{network.programId}</span>
+                              );
+                            })()}
                           </p>
                         )}
                         {network.arbitratorAddress && (
                           <p>
                             <span className="font-semibold">Arbitrator:</span>
-                            <a
-                              href={`${network.blockExplorerUrl
-                                ?.replace(
-                                  '/tx/0x0000000000000000000000000000000000000000000000000000000000000000',
-                                  '/address/'
-                                )
-                                .replace(
-                                  '/tx/1111111111111111111111111111111111111111111111111111111111111111',
-                                  '/address/'
-                                )}${network.arbitratorAddress}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 ml-1"
-                            >
-                              {network.arbitratorAddress}
-                            </a>
+                            {(() => {
+                              const url = explorerAddressUrl(
+                                network.blockExplorerUrl,
+                                network.arbitratorAddress,
+                              );
+                              return url ? (
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 ml-1"
+                                >
+                                  {network.arbitratorAddress}
+                                </a>
+                              ) : (
+                                <span className="ml-1">{network.arbitratorAddress}</span>
+                              );
+                            })()}
                           </p>
                         )}
                         {network.usdcMint && (
                           <p>
                             <span className="font-semibold">USDC Mint:</span>
-                            <a
-                              href={`${network.blockExplorerUrl?.replace(
-                                '/tx/1111111111111111111111111111111111111111111111111111111111111111',
-                                '/address/'
-                              )}${network.usdcMint}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 ml-1"
-                            >
-                              {network.usdcMint}
-                            </a>
+                            {(() => {
+                              const url = explorerAddressUrl(
+                                network.blockExplorerUrl,
+                                network.usdcMint,
+                              );
+                              return url ? (
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 ml-1"
+                                >
+                                  {network.usdcMint}
+                                </a>
+                              ) : (
+                                <span className="ml-1">{network.usdcMint}</span>
+                              );
+                            })()}
                           </p>
                         )}
                         {network.wsUrl && (

@@ -6,7 +6,7 @@ import { Button } from '../../components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import OfferActionButtons from '@/components/Offer/OfferActionButtons';
 import TradeConfirmationDialog from '@/components/Trade/TradeConfirmationDialog';
-import { abbreviateWallet, formatRate } from '../../utils/stringUtils';
+import { abbreviateWallet, formatRate, rateAdjustmentDirection } from '../../utils/stringUtils';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 
 interface MobileOfferListProps {
@@ -97,9 +97,9 @@ const MobileOfferList: React.FC<MobileOfferListProps> = ({
             <span className="mobile-card-view-label">Rate</span>
             <span
               className={
-                offer.rate_adjustment > 1
+                rateAdjustmentDirection(offer.rate_adjustment) === 'up'
                   ? 'text-success'
-                  : offer.rate_adjustment < 1
+                  : rateAdjustmentDirection(offer.rate_adjustment) === 'down'
                   ? 'text-red-600'
                   : 'text-neutral-600'
               }

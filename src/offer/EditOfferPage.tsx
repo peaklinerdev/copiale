@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getOfferById, updateOffer, Offer } from '@/api';
+import { getOfferById, updateOffer, Offer, UpdateOfferRequest } from '@/api';
+import { toUsdcString } from '@/utils/amounts';
 import {
   Card,
   CardContent,
@@ -13,22 +14,42 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import Container from '@/components/Shared/Container';
+import { ErrorBanner } from '@/components/Shared/ErrorBanner';
+import { ApiError, toApiError } from '@/api/errors';
 import OfferDescription from '@/components/Offer/OfferDescription';
 import { getMinutesFromTimeLimit } from '@/utils/timeUtils';
+
+// Form-state shape: amounts are strings (raw input values from <Input> elements);
+// rate_adjustment is a number factor (1.05 = 5% above market). Convert to the
+// canonical wire shape (UpdateOfferRequest) at submit time.
+type OfferFormState = {
+  offer_type: 'BUY' | 'SELL';
+  token: string;
+  min_amount: string;
+  max_amount: string;
+  total_available_amount: string;
+  rate_adjustment: number;
+  terms: string;
+  escrow_deposit_time_limit: { minutes: number } | string;
+  fiat_payment_time_limit: { minutes: number } | string;
+  fiat_currency: string;
+};
 
 function EditOfferPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Either a raw string (form-side) or a structured ApiError from the
+  // axios interceptor — ErrorBanner handles both.
+  const [error, setError] = useState<string | ApiError | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<Partial<Offer>>({
+  const [formData, setFormData] = useState<OfferFormState>({
     offer_type: 'BUY',
     token: 'USDC',
-    min_amount: 0,
-    max_amount: 0,
-    total_available_amount: 0,
+    min_amount: '0',
+    max_amount: '0',
+    total_available_amount: '0',
     rate_adjustment: 1,
     terms: '',
     escrow_deposit_time_limit: { minutes: 60 },
@@ -48,30 +69,34 @@ function EditOfferPage() {
         const response = await getOfferById(parseInt(id));
         const offerData = response.data.offer;
 
-        // Set form data from the fetched offer
-        console.log('[EditOfferPage] Fetched offer data:', offerData);
-        console.log('[EditOfferPage] Data types:', {
-          min_amount: typeof offerData.min_amount,
-          max_amount: typeof offerData.max_amount,
-          total_available_amount: typeof offerData.total_available_amount,
-          rate_adjustment: typeof offerData.rate_adjustment,
-        });
-
+        // Hydrate from response: amounts are decimal strings (M3); coerce
+        // rate_adjustment to a number factor for in-form arithmetic only.
+        // Don't silently fall back to 1 — saving with a default would
+        // overwrite the server's actual rate.
+        const rateNum = Number(offerData.rate_adjustment);
+        if (!Number.isFinite(rateNum)) {
+          setError(
+            `Could not load rate adjustment from server (got ${JSON.stringify(
+              offerData.rate_adjustment,
+            )}). Refresh and try again.`,
+          );
+          return;
+        }
         setFormData({
-          offer_type: offerData.offer_type,
+          offer_type: offerData.offer_type as 'BUY' | 'SELL',
           token: offerData.token,
-          min_amount: Number(offerData.min_amount),
-          max_amount: Number(offerData.max_amount),
-          total_available_amount: Number(offerData.total_available_amount),
-          rate_adjustment: Number(offerData.rate_adjustment),
+          min_amount: offerData.min_amount,
+          max_amount: offerData.max_amount,
+          total_available_amount: offerData.total_available_amount,
+          rate_adjustment: rateNum,
           terms: offerData.terms,
           escrow_deposit_time_limit: offerData.escrow_deposit_time_limit,
           fiat_payment_time_limit: offerData.fiat_payment_time_limit,
           fiat_currency: offerData.fiat_currency,
         });
 
-        // Set the rate adjustment input value
-        setRateAdjustmentInput(((offerData.rate_adjustment - 1) * 100).toFixed(2));
+        // Set the rate adjustment input value (display percentage)
+        setRateAdjustmentInput(((rateNum - 1) * 100).toFixed(2));
 
         setError(null);
       } catch (err) {
@@ -90,7 +115,8 @@ function EditOfferPage() {
     const { name, value } = e.target;
 
     if (name === 'min_amount' || name === 'max_amount' || name === 'total_available_amount') {
-      setFormData({ ...formData, [name]: parseFloat(value) || 0 });
+      // Keep raw string; validation happens at submit (toUsdcString).
+      setFormData({ ...formData, [name]: value });
     } else if (name === 'rate_adjustment') {
       // Store the exact input value
       setRateAdjustmentInput(value);
@@ -112,16 +138,29 @@ function EditOfferPage() {
     if (!id) return;
 
     try {
-      console.log('[EditOfferPage] Submitting form data:', formData);
-      console.log('[EditOfferPage] Form data types:', {
-        min_amount: typeof formData.min_amount,
-        max_amount: typeof formData.max_amount,
-        total_available_amount: typeof formData.total_available_amount,
-        rate_adjustment: typeof formData.rate_adjustment,
-      });
-      console.log('[EditOfferPage] Offer ID:', id);
-      const response = await updateOffer(parseInt(id), formData);
-      console.log('[EditOfferPage] Update successful, response:', response);
+      // Build the wire payload. Strict-reject of unknown fields means we
+      // must explicitly pick allowed fields (no creator_account_id, id,
+      // network_id, timestamps).
+      let payload: UpdateOfferRequest;
+      try {
+        payload = {
+          offer_type: formData.offer_type,
+          token: formData.token,
+          fiat_currency: formData.fiat_currency,
+          min_amount: toUsdcString(formData.min_amount),
+          max_amount: toUsdcString(formData.max_amount),
+          total_available_amount: toUsdcString(formData.total_available_amount),
+          rate_adjustment: formData.rate_adjustment,
+          terms: formData.terms,
+          escrow_deposit_time_limit: formData.escrow_deposit_time_limit,
+          fiat_payment_time_limit: formData.fiat_payment_time_limit,
+        };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Invalid form data';
+        setError(msg);
+        return;
+      }
+      await updateOffer(parseInt(id), payload);
       setSuccess('Offer updated successfully');
 
       // Clear success message after 3 seconds and navigate back to offer detail
@@ -129,8 +168,8 @@ function EditOfferPage() {
         navigate(`/offer/${id}`, { state: { message: 'Offer updated successfully' } });
       }, 3000);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      setError(`Failed to update offer: ${errorMessage}`);
+      // Preserve the structured ApiError so per-field issues + ref render.
+      setError(toApiError(err));
       window.scrollTo(0, 0); // Scroll to top to show error
     }
   };
@@ -161,7 +200,17 @@ function EditOfferPage() {
               <CardDescription>Update your offer details</CardDescription>
               {!loading && formData && (
                 <div className="mt-4">
-                  <OfferDescription offer={formData as Offer} />
+                  {/* OfferDescription expects an Offer (response shape). The
+                      form's rate_adjustment is a number factor; the response
+                      shape uses string. Stringify here for display only. */}
+                  <OfferDescription
+                    offer={
+                      {
+                        ...formData,
+                        rate_adjustment: String(formData.rate_adjustment),
+                      } as unknown as Offer
+                    }
+                  />
                   <p className="text-xs text-neutral-500 mt-2">
                     To change the offer type, token or fiat currency, please create a new offer.
                   </p>
@@ -174,11 +223,7 @@ function EditOfferPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-6 border-none bg-red-50">
-              <AlertDescription className="text-red-700">{error}</AlertDescription>
-            </Alert>
-          )}
+          {error && <ErrorBanner error={error} className="mb-6" />}
 
           {success && (
             <Alert className="mb-6 bg-secondary-200 border-secondary-300">

@@ -34,7 +34,7 @@ import { formatDistanceToNow } from 'date-fns';
 import Container from '@/components/Shared/Container';
 import OfferTypeTooltip from '@/components/Offer/OfferTypeTooltip';
 import OfferDescription from '@/components/Offer/OfferDescription';
-import { formatRate } from '@/utils/stringUtils'; // Added import
+import { formatRate, rateAdjustmentDirection } from '@/utils/stringUtils';
 import { getMinutesFromTimeLimit } from '@/utils/timeUtils';
 import { toast } from 'sonner'; // Keep for success toast
 import { useOfferDeletion } from '@/hooks/useOfferDeletion'; // Import the hook
@@ -264,9 +264,9 @@ function OfferDetailPage() {
                   <span className="font-medium text-neutral-700">Rate Adjustment</span>
                   <span
                     className={
-                      offer.rate_adjustment > 1
+                      rateAdjustmentDirection(offer.rate_adjustment) === 'up'
                         ? 'text-success-600'
-                        : offer.rate_adjustment < 1
+                        : rateAdjustmentDirection(offer.rate_adjustment) === 'down'
                         ? 'text-red-600'
                         : 'text-neutral-600'
                     }

@@ -1,6 +1,6 @@
 import { Offer } from '@/api';
 import { formatNumber } from '@/lib/utils';
-import { formatRate } from '@/utils/stringUtils'; // Added import
+import { formatRate, rateAdjustmentDirection } from '@/utils/stringUtils';
 
 interface OfferDescriptionProps {
   offer: Offer;
@@ -18,9 +18,9 @@ function OfferDescription({ offer, className = '' }: OfferDescriptionProps) {
       You are {action} {offer.token} for {offer.fiat_currency} at{' '}
       <span
         className={
-          offer.rate_adjustment > 1
+          rateAdjustmentDirection(offer.rate_adjustment) === 'up'
             ? 'text-success-600'
-            : offer.rate_adjustment < 1
+            : rateAdjustmentDirection(offer.rate_adjustment) === 'down'
             ? 'text-red-600'
             : 'text-neutral-600'
         }

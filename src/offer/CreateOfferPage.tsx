@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
-import { getAccount, Account, Offer } from '@/api';
+import { getAccount, Account, CreateOfferRequest } from '@/api';
+import { toUsdcString } from '@/utils/amounts';
+import { compareUsdcStrings } from '@/utils/money-display';
 import { useSolanaDevnetOffers } from '@/hooks/useNetworkAwareAPI';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +18,8 @@ import { Button } from '@/components/ui/button';
 import { CurrencyOptions } from '@/lib/currencyOptions';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import Container from '@/components/Shared/Container';
+import { ErrorBanner } from '@/components/Shared/ErrorBanner';
+import { ApiError, toApiError } from '@/api/errors';
 
 interface CreateOfferPageProps {
   account: Account | null;
@@ -60,7 +64,10 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
   });
   const [success, setSuccess] = useState('');
 
-  const [error, setError] = useState('');
+  // Error state accepts either a plain string (form-side validation) or
+  // an ApiError (server-side validation_error / etc.); ErrorBanner handles
+  // both shapes including issuesByField rendering.
+  const [error, setError] = useState<string | ApiError | ''>('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,30 +88,38 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
       return;
     }
 
-    const minAmount = Number(formData.min_amount);
-    const maxAmount = Number(formData.max_amount);
-    const totalAmount = Number(formData.total_available_amount);
-
-    if (minAmount <= 0) {
-      setError('Minimum amount must be greater than 0');
+    // Normalize at the boundary: form inputs are strings; API expects
+    // canonical decimal strings (Design Invariant 3). toUsdcString throws
+    // on malformed/zero/negative input; we surface those as form errors.
+    let minAmount: string;
+    let maxAmount: string;
+    let totalAmount: string;
+    try {
+      minAmount = toUsdcString(formData.min_amount as string | number);
+      maxAmount = toUsdcString(formData.max_amount as string | number);
+      totalAmount = toUsdcString(formData.total_available_amount as string | number);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Invalid amount');
       return;
     }
 
-    if (maxAmount < minAmount) {
+    if (compareUsdcStrings(maxAmount, minAmount) < 0) {
       setError('Maximum amount must be greater than or equal to minimum amount');
       return;
     }
 
-    if (totalAmount < maxAmount) {
+    if (compareUsdcStrings(totalAmount, maxAmount) < 0) {
       setError('Total available amount must be at least as large as maximum amount');
       return;
     }
 
     try {
-      // Prepare offer data with proper numeric types
-      const data: Partial<Offer> = {
+      // Prepare offer data. Amounts are decimal strings (M3); rate_adjustment
+      // remains a number on request per backend `createOfferRequestSchema`
+      // (response widens to string).
+      const data: CreateOfferRequest = {
         creator_account_id: accountId,
-        offer_type: formData.offer_type,
+        offer_type: formData.offer_type as 'BUY' | 'SELL',
         token: formData.token,
         min_amount: minAmount,
         max_amount: maxAmount,
@@ -152,7 +167,9 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
         fiat_currency: 'USD',
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create offer');
+      // Server-side errors come through the axios interceptor as ApiError;
+      // keep the original object so ErrorBanner can render issues + ref.
+      setError(toApiError(err));
       console.error('Create offer error:', err);
     }
   };
@@ -199,11 +216,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
             </Alert>
           )}
 
-          {error && (
-            <Alert className="mb-6 bg-red-50 border-red-200" variant="destructive">
-              <AlertDescription className="text-red-700">{error}</AlertDescription>
-            </Alert>
-          )}
+          {error && <ErrorBanner error={error} className="mb-6" />}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1">

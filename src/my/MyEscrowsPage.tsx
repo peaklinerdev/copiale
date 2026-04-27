@@ -92,10 +92,17 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
           // Handle null cases by putting them at the end
           if (a.onchain_escrow_id === null) return 1;
           if (b.onchain_escrow_id === null) return -1;
-          // Convert string IDs to numbers for comparison
-          const aId = Number(a.onchain_escrow_id);
-          const bId = Number(b.onchain_escrow_id);
-          return bId - aId; // Sort descending
+          // Compare as BigInt to preserve precision on Solana u64 ids
+          // (Design Invariant 4 — values can exceed Number.MAX_SAFE_INTEGER).
+          try {
+            const aId = BigInt(a.onchain_escrow_id);
+            const bId = BigInt(b.onchain_escrow_id);
+            if (bId === aId) return 0;
+            return bId > aId ? 1 : -1;
+          } catch {
+            // Fallback to string compare for non-numeric (e.g. EVM hex) ids.
+            return b.onchain_escrow_id.localeCompare(a.onchain_escrow_id);
+          }
         });
 
         // Set total count for pagination

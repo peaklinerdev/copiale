@@ -3,7 +3,7 @@ import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { Link } from 'react-router-dom';
 import { getOffers, Offer, Account } from '@/api'; // Removed deleteOffer import
 import { formatNumber } from '@/lib/utils';
-import { formatRate } from '@/utils/stringUtils';
+import { formatRate, rateAdjustmentDirection } from '@/utils/stringUtils';
 import { useOfferDeletion } from '@/hooks/useOfferDeletion'; // Import the hook
 import {
   Table,
@@ -253,9 +253,9 @@ function MyOffersPage({ account }: MyOffersPageProps) {
                           <span className="mobile-card-view-label">Rate</span>
                           <span
                             className={
-                              offer.rate_adjustment > 1
+                              rateAdjustmentDirection(offer.rate_adjustment) === 'up'
                                 ? 'text-success-600'
-                                : offer.rate_adjustment < 1
+                                : rateAdjustmentDirection(offer.rate_adjustment) === 'down'
                                 ? 'text-red-600'
                                 : 'text-neutral-600'
                             }
@@ -320,9 +320,9 @@ function MyOffersPage({ account }: MyOffersPageProps) {
                           <TableCell>
                             <span
                               className={
-                                offer.rate_adjustment > 1
+                                rateAdjustmentDirection(offer.rate_adjustment) === 'up'
                                   ? 'text-success-600'
-                                  : offer.rate_adjustment < 1
+                                  : rateAdjustmentDirection(offer.rate_adjustment) === 'down'
                                   ? 'text-red-600'
                                   : 'text-neutral-600'
                               }

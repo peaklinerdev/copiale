@@ -1,4 +1,5 @@
-import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import { toast } from 'sonner';
 import { config } from '../config';
 import type {
   Account,
@@ -9,6 +10,12 @@ import type {
   TransactionRecord,
   HealthResponse,
 } from '../types';
+import { assertIdempotencyKey } from './idempotency';
+import { toApiError } from './errors';
+
+export { newIdempotencyKey } from './idempotency';
+export { ApiError, toApiError, issuesByField } from './errors';
+export type { ApiErrorCode, ApiIssue } from './errors';
 
 // Use the API URL from the config file
 const API_URL = config.apiUrl;
@@ -35,26 +42,74 @@ api.interceptors.request.use(
   }
 );
 
+// Mark a request config as already-retried so we don't loop on the same
+// 409 retry_conflict more than once.
+type RetryableConfig = InternalAxiosRequestConfig & { _retried?: boolean };
+
 api.interceptors.response.use(
   (response: AxiosResponse) => {
-    // console.log("API Response:", response.status, response.data);
+    if (
+      import.meta.env.VITE_DEBUG_IDEMPOTENCY === 'true' &&
+      response.headers['idempotent-replayed'] === 'true'
+    ) {
+      console.debug('[idempotency] replayed cached response for', response.config.url);
+    }
     return response;
   },
-  (error: unknown) => {
-    const axiosError = error as { response?: { status?: number }; config?: { url?: string } };
-    const status = axiosError.response?.status;
-    const url = axiosError.config?.url;
+  async (error: unknown) => {
+    const ax = error as AxiosError;
+    const status = ax.response?.status;
+    const url = ax.config?.url;
 
-    // Suppress 404 errors for /accounts/me endpoint (user hasn't created account yet)
+    // Suppress noise for the expected /accounts/me 404.
     if (status === 404 && url?.includes('/accounts/me')) {
       console.warn('Account not found - user needs to create their account first');
-    } else {
-      // Log all other errors normally
-      console.error('API Error:', status, (error as Error).message, url);
+      return Promise.reject(toApiError(error));
     }
 
-    // Handle specific errors like 401 Unauthorized if needed
-    return Promise.reject(error);
+    // 409 retry_conflict: the backend hit a transient pg deadlock and asked
+    // us to retry. Honor Retry-After (default 1s), but do it ONCE — same
+    // body, same Idempotency-Key (already on the config), no extra
+    // amplification.
+    const apiErr = toApiError(error);
+    if (
+      status === 409 &&
+      apiErr.code === 'retry_conflict' &&
+      ax.config &&
+      !(ax.config as RetryableConfig)._retried
+    ) {
+      const cfg = ax.config as RetryableConfig;
+      cfg._retried = true;
+      const waitMs = (apiErr.retryAfter ?? 1) * 1000;
+      await new Promise((r) => setTimeout(r, waitMs));
+      return api.request(cfg);
+    }
+
+    // Global toast surfaces (M6). Inline form errors are still rendered by
+    // ErrorBanner / issuesByField at the call site; these toasts are for
+    // truly cross-cutting failures.
+    if (status === 429) {
+      const retrySec = apiErr.retryAfter ?? 60;
+      toast.error('Rate limit hit', {
+        description: `Try again in ${retrySec}s. (ref: ${apiErr.requestId ?? '—'})`,
+      });
+    } else if (status === 409 && apiErr.code === 'idempotency_key_conflict') {
+      // This indicates a frontend bug: same key, different body. Surface
+      // loudly so we catch it in dev.
+      console.error(
+        '[idempotency] key reused with different body — frontend bug',
+        apiErr.requestId,
+      );
+      toast.error('A duplicate request was detected', {
+        description: 'Please reload the page.',
+      });
+    }
+    // 409 resource_finalized is left to the calling component to handle
+    // (e.g. refetch + navigate); a global toast would be too aggressive
+    // since the UI typically updates the underlying state itself.
+
+    console.error('API Error:', status, apiErr.code, apiErr.message, url, apiErr.requestId);
+    return Promise.reject(apiErr);
   }
 );
 
@@ -69,71 +124,20 @@ export const setAuthToken = (token: string | null) => {
   }
 };
 
-// Function to set the network context for multi-network support
-export const setNetworkName = (networkName: string | null) => {
-  if (networkName) {
-    api.defaults.headers.common['X-Network-Name'] = networkName;
-  } else {
-    delete api.defaults.headers.common['X-Network-Name'];
-  }
-};
-
-// Legacy function for backward compatibility (deprecated)
-export const setNetworkId = (networkId: number | null) => {
-  console.warn('setNetworkId is deprecated. Use setNetworkName with string values instead.');
-  if (networkId) {
-    // Map numeric IDs to network names
-    const networkName =
-      networkId === 3
-        ? 'solana-devnet'
-        : networkId === 1
-        ? 'celo-alfajores'
-        : networkId === 42220
-        ? 'celo-mainnet'
-        : null;
-    if (networkName) {
-      setNetworkName(networkName);
-    }
-  } else {
-    setNetworkName(null);
-  }
-};
-
 /**
- * Executes an API call with temporary network context
- * @param networkName The network name to use for this specific call
- * @param apiCall The API function to execute
- * @returns Promise with the API response
+ * Build a per-request axios config carrying the X-Network-Name header.
+ *
+ * Network selection used to be a global mutation of
+ * `api.defaults.headers.common['X-Network-Name']` wrapped in a try/finally.
+ * That raced under concurrent calls — a sibling `withNetworkContext` could
+ * overwrite the header mid-flight, and 409 retries dispatched after the
+ * await would re-merge from defaults at whatever value happened to be set.
+ * The header is now passed per-request so concurrent network-aware calls
+ * can't trample each other.
  */
-export const withNetworkContext = async <T>(
-  networkName: string,
-  apiCall: () => Promise<T>
-): Promise<T> => {
-  // Store the original network name
-  const originalNetworkName = api.defaults.headers.common['X-Network-Name'];
-
-  console.log(`[withNetworkContext] Setting network context to ${networkName}`);
-
-  try {
-    // Set the network context for this call
-    api.defaults.headers.common['X-Network-Name'] = networkName;
-
-    // Execute the API call
-    const result = await apiCall();
-    console.log(`[withNetworkContext] API call completed successfully`);
-    return result;
-  } finally {
-    // Restore the original network context
-    if (originalNetworkName) {
-      api.defaults.headers.common['X-Network-Name'] = originalNetworkName;
-    } else {
-      delete api.defaults.headers.common['X-Network-Name'];
-    }
-    console.log(
-      `[withNetworkContext] Restored network context to ${originalNetworkName || 'none'}`
-    );
-  }
-};
+const networkHeaders = (networkName: string) => ({
+  headers: { 'X-Network-Name': networkName },
+});
 
 // --- Re-export types for backward compatibility ---
 export type {
@@ -171,25 +175,28 @@ export const updateAccount = (
 ) => api.put<Account>(`/accounts/${id}`, data); // Return full Account object
 
 // Offers API
-export const createOffer = (
-  data: Partial<Omit<Offer, 'id' | 'creator_account_id' | 'created_at' | 'updated_at'>>
-) => {
-  console.log('[createOffer] Base API call - data:', data);
-  console.log('[createOffer] Current headers:', api.defaults.headers.common);
-
-  return api
-    .post<CreateOfferResponse>('/offers', data)
-    .then(response => {
-      console.log('[createOffer] Response status:', response.status);
-      console.log('[createOffer] Response data:', response.data);
-      return response;
-    })
-    .catch(error => {
-      console.error('[createOffer] API error:', error);
-      console.error('[createOffer] Error response:', error.response);
-      throw error;
-    });
+/**
+ * Request body for POST /offers per yapbay-api/src/schemas/offers.ts:
+ *   - amounts are decimal strings
+ *   - rate_adjustment is number on request (responses widen to string)
+ *   - creator_account_id REQUIRED
+ */
+export type CreateOfferRequest = {
+  creator_account_id: number;
+  offer_type: 'BUY' | 'SELL';
+  token?: string;
+  fiat_currency?: string;
+  min_amount: string;
+  max_amount?: string;
+  total_available_amount?: string;
+  rate_adjustment?: number;
+  terms?: string;
+  escrow_deposit_time_limit?: string | { minutes: number };
+  fiat_payment_time_limit?: string | { minutes: number };
 };
+
+export const createOffer = (data: CreateOfferRequest) =>
+  api.post<CreateOfferResponse>('/offers', data);
 
 // Define the actual API response structure
 interface OffersResponse {
@@ -221,98 +228,89 @@ interface TradesResponse {
   trades: Trade[];
 }
 
-export const getOffers = (params?: { type?: string; token?: string; owner?: string }) =>
-  api.get<OffersResponse>('/offers', { params });
+/**
+ * GET /offers — list offers with optional filters and pagination.
+ *
+ * Pagination params per yapbay-api/src/schemas/primitives/pagination.ts:
+ *   limit: 1..100 (default 25), offset: 0..100_000 (default 0).
+ */
+export const getOffers = (params?: {
+  type?: string;
+  token?: string;
+  owner?: string;
+  limit?: number;
+  offset?: number;
+}) => api.get<OffersResponse>('/offers', { params });
 
 export const getOfferById = (
   id: number // Use number ID to match actual API
 ) => api.get<GetOfferResponse>(`/offers/${id}`);
 
-export const updateOffer = (
-  id: number,
-  data: Partial<Omit<Offer, 'id' | 'creator_account_id' | 'created_at' | 'updated_at'>>
-) => {
-  console.log('[updateOffer] Base API call - id:', id);
-  console.log('[updateOffer] Data being sent:', data);
-  console.log('[updateOffer] Current headers:', api.defaults.headers.common);
-
-  return api
-    .put<UpdateOfferResponse>(`/offers/${id}`, data)
-    .then(response => {
-      console.log('[updateOffer] Response status:', response.status);
-      console.log('[updateOffer] Response data:', response.data);
-      return response;
-    })
-    .catch(error => {
-      console.error('[updateOffer] API error:', error);
-      console.error('[updateOffer] Error response:', error.response);
-      console.error('[updateOffer] Error response data:', error.response?.data);
-      console.error('[updateOffer] Error response status:', error.response?.status);
-      throw error;
-    });
+/**
+ * Request body for PUT /offers/:id per yapbay-api/src/schemas/offers.ts.
+ * All fields optional; backend strict-rejects creator_account_id, id,
+ * timestamps, network_id (use COALESCE on supplied fields only).
+ */
+export type UpdateOfferRequest = Partial<Omit<CreateOfferRequest, 'creator_account_id'>> & {
+  offer_type?: 'BUY' | 'SELL';
 };
+
+export const updateOffer = (id: number, data: UpdateOfferRequest) =>
+  api.put<UpdateOfferResponse>(`/offers/${id}`, data);
 
 export const deleteOffer = (
   id: number // Use number ID to match actual API
 ) => api.delete<{ message: string }>(`/offers/${id}`);
 
-// Network-aware offer API functions
-export const createOfferWithNetwork = (
-  networkName: string,
-  data: Partial<Omit<Offer, 'id' | 'creator_account_id' | 'created_at' | 'updated_at'>>
-) => {
-  console.log('[createOfferWithNetwork] Creating offer with network:', networkName);
-  console.log('[createOfferWithNetwork] Offer data:', data);
-
-  return withNetworkContext(networkName, () => {
-    console.log('[createOfferWithNetwork] Inside withNetworkContext, calling createOffer');
-    return createOffer(data);
-  });
-};
+// Network-aware offer API functions. Each one carries X-Network-Name as a
+// per-request header so concurrent callers with different networks can't
+// race on a shared default (see networkHeaders comment above).
+export const createOfferWithNetwork = (networkName: string, data: CreateOfferRequest) =>
+  api.post<CreateOfferResponse>('/offers', data, networkHeaders(networkName));
 
 export const getOffersWithNetwork = (
   networkName: string,
-  params?: { type?: string; token?: string; owner?: string }
-) => withNetworkContext(networkName, () => getOffers(params));
+  params?: { type?: string; token?: string; owner?: string; limit?: number; offset?: number }
+) => api.get<OffersResponse>('/offers', { params, ...networkHeaders(networkName) });
 
 export const getOfferByIdWithNetwork = (networkName: string, id: number) =>
-  withNetworkContext(networkName, () => getOfferById(id));
+  api.get<GetOfferResponse>(`/offers/${id}`, networkHeaders(networkName));
 
 export const updateOfferWithNetwork = (
   networkName: string,
   id: number,
-  data: Partial<Omit<Offer, 'id' | 'creator_account_id' | 'created_at' | 'updated_at'>>
-) => withNetworkContext(networkName, () => updateOffer(id, data));
+  data: UpdateOfferRequest,
+) => api.put<UpdateOfferResponse>(`/offers/${id}`, data, networkHeaders(networkName));
 
 export const deleteOfferWithNetwork = (networkName: string, id: number) =>
-  withNetworkContext(networkName, () => deleteOffer(id));
+  api.delete<{ message: string }>(`/offers/${id}`, networkHeaders(networkName));
 
 // Trades API
-// Define TradeCreateData if different from Partial<Trade>
+//
+// Response shapes per yapbay-api/src/schemas/trades.ts:
+//   POST /trades     -> 201 { network, trade }
+//   GET  /trades/:id ->     { network, trade }
+//   GET  /trades/my  ->     { network, trades }
 type TradeCreateData = { leg1_offer_id: number } & Partial<
   Omit<Trade, 'id' | 'created_at' | 'updated_at'>
 >;
-export const createTrade = (data: TradeCreateData) => api.post<Trade>('/trades', data); // Return full Trade object
+
+interface TradeWrapper {
+  network: string;
+  trade: Trade;
+}
+
+export const createTrade = (data: TradeCreateData) =>
+  api.post<TradeWrapper>('/trades', data);
 
 export const getTrades = (params?: { status?: string; user?: string }) =>
   api.get<Trade[]>('/trades', { params });
 
-export const getMyTrades = () => {
-  return api
-    .get<TradesResponse>('/trades/my')
-    .then(response => {
-      console.log('[getMyTrades] API response:', response.data);
-      return response;
-    })
-    .catch(error => {
-      console.error('[getMyTrades] API error:', error);
-      throw error;
-    });
-};
+/** GET /trades/my — paginated; defaults limit=25, offset=0. */
+export const getMyTrades = (params?: { limit?: number; offset?: number }) =>
+  api.get<TradesResponse>('/trades/my', { params });
 
-export const getTradeById = (
-  id: number // Use number ID to match actual API
-) => api.get<Trade>(`/trades/${id}`);
+export const getTradeById = (id: number) => api.get<TradeWrapper>(`/trades/${id}`);
 
 // Define TradeUpdateData if different from Partial<Trade>
 type TradeUpdateData = Partial<Pick<Trade, 'overall_status'>>;
@@ -323,163 +321,88 @@ export const markFiatPaid = (id: number) =>
   api.put<{ id: number }>(`/trades/${id}`, { fiat_paid: true });
 
 // Escrow API
-export interface EscrowResponse {
-  transaction: string; // Base64-encoded serialized transaction
-  escrow_address: string; // Escrow PDA
-}
+//
+// NOTE: the legacy POST endpoints (/escrows/fund, /escrows/release,
+// /escrows/cancel, /escrows/dispute, /escrows/mark-fiat-paid) and the
+// fetch-by-tradeId GET were stale scaffolding — they were never wired up
+// in yapbay-api (verified via `git log -S` across the repo's full
+// history). The on-chain lifecycle is implemented client-side in
+// `src/services/chainService.ts` via the Anchor program; only the
+// recording POST below remains.
 
 /**
- * Records an escrow that was created on the blockchain
- * @param data Object containing escrow recording parameters
- * @param data.trade_id Trade ID (must be an integer)
- * @param data.transaction_hash Transaction hash of the blockchain transaction (EVM)
- * @param data.signature Transaction signature (Solana)
- * @param data.escrow_id Escrow ID (must be a number)
- * @param data.seller Seller's wallet address
- * @param data.buyer Buyer's wallet address
- * @param data.amount Crypto amount (supports decimal values, e.g. 22.22)
- * @param data.sequential Optional: Whether this is a sequential escrow
- * @param data.sequential_escrow_address Optional: Address of the sequential escrow
- * @param data.program_id Optional: Solana program ID
- * @param data.escrow_pda Optional: Solana PDA address
- * @param data.escrow_token_account Optional: Solana token account
- * @param data.trade_onchain_id Optional: Solana trade ID
- * @returns Promise with escrow recording response
+ * POST /escrows/record response.
+ * Shape matches yapbay-api/src/schemas/escrows.ts `escrowRecordResponseSchema`.
  */
-export const recordEscrow = (data: {
+export type RecordEscrowResponse = {
+  success: true;
+  /** Blockchain escrow ID — STRING (hex for EVM, u64 decimal for Solana). */
+  escrowId: string;
+  escrowDbId: number; // Database primary key for the escrow record
+  txHash: string;
+  networkFamily: 'evm' | 'solana';
+  blockExplorerUrl: string;
+};
+
+/**
+ * Solana variant of POST /escrows/record.
+ *
+ * Per Design Invariant 5: per-family request shapes are separate types,
+ * not optional-field unions. Backend strict-rejects EVM fields on Solana
+ * requests and vice versa. Mirrors `solanaEscrowRecordSchema` in
+ * yapbay-api/src/schemas/escrows.ts.
+ */
+export type RecordSolanaEscrowRequest = {
   trade_id: number;
-  transaction_hash?: string; // EVM
-  signature?: string; // Solana
-  escrow_id: number;
+  signature: string;
+  escrow_id: string;
   seller: string;
   buyer: string;
-  amount: number;
+  amount: string;
+  program_id: string;
+  escrow_pda: string;
+  escrow_token_account: string;
+  trade_onchain_id: string;
   sequential?: boolean;
   sequential_escrow_address?: string;
-  // Solana-specific fields
-  program_id?: string;
-  escrow_pda?: string;
-  escrow_token_account?: string;
-  trade_onchain_id?: string;
-}) =>
-  api.post<{
-    success: boolean;
-    escrowId: number; // Blockchain escrow ID
-    escrowDbId: number; // Database primary key for the escrow record
-    txHash: string;
-    networkFamily: string;
-    blockExplorerUrl: string;
-  }>('/escrows/record', data);
-
-/**
- * Funds an existing escrow
- * @param data Object containing escrow funding parameters
- * @param data.escrow_id Escrow ID (must be an integer)
- * @param data.trade_id Trade ID (must be an integer)
- * @param data.seller Seller's wallet address
- * @param data.seller_token_account Seller's token account
- * @param data.token_mint Token mint address
- * @param data.amount Crypto amount (supports decimal values, e.g. 22.22)
- * @returns Promise with escrow funding response
- */
-export const fundEscrow = (data: {
-  escrow_id: number;
-  trade_id: number;
-  seller: string;
-  seller_token_account: string;
-  token_mint: string;
-  amount: number;
-}) => api.post<EscrowResponse>('/escrows/fund', data);
-
-export const getEscrow = (tradeId: number) => api.get<Escrow>(`/escrows/${tradeId}`);
-
-export const getMyEscrows = () => {
-  return api
-    .get<Escrow[]>('/escrows/my')
-    .then(response => {
-      console.log('[getMyEscrows] API response:', response.data);
-      return response;
-    })
-    .catch(error => {
-      console.error('[getMyEscrows] API error:', error);
-      throw error;
-    });
 };
 
-/**
- * Releases an escrow and transfers funds to the buyer
- * @param data Object containing escrow release parameters
- * @param data.escrow_id Escrow ID (must be an integer)
- * @param data.trade_id Trade ID (must be an integer)
- * @param data.authority Optional: Authority's wallet address
- * @param data.buyer_token_account Optional: Buyer's token account
- * @param data.arbitrator_token_account Optional: Arbitrator's token account
- * @param data.sequential_escrow_token_account Optional: Sequential escrow token account
- * @param data.tx_hash Optional: Transaction hash if released on-chain
- * @param data.block_number Optional: Block number if released on-chain
- * @returns Promise with escrow release response
- */
-export const releaseEscrow = (data: {
-  escrow_id: number;
+/** EVM variant of POST /escrows/record (mirrors `evmEscrowRecordSchema`). */
+export type RecordEvmEscrowRequest = {
   trade_id: number;
-  authority?: string;
-  buyer_token_account?: string;
-  arbitrator_token_account?: string;
-  sequential_escrow_token_account?: string;
-  tx_hash?: string;
-  block_number?: number;
-}) => api.post<EscrowResponse>('/escrows/release', data);
-
-/**
- * Cancels an escrow and returns funds to the seller
- * @param data Object containing escrow cancellation parameters
- * @param data.escrow_id Escrow ID (must be an integer)
- * @param data.trade_id Trade ID (must be an integer)
- * @param data.seller Seller's wallet address
- * @param data.authority Authority's wallet address
- * @param data.seller_token_account Optional: Seller's token account
- * @param data.tx_hash Optional: Transaction hash if cancelled on-chain
- * @param data.block_number Optional: Block number if cancelled on-chain
- * @returns Promise with escrow cancellation response
- */
-export const cancelEscrow = (data: {
-  escrow_id: number;
-  trade_id: number;
+  transaction_hash: string;
+  escrow_id: string;
   seller: string;
-  authority: string;
-  seller_token_account?: string;
-  tx_hash?: string;
-  block_number?: number;
-}) => api.post<EscrowResponse>('/escrows/cancel', data);
+  buyer: string;
+  amount: string;
+  sequential?: boolean;
+  sequential_escrow_address?: string;
+};
 
-/**
- * Initiates a dispute for an escrow
- * @param data Object containing escrow dispute parameters
- * @param data.escrow_id Escrow ID (must be an integer)
- * @param data.trade_id Trade ID (must be an integer)
- * @param data.disputing_party Disputing party's wallet address
- * @param data.disputing_party_token_account Disputing party's token account
- * @param data.evidence_hash Optional: Hash of evidence
- * @param data.tx_hash Optional: Transaction hash if disputed on-chain
- * @param data.block_number Optional: Block number if disputed on-chain
- * @returns Promise with escrow dispute response
- */
-export const disputeEscrow = (data: {
-  escrow_id: number;
-  trade_id: number;
-  disputing_party: string;
-  disputing_party_token_account: string;
-  evidence_hash?: string;
-  tx_hash?: string;
-  block_number?: number;
-}) => api.post<EscrowResponse>('/escrows/dispute', data);
-
-// Add this function to handle marking trades as paid
-export const markTradeFiatPaid = (tradeId: number) => {
-  return api.post<{ message: string }>(`/escrows/mark-fiat-paid`, {
-    trade_id: tradeId,
+export const recordSolanaEscrow = (
+  data: RecordSolanaEscrowRequest,
+  idempotencyKey: string,
+) => {
+  // Per Design Invariant 1: key minted at user-intent time, threaded here.
+  assertIdempotencyKey(idempotencyKey);
+  return api.post<RecordEscrowResponse>('/escrows/record', data, {
+    headers: { 'Idempotency-Key': idempotencyKey },
   });
 };
+
+export const recordEvmEscrow = (
+  data: RecordEvmEscrowRequest,
+  idempotencyKey: string,
+) => {
+  assertIdempotencyKey(idempotencyKey);
+  return api.post<RecordEscrowResponse>('/escrows/record', data, {
+    headers: { 'Idempotency-Key': idempotencyKey },
+  });
+};
+
+/** GET /escrows/my — paginated; defaults limit=25, offset=0. */
+export const getMyEscrows = (params?: { limit?: number; offset?: number }) =>
+  api.get<Escrow[]>('/escrows/my', { params });
 
 /**
  * Records a blockchain transaction
@@ -511,8 +434,9 @@ export const recordTransaction = (data: {
   status?: 'PENDING' | 'SUCCESS' | 'FAILED';
   network_family?: 'evm' | 'solana';
   metadata?: Record<string, string>;
-}) => {
-  console.log('[recordTransaction] Sending data to API:', data);
+}, idempotencyKey: string) => {
+  // Per Design Invariant 1: key minted at user-intent time, threaded here.
+  assertIdempotencyKey(idempotencyKey);
   return api.post<{
     success: boolean;
     transactionId: number;
@@ -520,7 +444,9 @@ export const recordTransaction = (data: {
     signature?: string;
     blockNumber?: number;
     slot?: number;
-  }>('/transactions/', data);
+  }>('/transactions/', data, {
+    headers: { 'Idempotency-Key': idempotencyKey },
+  });
 };
 
 /**
@@ -555,6 +481,31 @@ export const getUserTransactions = (params?: {
 export const getPrices = () => api.get<PricesResponse>('/prices');
 
 // Health API
+//
+// yapbay-api split health into three endpoints (commit 251a93d):
+//   - /health/live  — cheap liveness, always 200 if process is alive
+//   - /health/ready — readiness with { status, checks } (200 / 503)
+//   - /health       — full aggregate (table counts, RPC ping, version)
+//
+// Use getLiveness for indicator dots; getHealth only for the Status page.
+
+export type LivenessResponse = {
+  status: 'ok';
+  timestamp: string;
+};
+
+export type ReadinessResponse = {
+  status: 'ok' | 'degraded' | 'down';
+  timestamp: string;
+  checks: {
+    db?: { status: string };
+    listener?: { status: string };
+    rpc?: { status: string };
+  };
+};
+
+export const getLiveness = () => api.get<LivenessResponse>('/health/live');
+export const getReadiness = () => api.get<ReadinessResponse>('/health/ready');
 export const getHealth = () => api.get<HealthResponse>('/health');
 
 // Export the api instance for use elsewhere

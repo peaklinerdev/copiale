@@ -5,7 +5,8 @@ import {
   getOfferByIdWithNetwork,
   updateOfferWithNetwork,
   deleteOfferWithNetwork,
-  Offer,
+  CreateOfferRequest,
+  UpdateOfferRequest,
 } from '@/api';
 
 /**
@@ -15,7 +16,7 @@ import {
  */
 export const useNetworkAwareOffers = (networkName: string = 'solana-devnet') => {
   const createOffer = useCallback(
-    (data: Partial<Omit<Offer, 'id' | 'creator_account_id' | 'created_at' | 'updated_at'>>) => {
+    (data: CreateOfferRequest) => {
       console.log('[useNetworkAwareOffers] createOffer called with network:', networkName);
       console.log('[useNetworkAwareOffers] createOffer data:', data);
       return createOfferWithNetwork(networkName, data);
@@ -35,10 +36,7 @@ export const useNetworkAwareOffers = (networkName: string = 'solana-devnet') => 
   );
 
   const updateOffer = useCallback(
-    (
-      id: number,
-      data: Partial<Omit<Offer, 'id' | 'creator_account_id' | 'created_at' | 'updated_at'>>
-    ) => updateOfferWithNetwork(networkName, id, data),
+    (id: number, data: UpdateOfferRequest) => updateOfferWithNetwork(networkName, id, data),
     [networkName]
   );
 

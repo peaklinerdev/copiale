@@ -10,14 +10,32 @@ export const abbreviateWallet = (address: string): string => {
 };
 
 /**
- * Formats a rate adjustment value as a percentage string with +/- sign
+ * Formats a rate adjustment value as a percentage string with +/- sign.
+ *
+ * Accepts string (canonical wire format from API responses, where pg
+ * DECIMAL serializes as string) or number (legacy / form input).
  * @param rate The rate adjustment value (1.0 = no adjustment)
  * @returns Formatted rate string (e.g., "+5.00%", "-3.25%", "0%")
  */
-export const formatRate = (rate: number): string => {
-  if (rate > 1) return `+${((rate - 1) * 100).toFixed(2)}%`;
-  if (rate < 1) return `-${((1 - rate) * 100).toFixed(2)}%`;
+export const formatRate = (rate: number | string): string => {
+  // Display-side coercion is allowed in this helper.
+  const r = typeof rate === 'string' ? Number(rate) : rate;
+  if (!Number.isFinite(r)) return '0%';
+  if (r > 1) return `+${((r - 1) * 100).toFixed(2)}%`;
+  if (r < 1) return `-${((1 - r) * 100).toFixed(2)}%`;
   return '0%';
+};
+
+/**
+ * Direction of a rate adjustment for UI styling (color, icon).
+ * Accepts the same input shapes as formatRate.
+ */
+export const rateAdjustmentDirection = (
+  rate: number | string,
+): 'up' | 'down' | 'flat' => {
+  const r = typeof rate === 'string' ? Number(rate) : rate;
+  if (!Number.isFinite(r) || r === 1) return 'flat';
+  return r > 1 ? 'up' : 'down';
 };
 
 /**

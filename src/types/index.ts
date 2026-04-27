@@ -1,4 +1,15 @@
 // src/types/index.ts
+//
+// Hand-written row types co-exist with generated OpenAPI types
+// (./api.generated). Use the generated `paths` / `components` for request
+// bodies and simple responses; keep the hand-written interfaces for joined
+// rows (e.g. Trade with both legs) the OpenAPI spec does not register.
+//
+// M1: generated types added; row types still numeric for amounts/escrow_id.
+// M3 will narrow those to string per Design Invariants 3 + 4.
+
+export type { components, paths } from './api.generated';
+
 export interface Account {
   id: number;
   wallet_address: string;
@@ -22,10 +33,17 @@ export interface Offer {
   network_id?: number; // Added for multi-network support
   offer_type: 'BUY' | 'SELL';
   token: string;
-  min_amount: number;
-  max_amount: number;
-  total_available_amount: number;
-  rate_adjustment: number;
+  /** USDC amount as decimal string (Design Invariant 3). */
+  min_amount: string;
+  /** USDC amount as decimal string. */
+  max_amount: string;
+  /** USDC amount as decimal string. */
+  total_available_amount: string;
+  /**
+   * Rate multiplier as decimal string in responses (pg DECIMAL serializes
+   * as string). Requests still accept number — convert at form boundary.
+   */
+  rate_adjustment: string;
   terms: string;
   escrow_deposit_time_limit: { minutes: number } | string; // Support both object and string formats
   fiat_payment_time_limit: { minutes: number } | string; // Support both object and string formats

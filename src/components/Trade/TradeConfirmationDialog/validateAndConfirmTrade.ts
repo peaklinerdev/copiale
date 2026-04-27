@@ -1,5 +1,6 @@
 import { Offer } from '@/api';
 import { formatNumber } from '@/lib/utils';
+import { compareUsdcStrings } from '@/utils/money-display';
 
 interface ValidateTradeResult {
   isValid: boolean;
@@ -15,32 +16,39 @@ export const validateTrade = (amount: string, offer: Offer): ValidateTradeResult
     error: null,
   };
 
-  if (!amount || parseFloat(amount) <= 0) {
+  if (!amount) {
     result.isValid = false;
     result.error = 'Please enter a valid amount';
     return result;
   }
 
-  const numAmount = parseFloat(amount);
-
-  // Validate against min/max offer amounts
-  if (numAmount < offer.min_amount) {
+  // Compare via scaled BigInt — no float drift, exact decimal comparison.
+  try {
+    if (compareUsdcStrings(amount, '0') <= 0) {
+      result.isValid = false;
+      result.error = 'Please enter a valid amount';
+      return result;
+    }
+    if (compareUsdcStrings(amount, offer.min_amount) < 0) {
+      result.isValid = false;
+      result.error = `Amount must be at least ${formatNumber(offer.min_amount)} ${offer.token}`;
+      return result;
+    }
+    if (compareUsdcStrings(amount, offer.max_amount) > 0) {
+      result.isValid = false;
+      result.error = `Amount cannot exceed ${formatNumber(offer.max_amount)} ${offer.token}`;
+      return result;
+    }
+    if (compareUsdcStrings(amount, offer.total_available_amount) > 0) {
+      result.isValid = false;
+      result.error = `Amount exceeds available amount of ${formatNumber(
+        offer.total_available_amount,
+      )} ${offer.token}`;
+      return result;
+    }
+  } catch {
     result.isValid = false;
-    result.error = `Amount must be at least ${formatNumber(offer.min_amount)} ${offer.token}`;
-    return result;
-  }
-
-  if (numAmount > offer.max_amount) {
-    result.isValid = false;
-    result.error = `Amount cannot exceed ${formatNumber(offer.max_amount)} ${offer.token}`;
-    return result;
-  }
-
-  if (numAmount > offer.total_available_amount) {
-    result.isValid = false;
-    result.error = `Amount exceeds available amount of ${formatNumber(
-      offer.total_available_amount
-    )} ${offer.token}`;
+    result.error = 'Please enter a valid amount';
     return result;
   }
 
@@ -48,7 +56,15 @@ export const validateTrade = (amount: string, offer: Offer): ValidateTradeResult
 };
 
 /**
- * Validate and confirm trade if valid
+ * Validate and confirm trade if valid.
+ *
+ * The amount string has already been validated against the offer bounds
+ * via `compareUsdcStrings` (BigInt-scaled exact comparison). Pass it
+ * through unchanged — running it through `parseFloat` and `.toString()`
+ * here would introduce a float roundtrip the rest of the money path is
+ * specifically designed to avoid (Design Invariant 3). Final wire-format
+ * conversion happens in `tradeService.ts` via `toUsdcString` /
+ * `toFiatString`, which round-trips through bigint-scaled decimals.
  */
 export const confirmTrade = (
   amount: string,
@@ -64,21 +80,6 @@ export const confirmTrade = (
     return false;
   }
 
-  const numAmount = parseFloat(amount);
-  // Pass the amount as a decimal string directly
-  const formattedAmount = numAmount.toString();
-
-  // Round fiat amount to 2 decimal places for fiat currency
-  const roundedFiatAmount = Math.round(fiatAmount * 100) / 100;
-
-  // Log the data being sent (using API parameter names)
-  console.log('Initiating trade with data:', {
-    leg1_offer_id: offer.id,
-    leg1_crypto_amount: formattedAmount,
-    leg1_fiat_amount: roundedFiatAmount,
-  });
-
-  // Call onConfirm with parameters matching the updated prop signature
-  onConfirm(offer.id, formattedAmount, roundedFiatAmount);
+  onConfirm(offer.id, amount, fiatAmount);
   return true;
 };

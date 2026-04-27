@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Offer } from '@/api';
 import { formatNumber } from '@/lib/utils';
+import { compareUsdcStrings } from '@/utils/money-display';
 
 interface UseAmountInputResult {
   amount: string;
@@ -22,17 +23,24 @@ export const useAmountInput = (offer: Offer, isOpen: boolean): UseAmountInputRes
     (value: string): string | null => {
       if (!value) return null;
 
-      const numAmount = parseFloat(value);
-      if (isNaN(numAmount)) return null;
-
-      if (numAmount < offer.min_amount) {
-        return `Amount must be at least ${formatNumber(offer.min_amount)} ${offer.token}`;
-      } else if (numAmount > offer.max_amount) {
-        return `Amount cannot exceed ${formatNumber(offer.max_amount)} ${offer.token}`;
-      } else if (numAmount > offer.total_available_amount) {
-        return `Amount exceeds available amount of ${formatNumber(offer.total_available_amount)} ${
-          offer.token
-        }`;
+      // Normalize the user's input to a decimal string and compare exactly
+      // against offer min/max/total via scaled BigInt — no float drift.
+      // If the input isn't a valid decimal, defer error to form validation.
+      try {
+        if (compareUsdcStrings(value, offer.min_amount) < 0) {
+          return `Amount must be at least ${formatNumber(offer.min_amount)} ${offer.token}`;
+        }
+        if (compareUsdcStrings(value, offer.max_amount) > 0) {
+          return `Amount cannot exceed ${formatNumber(offer.max_amount)} ${offer.token}`;
+        }
+        if (compareUsdcStrings(value, offer.total_available_amount) > 0) {
+          return `Amount exceeds available amount of ${formatNumber(offer.total_available_amount)} ${
+            offer.token
+          }`;
+        }
+      } catch {
+        // Malformed string; let the form-level regex error path handle it.
+        return null;
       }
 
       return null;
@@ -67,8 +75,8 @@ export const useAmountInput = (offer: Offer, isOpen: boolean): UseAmountInputRes
   // Set a default amount when the dialog opens
   useEffect(() => {
     if (isOpen && offer && offer.min_amount) {
-      setAmount(offer.min_amount.toString());
-      setAmountError(validateAmount(offer.min_amount.toString()));
+      setAmount(offer.min_amount);
+      setAmountError(validateAmount(offer.min_amount));
     }
   }, [isOpen, offer, validateAmount]);
 

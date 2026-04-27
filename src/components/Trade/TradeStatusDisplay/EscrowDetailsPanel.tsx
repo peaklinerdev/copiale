@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { microToUsdcString } from '@/utils/amounts';
 import { useEscrowDetails, getEscrowStateName, EscrowState } from '@/hooks/useEscrowDetails';
 import { checkAndFundEscrow } from '@/services/chainService';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
@@ -109,17 +110,24 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
     return `${address.substring(0, 4)}...${address.substring(address.length - 4)}`;
   };
 
-  // Format amount for display
+  // Format amount for display.
+  // The on-chain value is u64 micro-USDC. Use BN.toString() (or fallback)
+  // to get a decimal string, then microToUsdcString for the canonical
+  // 6dp formatting — never coerce u64 to JS number directly (Invariant 4).
   const formatAmount = (amount: unknown) => {
     if (!amount) return '0';
 
-    // Convert BN to number if needed
-    const amountNumber =
-      typeof amount === 'object' && amount && 'toNumber' in amount
-        ? (amount as { toNumber: () => number }).toNumber()
-        : Number(amount);
-
-    return (amountNumber / 1_000_000).toFixed(6); // USDC has 6 decimals
+    let microStr: string;
+    if (typeof amount === 'object' && amount && 'toString' in amount) {
+      microStr = (amount as { toString: () => string }).toString();
+    } else {
+      microStr = String(amount);
+    }
+    try {
+      return microToUsdcString(BigInt(microStr));
+    } catch {
+      return '0';
+    }
   };
 
   return (

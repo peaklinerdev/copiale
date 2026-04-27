@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Offer } from '@/api';
 import { formatNumber } from '@/lib/utils';
+import { numericValue } from '@/utils/money-display';
 import { ExternalLink } from 'lucide-react';
 
 // Import our custom hooks and components
@@ -70,8 +71,9 @@ const TradeConfirmationDialog = ({
     loading: usdcLoading,
     error: usdcError,
   } = useSellerUsdcBalance(isSeller ? primaryWallet?.address : undefined, isOpen, amount);
-  const amountToEscrow = parseFloat(amount);
-  const usdcBalanceNum = usdcBalance !== null ? Number(usdcBalance) / 1e6 : null;
+  // Display-side numeric values (coercion delegated to money-display helper).
+  const amountToEscrow = numericValue(amount);
+  const usdcBalanceNum = usdcBalance !== null ? numericValue(usdcBalance) / 1e6 : null;
   const insufficient =
     isSeller &&
     usdcBalanceNum !== null &&
@@ -132,34 +134,34 @@ const TradeConfirmationDialog = ({
               <span className="font-medium text-neutral-700">Rate Adjustment</span>
               <span
                 className={
-                  offer.rate_adjustment > 1
+                  numericValue(offer.rate_adjustment) > 1
                     ? 'text-green-600'
-                    : offer.rate_adjustment < 1
+                    : numericValue(offer.rate_adjustment) < 1
                     ? 'text-red-600'
                     : 'text-neutral-600'
                 }
               >
-                {offer.rate_adjustment > 1
-                  ? `+${((offer.rate_adjustment - 1) * 100).toFixed(2)}%`
-                  : offer.rate_adjustment < 1
-                  ? `-${((1 - offer.rate_adjustment) * 100).toFixed(2)}%`
+                {numericValue(offer.rate_adjustment) > 1
+                  ? `+${((numericValue(offer.rate_adjustment) - 1) * 100).toFixed(2)}%`
+                  : numericValue(offer.rate_adjustment) < 1
+                  ? `-${((1 - numericValue(offer.rate_adjustment)) * 100).toFixed(2)}%`
                   : '0%'}
               </span>
             </div>
             <div className="text-xs text-neutral-500 mt-1">
               {offer.offer_type === 'BUY'
                 ? `You are selling USDC at ${
-                    offer.rate_adjustment > 1
-                      ? `${((offer.rate_adjustment - 1) * 100).toFixed(2)}% above`
-                      : offer.rate_adjustment < 1
-                      ? `${((1 - offer.rate_adjustment) * 100).toFixed(2)}% below`
+                    numericValue(offer.rate_adjustment) > 1
+                      ? `${((numericValue(offer.rate_adjustment) - 1) * 100).toFixed(2)}% above`
+                      : numericValue(offer.rate_adjustment) < 1
+                      ? `${((1 - numericValue(offer.rate_adjustment)) * 100).toFixed(2)}% below`
                       : `the same as`
                   } the market price.`
                 : `You are buying USDC at ${
-                    offer.rate_adjustment > 1
-                      ? `${((offer.rate_adjustment - 1) * 100).toFixed(2)}% above`
-                      : offer.rate_adjustment < 1
-                      ? `${((1 - offer.rate_adjustment) * 100).toFixed(2)}% below`
+                    numericValue(offer.rate_adjustment) > 1
+                      ? `${((numericValue(offer.rate_adjustment) - 1) * 100).toFixed(2)}% above`
+                      : numericValue(offer.rate_adjustment) < 1
+                      ? `${((1 - numericValue(offer.rate_adjustment)) * 100).toFixed(2)}% below`
                       : `the same as`
                   } the market price.`}
             </div>

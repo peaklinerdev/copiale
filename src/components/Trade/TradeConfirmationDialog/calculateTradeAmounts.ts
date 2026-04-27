@@ -1,4 +1,5 @@
 import { Offer, PricesResponse } from '@/api';
+import { numericValue } from '@/utils/money-display';
 
 interface CalculateTradeAmountsResult {
   fiatAmount: number;
@@ -23,8 +24,8 @@ export const calculateTradeAmounts = (
   if (!priceData || !amount) return result;
 
   try {
-    const numAmount = parseFloat(amount);
-    if (isNaN(numAmount) || numAmount <= 0) {
+    const numAmount = numericValue(amount);
+    if (!Number.isFinite(numAmount) || numAmount <= 0) {
       return result;
     }
 
@@ -36,8 +37,17 @@ export const calculateTradeAmounts = (
       return result;
     }
 
-    // Apply rate adjustment from the offer
-    const adjustedPrice = parseFloat(basePrice) * offer.rate_adjustment;
+    // Apply rate adjustment from the offer.
+    // Display-side calculation: rate_adjustment ships as a string, coerce
+    // via the documented numericValue() helper. Bail with a clear error
+    // rather than letting NaN propagate to the dialog as "NaN USD".
+    const baseNum = numericValue(basePrice);
+    const rateNum = numericValue(offer.rate_adjustment);
+    if (!Number.isFinite(baseNum) || !Number.isFinite(rateNum)) {
+      result.error = 'Offer is missing a rate or price — refresh and try again.';
+      return result;
+    }
+    const adjustedPrice = baseNum * rateNum;
 
     // Calculate fiat amount
     result.fiatAmount = numAmount * adjustedPrice;

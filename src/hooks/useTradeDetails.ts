@@ -27,71 +27,58 @@ export function useTradeDetails(tradeId: number | null): UseTradeDetailsResult {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTradeDetails = async () => {
-      if (!tradeId) return;
+    if (!tradeId) return;
 
+    // Guard against late-resolving fetches clobbering newer state when
+    // tradeId changes or the component unmounts mid-flight.
+    let cancelled = false;
+
+    const fetchTradeDetails = async () => {
       setLoading(true);
       try {
-        // Fetch trade details
+        // M5: response shape is `{ network, trade }`.
         const tradeResponse = await getTradeById(tradeId);
-        console.log('[useTradeDetails] getTradeById response:', tradeResponse);
-        console.log('[useTradeDetails] response.data:', tradeResponse.data);
-
-        // Handle potential new API response structure with network wrapper
-        const tradeData =
-          (tradeResponse.data as { trade?: Trade } & Trade).trade || tradeResponse.data;
-        console.log('[useTradeDetails] extracted tradeData:', tradeData);
+        if (cancelled) return;
+        const tradeData = tradeResponse.data.trade;
         setTrade(tradeData);
 
-        // Fetch related offer
         if (tradeData.leg1_offer_id) {
           const offerResponse = await getOfferById(tradeData.leg1_offer_id);
-          console.log('[useTradeDetails] getOfferById response:', offerResponse);
-          console.log('[useTradeDetails] offer response.data:', offerResponse.data);
-          console.log('[useTradeDetails] offer response.data.offer:', offerResponse.data.offer);
-
+          if (cancelled) return;
           // Handle potential new API response structure with network wrapper
           const offerData = offerResponse.data.offer || offerResponse.data;
-          console.log('[useTradeDetails] extracted offerData:', offerData);
           setOffer(offerData);
 
-          // Fetch creator account
-          const creatorResponse = await getAccountById(offerData.creator_account_id);
-          console.log('[useTradeDetails] getAccountById response:', creatorResponse);
-          console.log('[useTradeDetails] creator response.data:', creatorResponse.data);
+          // Creator + buyer + seller accounts are independent — fetch in parallel.
+          const [creatorResponse, buyerResponse, sellerResponse] = await Promise.all([
+            getAccountById(offerData.creator_account_id),
+            tradeData.leg1_buyer_account_id
+              ? getAccountById(tradeData.leg1_buyer_account_id)
+              : Promise.resolve(null),
+            tradeData.leg1_seller_account_id
+              ? getAccountById(tradeData.leg1_seller_account_id)
+              : Promise.resolve(null),
+          ]);
+          if (cancelled) return;
 
-          // The API returns { data: Account } directly
-          const creatorData = creatorResponse.data;
-          console.log('[useTradeDetails] extracted creatorData:', creatorData);
-          setCreator(creatorData);
-
-          // Fetch buyer account
-          if (tradeData.leg1_buyer_account_id) {
-            const buyerResponse = await getAccountById(tradeData.leg1_buyer_account_id);
-            const buyerData = buyerResponse.data;
-            setBuyerAccount(buyerData);
-            // console.log('[DEBUG] Fetched buyer account:', buyerData);
-          }
-
-          // Fetch seller account
-          if (tradeData.leg1_seller_account_id) {
-            const sellerResponse = await getAccountById(tradeData.leg1_seller_account_id);
-            const sellerData = sellerResponse.data;
-            setSellerAccount(sellerData);
-            // console.log('[DEBUG] Fetched seller account:', sellerData);
-          }
-
-          // console.log(`Trade state: ${tradeData.leg1_state}`);
+          setCreator(creatorResponse.data);
+          if (buyerResponse) setBuyerAccount(buyerResponse.data);
+          if (sellerResponse) setSellerAccount(sellerResponse.data);
         }
       } catch (err) {
+        if (cancelled) return;
         const errorMessage = handleApiError(err, 'Unknown error');
         toast.error(`Failed to load trade details: ${errorMessage}`);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchTradeDetails();
+
+    return () => {
+      cancelled = true;
+    };
   }, [tradeId]);
 
   return {

@@ -2,7 +2,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Trade, Offer, Account } from '@/api';
 import { formatNumber } from '@/lib/utils';
-import { formatRate } from '@/utils/stringUtils'; // Added import
+import { formatRate } from '@/utils/stringUtils';
+import { numericValue } from '@/utils/money-display';
 import { useState } from 'react'; // Added import
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'; // Added import
 import { ChevronDown, ChevronUp } from 'lucide-react'; // Added import
@@ -35,7 +36,9 @@ function TradeDetailsCard({ trade, offer, userRole, counterparty }: TradeDetails
     return `${wallet.substring(0, 6)}...${wallet.substring(wallet.length - 4)}`;
   };
 
-  const rateAdjustment = offer?.rate_adjustment || 1;
+  // Display-side branching: coerce the canonical decimal-string to number
+  // for comparison against the 1.0 baseline.
+  const rateAdjustment = numericValue(offer?.rate_adjustment ?? 1);
   const token = trade.leg1_crypto_token || offer?.token || 'USDC';
   const action = userRole === 'buyer' ? 'buying' : 'selling';
   const marketPosition = rateAdjustment > 1 ? 'above' : rateAdjustment < 1 ? 'below' : 'at';

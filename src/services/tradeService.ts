@@ -2,28 +2,31 @@ import {
   createTrade,
   Offer,
   Trade,
-  recordEscrow,
+  recordSolanaEscrow,
+  RecordSolanaEscrowRequest,
   markFiatPaid,
   getTradeById,
   recordTransaction,
   getAccountById,
+  newIdempotencyKey,
 } from '../api';
 import { buildTransactionData } from '../utils/transactionUtils.js';
+import { toEscrowUsdcString, toUsdcString, toFiatString } from '../utils/amounts';
 
 // Custom interface for create trade request that matches API expectations
 interface CreateTradeRequest {
   leg1_offer_id: number;
-  leg1_crypto_amount: number;
-  leg1_fiat_amount: number;
+  /** USDC decimal string (Design Invariant 3). */
+  leg1_crypto_amount: string;
+  /** Fiat decimal string (Design Invariant 3). */
+  leg1_fiat_amount: string;
   from_fiat_currency: string;
   destination_fiat_currency: string;
 }
 
-// Interface for the actual API response structure
-interface CreateTradeResponse {
-  network: string;
-  trade: Trade;
-}
+// (Trade response unwrapping is now handled centrally via the typed
+// `TradeWrapper` in `src/api/index.ts`; the local response interface
+// previously declared here was retired in M5.)
 
 /**
  * Generates a unique escrow ID based on trade ID and sequence
@@ -48,33 +51,11 @@ function deriveSolanaAddresses(tradeId: number, escrowId: number) {
 
     const programId = new PublicKey(programIdString);
 
-    // Debug: Log the derivation parameters
-    console.log('[DEBUG] Deriving Solana addresses with:');
-    console.log('  programId:', programIdString);
-    console.log('  escrowId:', escrowId, '(type:', typeof escrowId, ')');
-    console.log('  tradeId:', tradeId, '(type:', typeof tradeId, ')');
-
-    // Debug: Show the actual seeds being used
-    const escrowIdBuffer = Buffer.alloc(8);
-    escrowIdBuffer.writeBigUInt64LE(BigInt(escrowId), 0);
-    const tradeIdBuffer = Buffer.alloc(8);
-    tradeIdBuffer.writeBigUInt64LE(BigInt(tradeId), 0);
-
-    console.log('[DEBUG] Seed buffers:');
-    console.log('  "escrow" buffer:', Buffer.from('escrow').toString('hex'));
-    console.log('  escrowId buffer:', escrowIdBuffer.toString('hex'));
-    console.log('  tradeId buffer:', tradeIdBuffer.toString('hex'));
-
     // Derive escrow PDA
     const [escrowPda] = PDADerivation.deriveEscrowPDA(programId, escrowId, tradeId);
 
     // Derive escrow token account PDA
     const [escrowTokenAccount] = PDADerivation.deriveEscrowTokenPDA(programId, escrowPda);
-
-    // Debug: Log the derived addresses
-    console.log('[DEBUG] Derived Solana addresses:');
-    console.log('  escrowPda:', escrowPda.toString());
-    console.log('  escrowTokenAccount:', escrowTokenAccount.toString());
 
     return {
       program_id: programIdString,
@@ -144,25 +125,22 @@ export const startTrade = async ({
       throw new Error('Offer not found');
     }
 
+    // Per Design Invariant 3: amounts go on the wire as decimal strings.
+    // toUsdcString / toFiatString validate at the boundary.
     const tradeData: CreateTradeRequest = {
       leg1_offer_id: offerId,
-      leg1_crypto_amount: parseFloat(amount), // Convert to number for API
-      leg1_fiat_amount: fiatAmount, // Keep as number for API compatibility
+      leg1_crypto_amount: toUsdcString(amount),
+      leg1_fiat_amount: toFiatString(fiatAmount),
       from_fiat_currency: offer.fiat_currency,
       destination_fiat_currency: offer.fiat_currency,
     };
 
     const tradeResponse = await createTrade(
       tradeData as unknown as Parameters<typeof createTrade>[0]
-    ); // Type assertion to bypass interface mismatch
-    console.log('[TradeService] createTrade response:', tradeResponse);
-    console.log('[TradeService] response.data:', tradeResponse.data);
-    console.log('[TradeService] response.data.id:', tradeResponse.data.id);
+    );
 
-    // Handle potential new API response structure with network wrapper
-    const responseData = tradeResponse.data as CreateTradeResponse | Trade;
-    const tradeId = 'trade' in responseData ? responseData.trade.id : responseData.id;
-    console.log('[TradeService] extracted tradeId:', tradeId);
+    // M5: response shape is `{ network, trade }`.
+    const tradeId = tradeResponse.data.trade.id;
 
     if (primaryWallet) {
       // MVP: Escrow creation moved to TradePage to happen manually by user action
@@ -198,6 +176,9 @@ export const createTradeEscrow = async ({
   buyerAddress,
   sellerAddress,
 }: CreateEscrowParams) => {
+  // One key per user intent — reused across both POSTs in this flow.
+  // Backend disambiguates by (METHOD, URL, body fingerprint).
+  const idempotencyKey = newIdempotencyKey();
   try {
     // Show notification message using toast
     toast('Creating escrow on Solana blockchain...', {
@@ -207,44 +188,43 @@ export const createTradeEscrow = async ({
     // Generate unique escrow ID (first escrow for this trade)
     const escrowId = generateEscrowId(trade.id, 0);
 
-    console.log('[DEBUG] Generated escrow ID:', escrowId, 'for trade:', trade.id);
-
-    // Create the escrow transaction on the Solana blockchain
+    // Create the escrow transaction on the Solana blockchain.
+    // Validate amount as a string at the boundary, then coerce to number
+    // for the on-chain BN; under the 100 USDC escrow cap precision is safe.
+    const cryptoAmountStr = toEscrowUsdcString(trade.leg1_crypto_amount || '0');
     const txResult = await createEscrowTransaction(primaryWallet, {
       tradeId: trade.id,
       escrowId: escrowId, // Pass the pre-generated ID
       buyer: buyerAddress,
-      amount: parseFloat(trade.leg1_crypto_amount || '0'),
+      amount: Number(cryptoAmountStr),
       sequential: false,
       sequentialEscrowAddress: undefined,
       arbitrator: undefined, // Solana program handles arbitrator internally
     });
 
-    console.log('[DEBUG] Solana transaction result:', txResult);
-    console.log('[DEBUG] Solana transaction result keys:', Object.keys(txResult));
-
-    // Record the escrow in our backend
-    const recordEscrowData = {
+    // Record the escrow in our backend (Solana variant — Design Invariant 5).
+    // escrow_id and amount serialized as decimal strings per Invariants 3+4.
+    // The on-chain numeric escrowId is preserved locally for PDA derivation;
+    // only the wire body uses strings.
+    const solanaAddresses = deriveSolanaAddresses(trade.id, escrowId);
+    const recordEscrowData: RecordSolanaEscrowRequest = {
       trade_id: trade.id,
-      signature: txResult.txHash, // Use signature for Solana transactions
-      escrow_id: escrowId, // Use the pre-generated ID
+      signature: txResult.txHash,
+      escrow_id: escrowId.toString(),
       seller: sellerAddress,
       buyer: buyerAddress,
-      amount: parseFloat(trade.leg1_crypto_amount || '0'),
+      amount: toEscrowUsdcString(trade.leg1_crypto_amount || '0'),
       sequential: false,
       sequential_escrow_address: '11111111111111111111111111111111', // System Program address for non-sequential escrows
-      // Add Solana-specific fields - derive actual addresses using config and PDA utilities
-      // Use the same escrow ID and trade ID for consistency
-      ...deriveSolanaAddresses(trade.id, escrowId),
+      program_id: solanaAddresses.program_id,
+      escrow_pda: solanaAddresses.escrow_pda,
+      escrow_token_account: solanaAddresses.escrow_token_account,
+      trade_onchain_id: solanaAddresses.trade_onchain_id,
     };
 
-    console.log('[DEBUG] recordEscrow data being sent:', recordEscrowData);
-    console.log('[DEBUG] recordEscrow data keys:', Object.keys(recordEscrowData));
+    await recordSolanaEscrow(recordEscrowData, idempotencyKey);
 
-    await recordEscrow(recordEscrowData);
-
-    // Add null checks and default values for all potentially undefined string values
-    const leg1CryptoAmount = parseFloat(trade.leg1_crypto_amount || '0');
+    // Pass amount as canonical decimal string into the transaction record.
     const leg1CryptoToken = trade.leg1_crypto_token || 'USDC';
 
     // Record the transaction using the utility function for correct field mapping
@@ -255,7 +235,7 @@ export const createTradeEscrow = async ({
       transaction_type: 'CREATE_ESCROW',
       from_address: sellerAddress,
       to_address: recordEscrowData.escrow_pda, // Use the escrow PDA as the destination
-      amount: leg1CryptoAmount.toString(),
+      amount: cryptoAmountStr,
       token_type: leg1CryptoToken,
       status: 'SUCCESS',
       slot: Number(txResult.blockNumber), // Use blockNumber as slot for Solana
@@ -265,7 +245,7 @@ export const createTradeEscrow = async ({
         buyer: buyerAddress,
       },
     });
-    await recordTransaction(transactionData);
+    await recordTransaction(transactionData, idempotencyKey);
 
     // Show success message
     toast.success('Escrow created successfully!', {
@@ -297,6 +277,8 @@ export const createAndFundTradeEscrow = async ({
   buyerAddress,
   sellerAddress,
 }: CreateEscrowParams) => {
+  // One key per user intent, reused across recordEscrow + recordTransaction.
+  const idempotencyKey = newIdempotencyKey();
   let escrowResult;
   let fundResult;
 
@@ -314,11 +296,12 @@ export const createAndFundTradeEscrow = async ({
       throw new Error('Invalid escrow ID. Cannot proceed with funding.');
     }
 
-    // Then check and fund it with the confirmed escrow ID
-    // Type assertion since leg1_crypto_amount should never be undefined for a valid trade
+    // Then check and fund it with the confirmed escrow ID.
+    // Validate amount as a string at the boundary; chainService coerces to
+    // number for the on-chain BN.
     fundResult = await checkAndFundEscrow(primaryWallet, escrowResult.escrowId, {
       id: trade.id,
-      leg1_crypto_amount: parseFloat(trade.leg1_crypto_amount || '0'),
+      leg1_crypto_amount: Number(toEscrowUsdcString(trade.leg1_crypto_amount || '0')),
     });
 
     // Convert result to expected format
@@ -338,7 +321,7 @@ export const createAndFundTradeEscrow = async ({
           transaction_type: 'FUND_ESCROW',
           from_address: sellerAddress,
           to_address: solanaAddresses.escrow_pda, // Use the escrow PDA as the destination
-          amount: (trade.leg1_crypto_amount || 0).toString(),
+          amount: toEscrowUsdcString(trade.leg1_crypto_amount || '0'),
           token_type: trade.leg1_crypto_token || 'USDC',
           status: 'SUCCESS',
           slot: Number(txResult.blockNumber), // Use blockNumber as slot for Solana
@@ -348,35 +331,19 @@ export const createAndFundTradeEscrow = async ({
             buyer: buyerAddress,
           },
         });
-        await recordTransaction(transactionData);
+        await recordTransaction(transactionData, idempotencyKey);
       } catch (recordError) {
-        // Log the error but don't fail the entire transaction
+        // On-chain succeeded but recording POST failed.
+        // Per Design Invariant 2: do not retry past one bounded attempt
+        // (the axios interceptor handles 409 retry_conflict). The
+        // backend listener reconciles missing transaction rows from
+        // chain events, so we surface a soft warning here and proceed.
         console.error(
-          'Failed to record transaction, but escrow was funded successfully:',
-          recordError
+          'Failed to record transaction; on-chain confirmed. Listener will reconcile.',
+          recordError,
         );
-
-        // Store transaction in localStorage as fallback
-        const localTransactionData = {
-          trade_id: trade.id,
-          escrow_id: escrowResult.escrowId ? parseInt(escrowResult.escrowId) : 0,
-          transaction_hash: String(txResult.txHash), // Keep as transaction_hash for localStorage compatibility
-          transaction_type: 'FUND_ESCROW',
-          from_address: sellerAddress,
-          to_address: '',
-          amount: (trade.leg1_crypto_amount || 0).toString(),
-          token_type: trade.leg1_crypto_token || 'USDC',
-          block_number: txResult.blockNumber ? Number(txResult.blockNumber) : undefined,
-          network_family: 'solana' as const,
-          metadata: {
-            timestamp: new Date().toISOString(),
-          },
-        };
-        storeTransactionLocally(localTransactionData);
-
-        // Show a warning to the user
         toast.warning(
-          'Transaction completed on blockchain but could not be recorded in our database. This will be synced later.'
+          'Transaction completed on blockchain. Recording will reconcile shortly.',
         );
       }
     }
@@ -384,179 +351,21 @@ export const createAndFundTradeEscrow = async ({
     return { escrow: escrowResult, fund: txResult };
   } catch (err) {
     console.error('Error in create and fund escrow flow:', err);
-
-    // If we have partial results, store them for recovery
-    if (escrowResult && !fundResult) {
-      storeIncompleteEscrowLocally({
-        trade_id: trade.id,
-        escrow_id: escrowResult.escrowId || '0',
-        status: 'CREATED_NOT_FUNDED',
-        timestamp: new Date().toISOString(),
-      });
-    }
-
+    // Partial-state recovery is now driven by the on-chain listener
+    // (Design Invariant 2). No localStorage fallback.
     const errorMessage = handleApiError(err, 'Failed to create and fund escrow');
     toast.error(errorMessage);
     throw err;
   }
 };
 
-/**
- * Helper function to store transaction data locally when API fails
- * This serves as a fallback mechanism for transaction recording
- */
-const storeTransactionLocally = (transactionData: {
-  trade_id: number;
-  escrow_id?: number;
-  transaction_hash?: string;
-  signature?: string;
-  transaction_type: string;
-  from_address: string;
-  to_address?: string;
-  amount?: string;
-  token_type?: string;
-  block_number?: number;
-  slot?: number;
-  network_family?: 'evm' | 'solana';
-  metadata?: Record<string, string>;
-}) => {
-  try {
-    // Get existing pending transactions or initialize empty array
-    const pendingTransactions = JSON.parse(localStorage.getItem('pendingTransactions') || '[]');
-
-    // Add new transaction to the array
-    pendingTransactions.push({
-      ...transactionData,
-      pendingSince: new Date().toISOString(),
-      retryCount: 0,
-    });
-
-    // Store updated array back to localStorage
-    localStorage.setItem('pendingTransactions', JSON.stringify(pendingTransactions));
-
-    console.log('Transaction stored locally for future sync:', transactionData.transaction_hash);
-
-    // Schedule a retry attempt
-    setTimeout(() => retryPendingTransactions(), 30000); // Try again in 30 seconds
-  } catch (error) {
-    console.error('Failed to store transaction locally:', error);
-  }
-};
-
-/**
- * Helper function to store incomplete escrow data locally
- * This helps with recovery of partially completed escrow operations
- */
-const storeIncompleteEscrowLocally = (escrowData: {
-  trade_id: number;
-  escrow_id: string;
-  status: string;
-  timestamp: string;
-}) => {
-  try {
-    // Get existing incomplete escrows or initialize empty array
-    const incompleteEscrows = JSON.parse(localStorage.getItem('incompleteEscrows') || '[]');
-
-    // Add new escrow to the array
-    incompleteEscrows.push({
-      ...escrowData,
-      createdAt: new Date().toISOString(),
-      retryCount: 0,
-    });
-
-    // Store updated array back to localStorage
-    localStorage.setItem('incompleteEscrows', JSON.stringify(incompleteEscrows));
-
-    console.log('Incomplete escrow stored locally for future recovery:', escrowData.escrow_id);
-  } catch (error) {
-    console.error('Failed to store incomplete escrow locally:', error);
-  }
-};
-
-/**
- * Retry sending pending transactions to the API
- * This function attempts to sync locally stored transactions with the backend
- */
-const retryPendingTransactions = async () => {
-  try {
-    // Get pending transactions from localStorage
-    const pendingTransactionsStr = localStorage.getItem('pendingTransactions');
-    if (!pendingTransactionsStr) return;
-
-    const pendingTransactions = JSON.parse(pendingTransactionsStr);
-    if (!pendingTransactions.length) return;
-
-    console.log(`Attempting to sync ${pendingTransactions.length} pending transactions`);
-
-    // Keep track of successful transactions to remove them from localStorage
-    const successfulTransactions: number[] = [];
-
-    // Process each pending transaction
-    for (let i = 0; i < pendingTransactions.length; i++) {
-      const transaction = pendingTransactions[i];
-
-      // Skip transactions that have been retried too many times (e.g., 5 times)
-      if (transaction.retryCount >= 5) {
-        console.log(
-          `Skipping transaction ${transaction.transaction_hash} - too many retry attempts`
-        );
-        continue;
-      }
-
-      try {
-        // Attempt to record the transaction
-        const transactionData = buildTransactionData({
-          trade_id: transaction.trade_id,
-          escrow_id: transaction.escrow_id,
-          signature: transaction.transaction_hash, // Use transaction_hash as signature for Solana
-          transaction_type: transaction.transaction_type,
-          from_address: transaction.from_address,
-          to_address: transaction.to_address || '',
-          amount: transaction.amount,
-          token_type: transaction.token_type,
-          status: 'SUCCESS',
-          slot: transaction.block_number, // Use block_number as slot for Solana
-          metadata: transaction.metadata || {},
-        });
-        await recordTransaction(transactionData);
-
-        // If successful, mark for removal
-        successfulTransactions.push(i);
-        console.log(`Successfully synced transaction ${transaction.transaction_hash}`);
-      } catch (error) {
-        // Increment retry count
-        pendingTransactions[i].retryCount = (pendingTransactions[i].retryCount || 0) + 1;
-        console.error(
-          `Failed to sync transaction ${transaction.transaction_hash}, retry count: ${pendingTransactions[i].retryCount}`,
-          error
-        );
-      }
-    }
-
-    // Remove successful transactions (in reverse order to avoid index issues)
-    for (let i = successfulTransactions.length - 1; i >= 0; i--) {
-      pendingTransactions.splice(successfulTransactions[i], 1);
-    }
-
-    // Update localStorage with remaining transactions
-    localStorage.setItem('pendingTransactions', JSON.stringify(pendingTransactions));
-
-    // If there are still pending transactions, schedule another retry
-    if (pendingTransactions.length > 0) {
-      // Exponential backoff: wait longer between retries (1 minute)
-      setTimeout(() => retryPendingTransactions(), 60000);
-    }
-  } catch (error) {
-    console.error('Error in retryPendingTransactions:', error);
-    // Schedule another retry despite the error
-    setTimeout(() => retryPendingTransactions(), 60000);
-  }
-};
-
-// Initialize retry mechanism on page load
-setTimeout(() => {
-  retryPendingTransactions();
-}, 5000); // Wait 5 seconds after page load before first retry attempt
+// NOTE: the previous storeTransactionLocally / storeIncompleteEscrowLocally /
+// retryPendingTransactions trio (along with the page-load setTimeout) was
+// designed around a two-step server-signed escrow flow that never existed
+// in this backend (verified via `git log -S` across yapbay-api). Per
+// Design Invariant 2 the recovery model is now: chain-confirmed actions
+// whose recording POST fails are reconciled by the backend listener from
+// chain events. No client-side localStorage queue, no setTimeout retry.
 
 /**
  * Marks fiat as paid for a trade
@@ -568,6 +377,7 @@ export const markTradeFiatPaid = async ({
   trade: Trade;
   primaryWallet: { address?: string };
 }) => {
+  const idempotencyKey = newIdempotencyKey();
   try {
     if (!trade.leg1_escrow_address) {
       throw new Error('No escrow address found for this trade');
@@ -602,8 +412,7 @@ export const markTradeFiatPaid = async ({
             },
           });
 
-          console.log('[DEBUG] Recording transaction with data:', transactionData);
-          await recordTransaction(transactionData);
+          await recordTransaction(transactionData, idempotencyKey);
 
           // Call the backend API to update the trade status
           await markFiatPaid(trade.id);
@@ -679,6 +488,7 @@ export const releaseTradeCrypto = async ({
   primaryWallet,
 }: ReleaseCryptoParams): Promise<void> => {
   if (!trade || !primaryWallet?.address || !trade.leg1_escrow_address) return;
+  const idempotencyKey = newIdempotencyKey();
 
   try {
     toast('Releasing crypto on Solana blockchain...', {
@@ -711,14 +521,15 @@ export const releaseTradeCrypto = async ({
         transaction_type: 'RELEASE_ESCROW',
         from_address: primaryWallet.address,
         to_address: buyerWalletAddress,
-        amount: trade.leg1_crypto_amount?.toString(),
+        amount: trade.leg1_crypto_amount
+          ? toUsdcString(trade.leg1_crypto_amount)
+          : undefined,
         token_type: trade.leg1_crypto_token,
         status: 'SUCCESS',
         slot: Number(txResult.blockNumber), // Use blockNumber as slot for Solana
       });
 
-      console.log('[DEBUG] Recording transaction with data:', transactionData);
-      await recordTransaction(transactionData);
+      await recordTransaction(transactionData, idempotencyKey);
     } else {
       throw new Error('Blockchain transaction failed - no signature returned');
     }
@@ -769,6 +580,7 @@ interface DisputeTradeParams {
  */
 export const disputeTrade = async ({ trade, primaryWallet }: DisputeTradeParams): Promise<void> => {
   if (!trade || !primaryWallet?.address || !trade.leg1_escrow_address) return;
+  const idempotencyKey = newIdempotencyKey();
 
   try {
     toast('Opening dispute on Solana blockchain...', {
@@ -800,7 +612,7 @@ export const disputeTrade = async ({ trade, primaryWallet }: DisputeTradeParams)
           evidence_hash: evidenceHash,
         },
       });
-      await recordTransaction(transactionData);
+      await recordTransaction(transactionData, idempotencyKey);
 
       toast.success('Trade disputed successfully');
     } catch (error: unknown) {
@@ -850,6 +662,7 @@ interface CancelTradeParams {
  */
 export const cancelTrade = async ({ trade, primaryWallet }: CancelTradeParams): Promise<void> => {
   if (!trade || !primaryWallet?.address || !trade.leg1_escrow_address) return;
+  const idempotencyKey = newIdempotencyKey();
 
   try {
     toast('Checking escrow state...', {
@@ -893,7 +706,7 @@ export const cancelTrade = async ({ trade, primaryWallet }: CancelTradeParams): 
             authority: primaryWallet.address,
           },
         });
-        await recordTransaction(transactionData);
+        await recordTransaction(transactionData, idempotencyKey);
 
         toast.success('Trade cancelled successfully');
       } catch (error: unknown) {
@@ -946,9 +759,8 @@ export const refreshTrade = async (
 ): Promise<void> => {
   try {
     const updatedTrade = await getTradeById(tradeId);
-    // Handle potential new API response structure with network wrapper
-    const tradeData = (updatedTrade.data as { trade?: Trade } & Trade).trade || updatedTrade.data;
-    setTrade(tradeData);
+    // M5: response shape is `{ network, trade }`.
+    setTrade(updatedTrade.data.trade);
   } catch (err) {
     console.error('Error refreshing trade:', err);
     const errorMessage = handleApiError(err, 'Failed to refresh trade data');

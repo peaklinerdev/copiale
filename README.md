@@ -156,6 +156,19 @@ We envision a world of crypto mass adoption, where everyone has access to prospe
 
 We envision a world free from large-scale oppressive forces such as nation-states and rent-seeking intermediaries such as banks, so that individuals can develop as they see fit, entering into voluntary relationships with each other by mutual agreement, without interference from those who would unjustly tilt the playing field in their own favor using aggressive institutions or unfair restrictions on our liberty.
 
+## Development
+
+### Claude Code Hooks
+
+This repo ships with [Claude Code](https://docs.claude.com/en/docs/claude-code) hooks in [.claude/](.claude/) that add automated guardrails when working with the Claude Code CLI. Configuration is in [.claude/settings.json](.claude/settings.json); hook scripts live in [.claude/hooks/](.claude/hooks/).
+
+- **`block-dangerous.sh`** — blocks destructive Bash commands before they run (`rm -rf`, `git reset --hard`, `git push --force`, `curl|sh`, `podman pod rm`, `systemctl stop/disable yapbay-vite`, `dd of=/dev/*`, etc.).
+- **`protect-files.sh`** — blocks edits to secrets and generated artifacts: `.env*`, `jwt.txt`, `jwt2.txt`, `package-lock.json`, `*.pem`, `*.key`, `commit.txt`, `stats.html`, `Containerfile`.
+- **`log-commands.sh`** — appends every Bash command Claude runs to `.claude/command-log.txt` (gitignored) with timestamps.
+- **`post-edit-checks.sh`** — after editing any `.ts`/`.tsx` file, runs `eslint --fix` on the touched file and `tsc -b --noEmit` project-wide, tailing output. Non-blocking so diagnostics flow back to Claude as feedback.
+
+Requirements: `jq` on `PATH`, plus `npm install` for `eslint` and `typescript`. To bypass a blocked command, run it in a normal shell outside of Claude.
+
 ## Community
 
 Join us to shape the future of decentralized trading and remittances:

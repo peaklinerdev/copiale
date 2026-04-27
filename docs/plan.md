@@ -1,5 +1,15 @@
 # YapBay Frontend Development Plan
 
+- Organize this into projects and todo lists
+- add postgres backups
+
+make a terminal management interface using https://ratatui.rs/
+
+- rename anchor contracts repo to yapbay-solana-anchor
+- also rename yapbay-contract-solidity to yapbay-solidity perhaps
+- rebuild rust program, ensure I have it all working, probably in its own container frankly.
+
+- infisical or better.
 
 need to finish full remittance flow and do some marketing
 

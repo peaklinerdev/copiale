@@ -8,6 +8,11 @@ import { Account } from './api';
 import Container from '@/components/Shared/Container';
 import { Toaster } from 'sonner';
 import { dispatchAuthStateChange } from './utils/events';
+import { runStorageMigrations } from './utils/storageMigrations';
+
+// Boot-time: drop legacy localStorage queues with shapes incompatible
+// with the post-M3 wire contract. Idempotent (sentinel-gated).
+runStorageMigrations();
 
 // Lazy load route components for code splitting
 const HomePage = lazy(() => import('./Home'));

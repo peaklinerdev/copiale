@@ -11,7 +11,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <DynamicContextProvider
       settings={{
-        environmentId: '322e23a8-06d7-445f-b525-66426d63d858',
+        environmentId: import.meta.env.VITE_DYNAMIC_ENVIRONMENT_ID,
         walletConnectors: [SolanaWalletConnectors],
       }}
     >

@@ -1,9 +1,9 @@
 // This file is auto-generated. Do not edit manually.
 export const versionInfo = {
   "version": "0.2.0",
-  "gitCommitHash": "c6bc1b1",
-  "gitCommitDate": "2026-04-02T16:27:14Z",
+  "gitCommitHash": "cb94b1c",
+  "gitCommitDate": "2026-04-28T01:00:35Z",
   "gitBranch": "main",
-  "buildDate": "2026-04-27T21:05:51.705Z",
+  "buildDate": "2026-05-01T18:22:37.373Z",
   "isDirty": true
 };

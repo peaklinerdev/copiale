@@ -1,50 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { getHealth, getReadiness, HealthResponse, ReadinessResponse } from '@/api';
+import { getHealth, getReadiness, HealthResponse } from '@/api';
 import Container from '@/components/Shared/Container';
 import { versionInfo } from '@/utils/version';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 
 // GitHub repository configuration - Replaced with generic placeholder
-const GITHUB_REPO = 'copiale-p2p';
-const GITHUB_REPO_URL = '#';
-const GITHUB_API_BASE = 'https://api.github.com';
-
-// GitHub API types
-interface GitHubCommit {
-  sha: string;
-  commit: {
-    message: string;
-    author: {
-      name: string;
-      email: string;
-      date: string;
-    };
-    committer: {
-      name: string;
-      email: string;
-      date: string;
-    };
-  };
-  author: {
-    login: string;
-    avatar_url: string;
-  } | null;
-  html_url: string;
-}
-
-function explorerAddressUrl(
-  blockExplorerUrl: string | null | undefined,
-  address: string | null | undefined,
-): string | null {
-  if (!blockExplorerUrl || !address) return null;
-  try {
-    const base = new URL(blockExplorerUrl);
-    if (base.protocol !== 'http:' && base.protocol !== 'https:') return null;
-    return new URL(`/address/${encodeURIComponent(address)}`, base.origin).href;
-  } catch {
-    return null;
-  }
-}
 
 function formatWalletAddress(address: string | null | undefined): string {
   if (!address) return 'Not Connected';
@@ -67,36 +27,16 @@ function formatDate(dateString: string | null | undefined): string {
   }
 }
 
-function getGitHubCommitUrl(commitHash: string | null | undefined): string | null {
-  if (!commitHash || commitHash === 'unknown') return null;
-  return `${GITHUB_REPO_URL}/commit/${commitHash}`;
-}
-
-function CommitHashLink({ 
-  commitHash, 
-}: { 
-  commitHash: string | null | undefined; 
-}) {
-  if (!commitHash || commitHash === 'unknown') {
-    return <span className="text-slate-500">Unknown</span>;
-  }
-
-  const shortHash = commitHash.length > 7 ? commitHash.substring(0, 7) : commitHash;
-  return <span className="font-mono text-sm text-slate-300">{shortHash}</span>;
-}
-
 export const Status: React.FC = () => {
   const { primaryWallet } = useDynamicContext();
   const [health, setHealth] = useState<HealthResponse | null>(null);
-  const [readiness, setReadiness] = useState<ReadinessResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [h, r] = await Promise.all([getHealth(), getReadiness().catch(() => null)]);
+        const [h] = await Promise.all([getHealth(), getReadiness().catch(() => null)]);
         setHealth(h.data);
-        setReadiness(r ? r.data : null);
       } catch (err) {
         setError('Failed to fetch system status');
         console.error('Health check failed:', err);

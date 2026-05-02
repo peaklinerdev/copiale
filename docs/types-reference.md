@@ -1,6 +1,6 @@
-# YapBay Types Reference
+# Copiale-p2p Types Reference
 
-This document provides a comprehensive reference of the types used throughout the YapBay application.
+This document provides a comprehensive reference of the types used throughout the Copiale-p2p application.
 
 ## Table of Contents
 

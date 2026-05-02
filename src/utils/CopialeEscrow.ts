@@ -23,7 +23,7 @@ import type {
   TypedContractMethod,
 } from "./common";
 
-export interface YapBayEscrowInterface extends Interface {
+export interface Copiale-p2pEscrowInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "ARBITRATION_DURATION"
@@ -691,11 +691,11 @@ export namespace UpgradedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export interface YapBayEscrow extends BaseContract {
-  connect(runner?: ContractRunner | null): YapBayEscrow;
+export interface Copiale-p2pEscrow extends BaseContract {
+  connect(runner?: ContractRunner | null): Copiale-p2pEscrow;
   waitForDeployment(): Promise<this>;
 
-  interface: YapBayEscrowInterface;
+  interface: Copiale-p2pEscrowInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,

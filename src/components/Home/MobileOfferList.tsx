@@ -17,7 +17,7 @@ interface MobileOfferListProps {
   isDialogOpen: boolean;
   selectedOfferId: number | null;
   handleDeleteOffer: (offerId: number) => Promise<void>;
-  isDeletingOffer?: boolean; // Add isDeletingOffer prop
+  isDeletingOffer?: boolean;
   openTradeDialog: (offerId: number) => void;
   onOpenChange: (open: boolean) => void;
   onConfirmTrade: (offerId: number, amount: string, fiatAmount: number) => void;
@@ -31,7 +31,7 @@ const MobileOfferList: React.FC<MobileOfferListProps> = ({
   isDialogOpen,
   selectedOfferId,
   handleDeleteOffer,
-  isDeletingOffer, // Destructure prop
+  isDeletingOffer,
   openTradeDialog,
   onOpenChange,
   onConfirmTrade,
@@ -40,119 +40,77 @@ const MobileOfferList: React.FC<MobileOfferListProps> = ({
   return (
     <div className="md:hidden p-4 space-y-4">
       {filteredOffers.map(offer => (
-        <div key={offer.id} className="mobile-card-view">
-          <div className="mobile-card-view-header">
-            <span>{formatNumber(offer.id)}</span>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    offer.offer_type === 'BUY'
-                      ? 'bg-secondary-500 text-neutral-100'
-                      : 'bg-amber-500 text-neutral-100'
-                  }`}
-                >
-                  {offer.offer_type}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent
-                className={
-                  offer.offer_type === 'BUY'
-                    ? 'bg-secondary-500 text-neutral-100'
-                    : 'bg-amber-500 text-neutral-100'
-                }
-              >
-                <p>
-                  {offer.offer_type === 'BUY'
-                    ? 'An offer to buy crypto from you'
-                    : 'An offer to sell crypto to you'}
-                </p>
-              </TooltipContent>
-            </Tooltip>
+        <div key={offer.id} className="bg-[#1e2329] border border-[#2b3139] p-4 rounded-sm">
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex flex-col">
+              <span className="text-[#eaecef] font-bold">
+                {creatorNames[offer.creator_account_id] || abbreviateWallet(String(offer.creator_account_id))}
+              </span>
+              <span className="text-[10px] text-[#848e9c] uppercase font-bold">ID: {offer.id}</span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-lg font-extrabold text-[#eaecef] leading-none">{formatNumber(offer.rate_adjustment)}</span>
+              <span className="text-[10px] font-bold text-[#848e9c]">{offer.fiat_currency}</span>
+            </div>
           </div>
 
-          <div className="mobile-card-view-row">
-            <span className="mobile-card-view-label">Creator</span>
-            <span>
-              {creatorNames[offer.creator_account_id] ||
-                abbreviateWallet(String(offer.creator_account_id))}
+          <div className="grid grid-cols-2 gap-4 mb-4 pt-4 border-t border-[#2b3139]">
+            <div>
+              <span className="text-[10px] text-[#848e9c] uppercase font-bold block mb-1">Limit</span>
+              <span className="text-xs text-[#eaecef] font-medium">
+                {formatNumber(offer.min_amount)} - {formatNumber(offer.max_amount)} {offer.token}
+              </span>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] text-[#848e9c] uppercase font-bold block mb-1">Available</span>
+              <span className="text-xs text-[#eaecef] font-medium">
+                {formatNumber(offer.total_available_amount)} {offer.token}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-4 border-t border-[#2b3139]">
+            <span className="text-[10px] text-[#848e9c] font-medium italic">
+              Updated {formatDistanceToNow(new Date(offer.updated_at))} ago
             </span>
-          </div>
-
-          <div className="mobile-card-view-row">
-            <span className="mobile-card-view-label">Amount</span>
-            <span>
-              {formatNumber(offer.min_amount)} - {formatNumber(offer.max_amount)} {offer.token}
-            </span>
-          </div>
-
-          <div className="mobile-card-view-row">
-            <span className="mobile-card-view-label">Available</span>
-            <span>
-              {formatNumber(offer.total_available_amount)} {offer.token}
-            </span>
-          </div>
-
-          <div className="mobile-card-view-row">
-            <span className="mobile-card-view-label">Rate</span>
-            <span
-              className={
-                rateAdjustmentDirection(offer.rate_adjustment) === 'up'
-                  ? 'text-success'
-                  : rateAdjustmentDirection(offer.rate_adjustment) === 'down'
-                  ? 'text-red-600'
-                  : 'text-neutral-600'
-              }
-            >
-              {formatRate(offer.rate_adjustment)}
-            </span>
-          </div>
-
-          <div className="mobile-card-view-row">
-            <span className="mobile-card-view-label">Currency</span>
-            <span>{offer.fiat_currency}</span>
-          </div>
-
-          <div className="mobile-card-view-row">
-            <span className="mobile-card-view-label">Updated</span>
-            <span className="text-neutral-600 text-sm">
-              {formatDistanceToNow(new Date(offer.updated_at))} ago
-            </span>
-          </div>
-
-          <div className="mt-4">
-            {primaryWallet ? (
-              currentUserAccountId === offer.creator_account_id ? (
-                <OfferActionButtons
-                  offerId={offer.id}
-                  onDelete={handleDeleteOffer}
-                  isDeleting={isDeletingOffer} // Pass down isDeleting prop
-                  isMobile={true}
-                />
+            <div className="flex gap-2">
+               {primaryWallet ? (
+                currentUserAccountId === offer.creator_account_id ? (
+                  <OfferActionButtons
+                    offerId={offer.id}
+                    onDelete={handleDeleteOffer}
+                    isDeleting={isDeletingOffer}
+                    isMobile={true}
+                  />
+                ) : (
+                  <TradeConfirmationDialog
+                    isOpen={isDialogOpen && selectedOfferId === offer.id}
+                    onOpenChange={onOpenChange}
+                    offer={offer}
+                    onConfirm={onConfirmTrade}
+                    triggerButton={
+                      <Button
+                        onClick={() => openTradeDialog(offer.id)}
+                        className={`${
+                          offer.offer_type === 'BUY' 
+                            ? 'bg-[#02c076] hover:opacity-90' 
+                            : 'bg-[#f84960] hover:opacity-90'
+                        } text-white font-bold h-9 px-6 rounded-sm text-xs`}
+                      >
+                        {offer.offer_type === 'BUY' ? 'Sell' : 'Buy'} {offer.token}
+                      </Button>
+                    }
+                  />
+                )
               ) : (
-                <TradeConfirmationDialog
-                  isOpen={isDialogOpen && selectedOfferId === offer.id}
-                  onOpenChange={onOpenChange}
-                  offer={offer}
-                  onConfirm={onConfirmTrade}
-                  triggerButton={
-                    <Button
-                      onClick={() => openTradeDialog(offer.id)}
-                      className="bg-secondary-500 hover:bg-secondary-900 text-white w-full flex justify-center"
-                    >
-                      Preview Trade
-                    </Button>
-                  }
-                />
-              )
-            ) : (
-              <Button
-                onClick={() => setShowAuthFlow(true)}
-                className="bg-primary-600 hover:bg-primary-700 text-white w-full flex justify-center"
-              >
-                Connect Wallet to Trade
-              </Button>
-            )}
+                <Button
+                  onClick={() => setShowAuthFlow(true)}
+                  className="bg-[#fcd535] hover:opacity-90 text-[#0b0e11] font-bold h-9 px-4 rounded-sm text-xs w-full"
+                >
+                  Trade Now
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       ))}

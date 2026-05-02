@@ -69,14 +69,14 @@ export function useTradeUpdates(tradeId: number) {
     );
 
     // Dispatch a custom event to notify other components
-    const event = new CustomEvent('yapbay:trade-state-changed', {
+    const event = new CustomEvent('copiale-p2p:trade-state-changed', {
       detail: { tradeId, newState: newTrade.leg1_state },
     });
     window.dispatchEvent(event);
     console.log(`[useTradeUpdates] Dispatched trade-state-changed event for trade ${tradeId}`);
 
     // Also dispatch the existing refresh event for backward compatibility
-    const refreshEvent = new CustomEvent('yapbay:refresh-trade', {
+    const refreshEvent = new CustomEvent('copiale-p2p:refresh-trade', {
       detail: { tradeId },
     });
     window.dispatchEvent(refreshEvent);

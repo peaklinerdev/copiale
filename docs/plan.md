@@ -1,12 +1,12 @@
-# YapBay Frontend Development Plan
+# Copiale-p2p Frontend Development Plan
 
 - Organize this into projects and todo lists
 - add postgres backups
 
 make a terminal management interface using https://ratatui.rs/
 
-- rename anchor contracts repo to yapbay-solana-anchor
-- also rename yapbay-contract-solidity to yapbay-solidity perhaps
+- rename anchor contracts repo to copiale-p2p-solana-anchor
+- also rename copiale-p2p-contract-solidity to copiale-p2p-solidity perhaps
 - rebuild rust program, ensure I have it all working, probably in its own container frankly.
 
 - infisical or better.
@@ -30,7 +30,7 @@ review the network awareness/wrapper stuff to ensure it is extensible
 
 ### Add payment methods
 
-add pagomovil https://t.me/yuneHR16 perfect payment methods and expose it for direct user management
+add pagomovil https://t.me/copiale_dev perfect payment methods and expose it for direct user management
 
 ### Add self-rolled chat
 
@@ -60,10 +60,10 @@ strategic friction [https://read.first1000.co/p/positive-friction](https://read.
 2. review state ref escrows trades and trade checklist
 3. improve the dev/prod env var management
 4. get the new pods to restart on boot
-5. create some views in mathesar, get a handle on that [https://db.panmoni.com/db/7/schemas/2200/tables/22638/30](https://db.panmoni.com/db/7/schemas/2200/tables/22638/30)
+5. create some views in mathesar, get a handle on that [https://db..com/db/7/schemas/2200/tables/22638/30](https://db..com/db/7/schemas/2200/tables/22638/30)
 6. dig into the transactions and the data being returned to clear some of these unknown results and get more complete data
 7. is TradePage finally updating when trade is updated?
-8. MyTradesPage lag to update",Deploy YapBay to Celo Mainnet
+8. MyTradesPage lag to update",Deploy Copiale-p2p to Celo Mainnet
 9. refactor: useUserAccount for Account Page?
 10. will events be more reliable as its own process?
 11. scour the blockchain stuff to see about types stuff that needs to moved into the appropriate types file so types are centralized

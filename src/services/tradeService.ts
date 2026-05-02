@@ -67,7 +67,7 @@ function deriveSolanaAddresses(tradeId: number, escrowId: number) {
     console.error('[ERROR] Failed to derive Solana addresses:', error);
     // Fallback to placeholder values if derivation fails
     return {
-      program_id: 'YapBayProgramId',
+      program_id: 'Copiale-p2pProgramId',
       escrow_pda: 'EscrowPDAAddress',
       escrow_token_account: 'TokenAccountAddress',
       trade_onchain_id: tradeId.toString(),
@@ -362,7 +362,7 @@ export const createAndFundTradeEscrow = async ({
 // NOTE: the previous storeTransactionLocally / storeIncompleteEscrowLocally /
 // retryPendingTransactions trio (along with the page-load setTimeout) was
 // designed around a two-step server-signed escrow flow that never existed
-// in this backend (verified via `git log -S` across yapbay-api). Per
+// in this backend (verified via `git log -S` across copiale-p2p-api). Per
 // Design Invariant 2 the recovery model is now: chain-confirmed actions
 // whose recording POST fails are reconciled by the backend listener from
 // chain events. No client-side localStorage queue, no setTimeout retry.
@@ -421,7 +421,7 @@ export const markTradeFiatPaid = async ({
         }
 
         // Dispatch a global event to notify all open tabs/windows about this critical state change
-        const event = new CustomEvent('yapbay:critical-state-change', {
+        const event = new CustomEvent('copiale-p2p:critical-state-change', {
           detail: {
             tradeId: trade.id,
             newState: 'FIAT_PAID',
@@ -431,7 +431,7 @@ export const markTradeFiatPaid = async ({
         window.dispatchEvent(event);
 
         // Force an immediate refresh for all clients by invalidating cache
-        localStorage.setItem('yapbay_last_trade_update', new Date().toISOString());
+        localStorage.setItem('copiale-p2p_last_trade_update', new Date().toISOString());
 
         toast.success('Fiat payment marked as complete');
       } catch (error: unknown) {

@@ -1,86 +1,69 @@
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
+import { ArrowRight, ShieldCheck, Zap, Globe2 } from 'lucide-react';
 
-const IntroMessageNotLoggedIn = () => {
+export const IntroMessageNotLoggedIn: React.FC = () => {
   const { setShowAuthFlow } = useDynamicContext();
+
   return (
-    <Card className="my-4 border-primary-600 border-2">
-      <CardContent className="px-4 py-2 sm:py-2">
-        <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-6">
-          <div className="bg-neutral-100 p-3 sm:p-4 rounded-full">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#2b6cb0"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" />
-              <path d="M4 6v12c0 1.1.9 2 2 2h14v-4" />
-              <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z" />
-            </svg>
+    <div className="bg-[#1e2329] border border-[#2b3139] p-8 md:p-12 mb-8 relative overflow-hidden">
+      <div className="max-w-4xl relative z-10">
+        <h2 className="text-4xl md:text-6xl font-extrabold text-[#eaecef] mb-6 tracking-tight">
+          Trade <span className="text-[#fcd535]">USDC/USDT</span> <br />
+          on Solana & EVM
+        </h2>
+        
+        <p className="text-lg text-[#848e9c] mb-10 max-w-2xl leading-relaxed">
+          The premier institutional-grade P2P marketplace. Direct on-chain settlement, 
+          escrow protection, and borderless liquidity for the modern trader.
+        </p>
+        
+        <div className="flex flex-wrap gap-4 mb-16">
+          <Button 
+            size="lg" 
+            onClick={() => setShowAuthFlow(true)}
+            className="bg-[#fcd535] hover:opacity-90 text-[#0b0e11] font-bold px-10 h-14 text-lg rounded-sm"
+          >
+            Start Trading <ArrowRight className="ml-2" size={20} />
+          </Button>
+          <Button 
+            variant="outline" 
+            size="lg"
+            className="border-[#2b3139] text-[#eaecef] hover:bg-[#2b3139] h-14 px-10 text-lg rounded-sm"
+          >
+            View Market
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 pt-10 border-t border-[#2b3139]">
+          <div className="flex items-center gap-4">
+            <ShieldCheck size={32} className="text-[#02c076] shrink-0" />
+            <div>
+              <h4 className="text-sm font-bold text-[#eaecef]">Escrow Protection</h4>
+              <p className="text-xs text-[#848e9c]">100% on-chain security.</p>
+            </div>
           </div>
-          <div className="flex-1 text-center md:text-left">
-            <h2 className="text-2xl sm:text-3xl font-bold text-primary-900 mb-2">
-              Welcome to YapBay P2P Trading
-            </h2>
-            <p className="text-neutral-600 mb-4 text-sm sm:text-base">
-              Trade USDC on YapBay directly with other users anywhere in the world. Buy and sell
-              using any fiat payment method with our on-chain escrow system. Test on Solana Devnet
-              with devnet SOL and USDC. Get {''}
-              <a
-                href="https://faucet.solana.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary-600 underline"
-              >
-                Devnet SOL
-              </a>{' '}
-              and{' '}
-              <a
-                href="https://faucet.circle.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary-600 underline"
-              >
-                Solana Devnet USDC
-              </a>
-              . Access support in{' '}
-              <a
-                href="https://t.me/Panmoni/288"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary-600 underline"
-              >
-                English
-              </a>{' '}
-              or{' '}
-              <a
-                href="https://t.me/Panmoni/291"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary-600 underline"
-              >
-                Español
-              </a>
-              .
-            </p>
-            <Button
-              onClick={() => setShowAuthFlow(true)}
-              className="bg-primary-600 hover:bg-primary-900 text-white w-full md:w-auto"
-            >
-              Connect Your Wallet to Get Started
-            </Button>
+          <div className="flex items-center gap-4">
+            <Zap size={32} className="text-[#fcd535] shrink-0" />
+            <div>
+              <h4 className="text-sm font-bold text-[#eaecef]">Instant Settlement</h4>
+              <p className="text-xs text-[#848e9c]">Solana/EVM powered speed.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <Globe2 size={32} className="text-[#848e9c] shrink-0" />
+            <div>
+              <h4 className="text-sm font-bold text-[#eaecef]">Zero Boundaries</h4>
+              <p className="text-xs text-[#848e9c]">Global liquidity access.</p>
+            </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      
+      {/* Decorative Binance-style grid background element */}
+      <div className="absolute top-0 right-0 w-1/3 h-full bg-[#fcd535]/5 hidden lg:block" style={{ clipPath: 'polygon(100% 0, 0% 100%, 100% 100%)' }}></div>
+    </div>
   );
 };
 

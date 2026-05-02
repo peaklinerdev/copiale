@@ -2,7 +2,7 @@
 //
 // Per Design Invariant 3: amounts are strings on the money path; numbers
 // only inside `utils/money-display.ts`. The backend Zod schemas at
-// yapbay-api/src/schemas/primitives/amounts.ts enforce:
+// copiale-p2p-api/src/schemas/primitives/amounts.ts enforce:
 //   - USDC: regex /^(0|[1-9]\d*)(\.\d{1,6})?$/, > 0
 //   - escrow USDC: same plus <= 100.000000
 //   - fiat:  regex /^(0|[1-9]\d*)(\.\d{1,2})?$/, > 0

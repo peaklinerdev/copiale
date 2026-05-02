@@ -10,7 +10,7 @@ export interface PendingTransaction {
 // Get pending transactions from localStorage
 export function getPendingTransactions(): PendingTransaction[] {
   try {
-    const stored = localStorage.getItem('yapbay_pending_transactions');
+    const stored = localStorage.getItem('copiale-p2p_pending_transactions');
     if (!stored) return [];
     return JSON.parse(stored);
   } catch (error) {
@@ -28,10 +28,10 @@ export function addPendingTransaction(transaction: Omit<PendingTransaction, 'las
       lastChecked: Date.now(),
       attempts: 0
     });
-    localStorage.setItem('yapbay_pending_transactions', JSON.stringify(transactions));
+    localStorage.setItem('copiale-p2p_pending_transactions', JSON.stringify(transactions));
     
     // Dispatch event to notify listeners
-    window.dispatchEvent(new CustomEvent('yapbay:new-transaction'));
+    window.dispatchEvent(new CustomEvent('copiale-p2p:new-transaction'));
   } catch (error) {
     console.error('Error adding pending transaction:', error);
   }
@@ -41,7 +41,7 @@ export function addPendingTransaction(transaction: Omit<PendingTransaction, 'las
 export function removePendingTransaction(txHash: string): void {
   try {
     const transactions = getPendingTransactions().filter(tx => tx.txHash !== txHash);
-    localStorage.setItem('yapbay_pending_transactions', JSON.stringify(transactions));
+    localStorage.setItem('copiale-p2p_pending_transactions', JSON.stringify(transactions));
   } catch (error) {
     console.error('Error removing pending transaction:', error);
   }
@@ -54,7 +54,7 @@ export function updatePendingTransaction(txHash: string, updates: Partial<Pendin
     const index = transactions.findIndex(tx => tx.txHash === txHash);
     if (index >= 0) {
       transactions[index] = { ...transactions[index], ...updates };
-      localStorage.setItem('yapbay_pending_transactions', JSON.stringify(transactions));
+      localStorage.setItem('copiale-p2p_pending_transactions', JSON.stringify(transactions));
     }
   } catch (error) {
     console.error('Error updating pending transaction:', error);

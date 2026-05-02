@@ -1,6 +1,6 @@
 // Convert any thrown value to a human-readable error string.
 //
-// New error envelope from yapbay-api (commit fc47285):
+// New error envelope from copiale-p2p-api (commit fc47285):
 //   { error: { code, message, details: { request_id, ... }, issues?, fields? } }
 // Falls back to the legacy `data.message` shape for the migration window
 // (axios may still hold legacy errors thrown before M2 landed).

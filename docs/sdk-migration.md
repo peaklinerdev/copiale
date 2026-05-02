@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document outlines a detailed migration strategy to transition the YapBay frontend from Celo EVM to Solana while maintaining multi-network support capabilities. The migration preserves existing Celo functionality (disabled by default) and introduces a robust Solana integration that can be easily extended to support additional blockchain networks in the future.
+This document outlines a detailed migration strategy to transition the Copiale-p2p frontend from Celo EVM to Solana while maintaining multi-network support capabilities. The migration preserves existing Celo functionality (disabled by default) and introduces a robust Solana integration that can be easily extended to support additional blockchain networks in the future.
 
 ## Current State Analysis
 
@@ -63,7 +63,7 @@ src/
 │   │   ├── lib.rs                 # Solana program (moved from src/solana/)
 │   │   └── idl.ts                 # Generated IDL
 │   └── evm/
-│       └── YapBayEscrow.json      # EVM ABI (preserved)
+│       └── Copiale-p2pEscrow.json      # EVM ABI (preserved)
 └── services/
     ├── blockchainService.ts       # Unified blockchain service
     └── transactionService.ts      # Transaction management

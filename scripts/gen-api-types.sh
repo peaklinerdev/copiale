@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# Generate yapbay frontend API types from yapbay-api's OpenAPI spec.
+# Generate copiale-p2p frontend API types from copiale-p2p-api's OpenAPI spec.
 #
-# Strategy: invoke yapbay-api's pure dump-openapi.ts (no DB/server required)
+# Strategy: invoke copiale-p2p-api's pure dump-openapi.ts (no DB/server required)
 # to produce the spec, snapshot it for drift detection, then run
 # openapi-typescript via npx (run from /tmp because the project's package.json
 # has an `npm:`-aliased override that older npms fail to parse).
 #
-# Requires: yapbay-api checked out at ../yapbay-api with deps installed.
+# Requires: copiale-p2p-api checked out at ../copiale-p2p-api with deps installed.
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-API_REPO="${YAPBAY_API_REPO:-$REPO_ROOT/../yapbay-api}"
+API_REPO="${YAPBAY_API_REPO:-$REPO_ROOT/../copiale-p2p-api}"
 
 if [ ! -d "$API_REPO" ]; then
-  echo "yapbay-api not found at $API_REPO. Set YAPBAY_API_REPO env var." >&2
+  echo "copiale-p2p-api not found at $API_REPO. Set YAPBAY_API_REPO env var." >&2
   exit 1
 fi
 

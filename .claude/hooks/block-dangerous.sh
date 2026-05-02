@@ -14,7 +14,7 @@ dangerous_patterns=(
   'wget[[:space:]]+.*\|[[:space:]]*(sh|bash)'
   'podman[[:space:]]+pod[[:space:]]+rm'
   'podman[[:space:]]+(system[[:space:]]+)?prune'
-  'systemctl[[:space:]]+.*(stop|disable|mask)[[:space:]]+yapbay-vite'
+  'systemctl[[:space:]]+.*(stop|disable|mask)[[:space:]]+copiale-p2p-vite'
   'dd[[:space:]]+.*of=/dev/'
   'mkfs\.'
   '>[[:space:]]*/dev/sd[a-z]'

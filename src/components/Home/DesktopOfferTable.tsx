@@ -25,7 +25,7 @@ interface DesktopOfferTableProps {
   isDialogOpen: boolean;
   selectedOfferId: number | null;
   handleDeleteOffer: (offerId: number) => Promise<void>;
-  isDeletingOffer?: boolean; // Add isDeletingOffer prop
+  isDeletingOffer?: boolean;
   openTradeDialog: (offerId: number) => void;
   onOpenChange: (open: boolean) => void;
   onConfirmTrade: (offerId: number, amount: string, fiatAmount: number) => void;
@@ -39,99 +39,69 @@ const DesktopOfferTable: React.FC<DesktopOfferTableProps> = ({
   isDialogOpen,
   selectedOfferId,
   handleDeleteOffer,
-  isDeletingOffer, // Destructure prop
+  isDeletingOffer,
   openTradeDialog,
   onOpenChange,
   onConfirmTrade,
 }) => {
   const { setShowAuthFlow } = useDynamicContext();
   return (
-    <div className="hidden md:block overflow-x-auto">
+    <div className="bg-[#1e2329] border border-[#2b3139] rounded-sm overflow-hidden">
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="text-primary font-medium">ID</TableHead>
-            <TableHead className="text-primary font-medium">Type</TableHead>
-            <TableHead className="text-primary font-medium">Creator</TableHead>
-            <TableHead className="text-primary font-medium">Min Amount</TableHead>
-            <TableHead className="text-primary font-medium">Max Amount</TableHead>
-            <TableHead className="text-primary font-medium">Available</TableHead>
-            <TableHead className="text-primary font-medium">Rate</TableHead>
-            <TableHead className="text-primary font-medium">Currency</TableHead>
-            <TableHead className="text-primary font-medium">Updated</TableHead>
-            <TableHead className="text-primary font-medium">Action</TableHead>
+        <TableHeader className="bg-[#0b0e11]">
+          <TableRow className="border-b border-[#2b3139] hover:bg-transparent">
+            <TableHead className="text-[#848e9c] text-xs font-bold uppercase tracking-wider h-12">Advertiser</TableHead>
+            <TableHead className="text-[#848e9c] text-xs font-bold uppercase tracking-wider h-12">Price</TableHead>
+            <TableHead className="text-[#848e9c] text-xs font-bold uppercase tracking-wider h-12">Limit/Available</TableHead>
+            <TableHead className="text-[#848e9c] text-xs font-bold uppercase tracking-wider h-12">Payment</TableHead>
+            <TableHead className="text-[#848e9c] text-xs font-bold uppercase tracking-wider h-12 text-right">Trade</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {filteredOffers.map(offer => (
-            <TableRow key={offer.id} className="hover:bg-neutral-50">
-              <TableCell>{formatNumber(offer.id)}</TableCell>
-              <TableCell>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        offer.offer_type === 'BUY'
-                          ? 'bg-success text-neutral-100'
-                          : 'bg-error text-neutral-100'
-                      }`}
-                    >
-                      {offer.offer_type}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    className={
-                      offer.offer_type === 'BUY'
-                        ? 'bg-success text-neutral-100'
-                        : 'bg-error text-neutral-100'
-                    }
-                  >
-                    <p>
-                      {offer.offer_type === 'BUY'
-                        ? 'An offer to buy crypto from you'
-                        : 'An offer to sell crypto to you'}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
+            <TableRow key={offer.id} className="border-b border-[#2b3139] hover:bg-[#2b3139]/30 transition-colors">
+              <TableCell className="py-4">
+                <div className="flex flex-col">
+                  <span className="text-[#eaecef] font-bold text-sm">
+                    {creatorNames[offer.creator_account_id] || abbreviateWallet(String(offer.creator_account_id))}
+                  </span>
+                  <span className="text-[10px] text-[#848e9c] font-medium uppercase mt-0.5">ID: {offer.id}</span>
+                </div>
               </TableCell>
-              <TableCell>
-                {creatorNames[offer.creator_account_id] ||
-                  abbreviateWallet(String(offer.creator_account_id))}
+              <TableCell className="py-4">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-lg font-extrabold text-[#eaecef]">{formatNumber(offer.rate_adjustment)}</span>
+                  <span className="text-xs font-bold text-[#848e9c]">{offer.fiat_currency}</span>
+                </div>
+                <div className="text-[10px] text-[#848e9c] font-medium">Rate: {formatRate(offer.rate_adjustment)}</div>
               </TableCell>
-              <TableCell>
-                {formatNumber(offer.min_amount)} {offer.token}
+              <TableCell className="py-4">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#848e9c] text-xs">Available</span>
+                    <span className="text-[#eaecef] text-xs font-bold">{formatNumber(offer.total_available_amount)} {offer.token}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#848e9c] text-xs">Limit</span>
+                    <span className="text-[#eaecef] text-xs font-bold">{formatNumber(offer.min_amount)} - {formatNumber(offer.max_amount)} {offer.token}</span>
+                  </div>
+                </div>
               </TableCell>
-              <TableCell>
-                {formatNumber(offer.max_amount)} {offer.token}
-              </TableCell>
-              <TableCell>
-                {formatNumber(offer.total_available_amount)} {offer.token}
-              </TableCell>
-              <TableCell>
-                <span
-                  className={
-                    rateAdjustmentDirection(offer.rate_adjustment) === 'up'
-                      ? 'text-success'
-                      : rateAdjustmentDirection(offer.rate_adjustment) === 'down'
-                      ? 'text-red-600'
-                      : 'text-neutral-600'
-                  }
-                >
-                  {formatRate(offer.rate_adjustment)}
+              <TableCell className="py-4">
+                <span className="bg-[#2b3139] text-[#eaecef] text-[10px] font-bold px-2 py-1 border-l-2 border-[#fcd535]">
+                  On-chain Escrow
                 </span>
               </TableCell>
-              <TableCell>{offer.fiat_currency}</TableCell>
-              <TableCell className="text-neutral-600 text-sm">
-                {formatDistanceToNow(new Date(offer.updated_at))} ago
-              </TableCell>
-              <TableCell>
+              <TableCell className="py-4 text-right">
                 {primaryWallet ? (
                   currentUserAccountId === offer.creator_account_id ? (
-                    <OfferActionButtons
-                      offerId={offer.id}
-                      onDelete={handleDeleteOffer}
-                      isDeleting={isDeletingOffer} // Pass down isDeleting prop
-                    />
+                    <div className="flex justify-end">
+                      <OfferActionButtons
+                        offerId={offer.id}
+                        onDelete={handleDeleteOffer}
+                        isDeleting={isDeletingOffer}
+                      />
+                    </div>
                   ) : (
                     <TradeConfirmationDialog
                       isOpen={isDialogOpen && selectedOfferId === offer.id}
@@ -141,9 +111,13 @@ const DesktopOfferTable: React.FC<DesktopOfferTableProps> = ({
                       triggerButton={
                         <Button
                           onClick={() => openTradeDialog(offer.id)}
-                          className="bg-success hover:bg-secondary-800 text-white border-none h-8 px-2 w-full flex justify-center"
+                          className={`${
+                            offer.offer_type === 'BUY' 
+                              ? 'bg-[#02c076] hover:opacity-90' 
+                              : 'bg-[#f84960] hover:opacity-90'
+                          } text-white font-bold h-9 px-6 rounded-sm text-sm min-w-[100px]`}
                         >
-                          Preview Trade
+                          {offer.offer_type === 'BUY' ? 'Sell USDC' : 'Buy USDC'}
                         </Button>
                       }
                     />
@@ -151,9 +125,9 @@ const DesktopOfferTable: React.FC<DesktopOfferTableProps> = ({
                 ) : (
                   <Button
                     onClick={() => setShowAuthFlow(true)}
-                    className="bg-primary-600 hover:bg-primary-700 text-white border-none text-sm px-3 py-1 h-8"
+                    className="bg-[#fcd535] hover:opacity-90 text-[#0b0e11] font-bold h-9 px-4 rounded-sm text-xs"
                   >
-                    Connect Wallet to Trade
+                    Connect to Trade
                   </Button>
                 )}
               </TableCell>

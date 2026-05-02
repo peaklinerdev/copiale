@@ -1,5 +1,5 @@
 // Reusable error banner that knows how to render the structured ApiError
-// shape from yapbay-api (M2 / M6). Surfaces:
+// shape from copiale-p2p-api (M2 / M6). Surfaces:
 //   - top-level message
 //   - per-field validation issues (under each label or all collected)
 //   - X-Request-Id as a small "ref:" line for support correlation

@@ -1,230 +1,87 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Container from '@/components/Shared/Container';
-import StatusBadge from '@/components/Shared/StatusBadge';
 import { getHealth, HealthResponse } from '@/api';
+import { BarChart3 } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   const [health, setHealth] = useState<HealthResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // The Footer renders apiVersion / contractVersion / dbStatus, all of
-    // which only the full /health endpoint returns. /health/live is used
-    // by other indicators (Status page liveness panel) for cheap probes;
-    // here we keep /health and rate-limit ourselves to once per 30s.
     const fetchHealth = async () => {
       try {
         const response = await getHealth();
         setHealth(response.data);
       } catch (err) {
-        setError('Failed to fetch system status');
         console.error('Health check failed:', err);
       }
     };
 
     fetchHealth();
-    const interval = setInterval(fetchHealth, 30000); // Refresh every 30 seconds
+    const interval = setInterval(fetchHealth, 30000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <footer className="site-footer">
+    <footer className="bg-[#0b0e11] border-t border-[#2b3139] py-12 mt-auto">
       <Container>
-        <div className="footer-container">
-          <div className="footer-section flex items-center justify-center text-center">
-            <div className="footer-nav flex flex-col items-center">
-              <Link to="/" className="text-xl sm:text-2xl text-primary-700 flex items-center gap-2">
-                <img
-                  src="/logo.png"
-                  alt="YapBay Logo"
-                  className="h-4 sm:h-6 md:h-10 lg:h-12 w-auto max-h-12 mx-auto rounded-full"
-                  loading="lazy"
-                />
-                <h4 className="font-black text-primary-800 my-1">YapBay</h4>
-                <StatusBadge />
-              </Link>
-              <p className="text-sm">Buy, sell and remit USDC on Solana P2P anywhere, anyhow</p>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+          {/* Brand */}
+          <div className="md:col-span-1 space-y-6">
+            <Link to="/" className="flex items-center gap-2 group">
+              <div className="w-6 h-6 bg-[#fcd535] rounded-sm flex items-center justify-center">
+                <BarChart3 size={16} className="text-[#0b0e11]" />
+              </div>
+              <span className="text-lg font-bold text-[#eaecef]">Copiale-p2p</span>
+            </Link>
+            <p className="text-xs text-[#848e9c] leading-relaxed">
+              Professional P2P marketplace for <br />
+              <span className="text-[#fcd535] font-bold">USDC/USDT</span> on <span className="text-[#fcd535] font-bold">Solana/EVM</span>.
+            </p>
           </div>
 
-          <div className="footer-section">
-            <h3 className="footer-title">About</h3>
-            <nav className="footer-nav">
-              <a target="_blank" href="https://yapbay.com/" rel="noopener noreferrer">
-                Features
-              </a>
-              <a target="_blank" href="https://yapbay.com/about/" rel="noopener noreferrer">
-                About
-              </a>
-              <a target="_blank" href="https://yapbay.com/blog" rel="noopener noreferrer">
-                Blog
-              </a>
-              <a target="_blank" href="https://yapbay.com/roadmap/" rel="noopener noreferrer">
-                Roadmap
-              </a>
+          {/* Links */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase text-[#eaecef] tracking-wider">Service</h3>
+            <nav className="flex flex-col gap-2 text-xs">
+              <Link to="/" className="text-[#848e9c] hover:text-[#fcd535]">P2P Trading</Link>
+              <Link to="/status" className="text-[#848e9c] hover:text-[#fcd535]">System Status</Link>
+              <a href="#" className="text-[#848e9c] hover:text-[#fcd535]">Fees & Limits</a>
             </nav>
           </div>
 
-          <div className="footer-section">
-            <h3 className="footer-title">Legal</h3>
-            <nav className="footer-nav">
-              <a target="_blank" href="https://yapbay.com/terms" rel="noopener noreferrer">
-                Terms of Service
-              </a>
-              <a target="_blank" href="https://yapbay.com/privacy" rel="noopener noreferrer">
-                Privacy Policy
-              </a>
-              <a target="_blank" href="https://yapbay.com/disclaimer" rel="noopener noreferrer">
-                Disclaimer
-              </a>
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase text-[#eaecef] tracking-wider">Support</h3>
+            <nav className="flex flex-col gap-2 text-xs">
+              <a href="mailto:support@copiale-p2p.com" className="text-[#848e9c] hover:text-[#fcd535]">Help Center</a>
+              <a href="#" className="text-[#848e9c] hover:text-[#fcd535]">API Documentation</a>
+              <a href="#" className="text-[#848e9c] hover:text-[#fcd535]">Contact Us</a>
             </nav>
           </div>
 
-          <div className="footer-section">
-            <h3 className="footer-title">Connect</h3>
-
-            <p>
-              <a
-                target="_blank"
-                href="https://getwaitlist.com/waitlist/17774"
-                rel="noopener noreferrer"
-              >
-                Get on the Waitlist
-              </a>
-            </p>
-
-            <p className="mt-2">
-              <a className="!font-normal" href="mailto:hello@panmoni.com">
-                hello@panmoni.com
-              </a>
-            </p>
-
-            <div className="social-links">
-              <a
-                href="https://x.com/yapbay_"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="X (Twitter)"
-                className="flex items-center"
-              >
-                <svg
-                  className="text-primary-700 hover:text-primary-800 w-5 h-5"
-                  role="img"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <title>X</title>
-                  <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
-                </svg>
-              </a>
-              <a
-                href="https://github.com/Panmoni/yapbay"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="GitHub"
-                className="flex items-center"
-              >
-                <svg
-                  className="text-primary-700 hover:text-primary-800 w-5 h-5"
-                  role="img"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <title>GitHub</title>
-                  <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
-                </svg>
-              </a>
-              <a
-                href="https://t.me/Panmoni/288"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Telegram"
-                className="flex items-center"
-              >
-                <svg
-                  className="text-primary-700 hover:text-primary-800 w-5 h-5"
-                  role="img"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <title>Telegram</title>
-                  <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
-                </svg>
-              </a>
-              <a
-                href="mailto:hello@panmoni.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Email"
-                className="flex items-center"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="text-primary-700 hover:text-primary-800 w-6 h-6"
-                >
-                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                  <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
-                  <g id="SVGRepo_iconCarrier">
-                    {' '}
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M3.75 5.25L3 6V18L3.75 18.75H20.25L21 18V6L20.25 5.25H3.75ZM4.5 7.6955V17.25H19.5V7.69525L11.9999 14.5136L4.5 7.6955ZM18.3099 6.75H5.68986L11.9999 12.4864L18.3099 6.75Z"
-                      fill="#080341"
-                    ></path>{' '}
-                  </g>
-                </svg>
-              </a>
-            </div>
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase text-[#eaecef] tracking-wider">Legal</h3>
+            <nav className="flex flex-col gap-2 text-xs">
+              <a href="#" className="text-[#848e9c] hover:text-[#fcd535]">Terms of Use</a>
+              <a href="#" className="text-[#848e9c] hover:text-[#fcd535]">Privacy Policy</a>
+              <a href="#" className="text-[#848e9c] hover:text-[#fcd535]">Risk Warning</a>
+            </nav>
           </div>
         </div>
 
-        <div className="footer-bottom">
-          <p className="mb-2">
-            This is alpha software running on Solana devnet. Trades are limited to 100 USDC per
-            transaction.
+        <div className="pt-8 border-t border-[#2b3139] flex flex-col md:row justify-between items-center gap-4">
+          <p className="text-[10px] text-[#5e6673]">
+            &copy; {new Date().getFullYear()} Copiale-p2p. All rights reserved.
           </p>
-          <p className="mb-2">
-            Join the Telegram group:{' '}
-            <a href="https://t.me/Panmoni/288" target="_blank" rel="noopener noreferrer">
-              English
-            </a>{' '}
-            |{' '}
-            <a href="https://t.me/Panmoni/291" target="_blank" rel="noopener noreferrer">
-              Español
-            </a>
-          </p>
-          <p>
-            &copy; 2023-{new Date().getFullYear()} A{' '}
-            <a className="panmoni-link" href="https://panmoni.com" target="_blank" rel="noopener noreferrer">
-              Panmoni
-              <img
-                src="/panmoni.svg"
-                alt="Panmoni Logo"
-                className="w-4 h-4 inline ml-1 align-middle"
-              />
-            </a>{' '}
-            project
-          </p>
-
-          {/* Simplified System Status */}
-          {error ? (
-            <p className="text-red-500 text-sm mt-4">{error}</p>
-          ) : health ? (
-            <p className="text-xs text-gray-600 mt-4">
-              Status: {health.status} | Database: {health.dbStatus} | API:{' '}
-              {health.apiVersion.version} | Contract: {health.contractVersion} | Frontend:{' '}
-              {import.meta.env.VITE_APP_VERSION || '0.1.2'} | Build:{' '}
-              {new Date(health.apiVersion.buildDate).toLocaleString()} |{' '}
-              <Link to="/status" className="text-primary-600 hover:text-primary-800">
-                View Details
-              </Link>
-            </p>
-          ) : (
-            <p className="text-sm text-gray-500 mt-4">Loading system status...</p>
+          
+          {health && (
+            <div className="flex gap-4 text-[9px] text-[#474d57] font-medium uppercase tracking-tighter">
+              <span>API: {health.apiVersion.version}</span>
+              <span>•</span>
+              <span>DB: {health.dbStatus}</span>
+              <span>•</span>
+              <span>Contract: {health.contractVersion}</span>
+            </div>
           )}
         </div>
       </Container>

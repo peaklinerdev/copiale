@@ -1,9 +1,9 @@
 // Custom event names
-export const AUTH_STATE_CHANGE_EVENT = 'yapbay:auth-state-change';
-export const TRADE_REFRESH_EVENT = 'yapbay:refresh-trade';
-export const TRADE_STATE_CHANGE_EVENT = 'yapbay:trade-state-change';
-export const NEW_TRANSACTION_EVENT = 'yapbay:new-transaction';
-export const CRITICAL_STATE_CHANGE_EVENT = 'yapbay:critical-state-change';
+export const AUTH_STATE_CHANGE_EVENT = 'copiale-p2p:auth-state-change';
+export const TRADE_REFRESH_EVENT = 'copiale-p2p:refresh-trade';
+export const TRADE_STATE_CHANGE_EVENT = 'copiale-p2p:trade-state-change';
+export const NEW_TRANSACTION_EVENT = 'copiale-p2p:new-transaction';
+export const CRITICAL_STATE_CHANGE_EVENT = 'copiale-p2p:critical-state-change';
 
 // Helper function to dispatch auth state change events
 export const dispatchAuthStateChange = (walletAddress?: string) => {

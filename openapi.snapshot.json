@@ -1,12 +1,12 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "yapbay-api",
+    "title": "copiale-p2p-api",
     "version": "0.0.0",
     "description": "Financial P2P crypto escrow API. See docs/api-ref.md for the human-readable contract; this document is machine-generated from Zod schemas where registered.",
     "contact": {
-      "name": "YapBay",
-      "url": "https://app.yapbay.com"
+      "name": "Copiale-p2p",
+      "url": "https://app.copiale-p2p.com"
     },
     "license": {
       "name": "MIT"
@@ -14,7 +14,7 @@
   },
   "servers": [
     {
-      "url": "https://api.yapbay.com",
+      "url": "https://api.copiale-p2p.com",
       "description": "Production"
     },
     {

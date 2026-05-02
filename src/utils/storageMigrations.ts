@@ -5,9 +5,9 @@
 // an old browser session resuming after the cutover would replay
 // schema-invalid POSTs and loop on 400s.
 //
-// Sentinel `yapbay.migrations.v2` prevents re-runs.
+// Sentinel `copiale-p2p.migrations.v2` prevents re-runs.
 
-const SENTINEL_KEY = 'yapbay.migrations.v2';
+const SENTINEL_KEY = 'copiale-p2p.migrations.v2';
 
 /** Keys that held legacy numeric-amount payloads — drop on first boot. */
 const LEGACY_KEYS_TO_DROP = ['pendingTransactions', 'incompleteEscrows'];

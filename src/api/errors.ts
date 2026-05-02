@@ -1,4 +1,4 @@
-// Structured API error from yapbay-api's new error envelope:
+// Structured API error from copiale-p2p-api's new error envelope:
 //   { error: { code, message, details: { request_id, ... }, issues?, fields? } }
 //
 // Use `toApiError(err)` to turn an unknown thrown value (axios error, network

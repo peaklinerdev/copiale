@@ -49,7 +49,7 @@ export const TradeCalculatedValues: React.FC<TradeCalculatedValuesProps> = ({
           {showFeeSection && (
             <>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-neutral-700">YapBay Fee (1%)</span>
+                <span className="text-sm text-neutral-700">Copiale-p2p Fee (1%)</span>
                 <span className="font-medium">{formatNumber(platformFee)} USDC</span>
               </div>
               {actualFeeCharged && (
@@ -88,14 +88,14 @@ export const TradeCalculatedValues: React.FC<TradeCalculatedValuesProps> = ({
           {showFeeSection && (
             <>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-neutral-700">YapBay Fee</span>
+                <span className="text-sm text-neutral-700">Copiale-p2p Fee</span>
                 {/* Buyer pays 0 fiat fee */}
                 <span className="font-medium">0 {offer.fiat_currency}</span>
               </div>
               <div className="text-xs text-neutral-500 pl-2">
                 {/* Show the fee the seller pays */}
                 <span>
-                  Seller pays the 1% YapBay fee ({formatNumber(platformFee)} USDC ≈{' '}
+                  Seller pays the 1% Copiale-p2p fee ({formatNumber(platformFee)} USDC ≈{' '}
                   {formatNumber(platformFee * (fiatAmount / parseFloat(amount)))}{' '}
                   {offer.fiat_currency})
                 </span>

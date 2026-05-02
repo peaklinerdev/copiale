@@ -1,6 +1,6 @@
-# State Reference for YapBay
+# State Reference for Copiale-p2p
 
-This document serves as the definitive state reference for the YapBay repository, covering both API/blockchain states and frontend-specific states.
+This document serves as the definitive state reference for the Copiale-p2p repository, covering both API/blockchain states and frontend-specific states.
 
 ## API and Blockchain States
 

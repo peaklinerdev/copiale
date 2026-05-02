@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "YapBayEscrow",
-  "sourceName": "contracts/YapBayEscrow.sol",
+  "contractName": "Copiale-p2pEscrow",
+  "sourceName": "contracts/Copiale-p2pEscrow.sol",
   "abi": [
     {
       "anonymous": false,
@@ -720,7 +720,7 @@
           "type": "uint256"
         },
         {
-          "internalType": "enum YapBayEscrow.EscrowState",
+          "internalType": "enum Copiale-p2pEscrow.EscrowState",
           "name": "state",
           "type": "uint8"
         },

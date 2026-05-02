@@ -10,9 +10,9 @@ import { fileURLToPath } from 'url';
 // Load ABI using fs (ES Module compatible)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const abiPath = path.resolve(__dirname, '../src/utils/YapBayEscrow.json');
+const abiPath = path.resolve(__dirname, '../src/utils/Copiale-p2pEscrow.json');
 const abiFileContent = fs.readFileSync(abiPath, 'utf-8');
-const YapBayEscrowABI = JSON.parse(abiFileContent);
+const Copiale-p2pEscrowABI = JSON.parse(abiFileContent);
 
 // Load environment variables from .env file
 dotenv.config();
@@ -92,7 +92,7 @@ async function main() {
   const provider = new ethers.JsonRpcProvider(RPC_URL);
 
   console.log(`Using contract address: ${CONTRACT_ADDRESS}`);
-  const contract = new ethers.Contract(CONTRACT_ADDRESS!, YapBayEscrowABI.abi, provider);
+  const contract = new ethers.Contract(CONTRACT_ADDRESS!, Copiale-p2pEscrowABI.abi, provider);
 
   console.log('Querying EscrowCreated events...');
 

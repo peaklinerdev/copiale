@@ -176,7 +176,7 @@ export const updateAccount = (
 
 // Offers API
 /**
- * Request body for POST /offers per yapbay-api/src/schemas/offers.ts:
+ * Request body for POST /offers per copiale-p2p-api/src/schemas/offers.ts:
  *   - amounts are decimal strings
  *   - rate_adjustment is number on request (responses widen to string)
  *   - creator_account_id REQUIRED
@@ -231,7 +231,7 @@ interface TradesResponse {
 /**
  * GET /offers — list offers with optional filters and pagination.
  *
- * Pagination params per yapbay-api/src/schemas/primitives/pagination.ts:
+ * Pagination params per copiale-p2p-api/src/schemas/primitives/pagination.ts:
  *   limit: 1..100 (default 25), offset: 0..100_000 (default 0).
  */
 export const getOffers = (params?: {
@@ -247,7 +247,7 @@ export const getOfferById = (
 ) => api.get<GetOfferResponse>(`/offers/${id}`);
 
 /**
- * Request body for PUT /offers/:id per yapbay-api/src/schemas/offers.ts.
+ * Request body for PUT /offers/:id per copiale-p2p-api/src/schemas/offers.ts.
  * All fields optional; backend strict-rejects creator_account_id, id,
  * timestamps, network_id (use COALESCE on supplied fields only).
  */
@@ -287,7 +287,7 @@ export const deleteOfferWithNetwork = (networkName: string, id: number) =>
 
 // Trades API
 //
-// Response shapes per yapbay-api/src/schemas/trades.ts:
+// Response shapes per copiale-p2p-api/src/schemas/trades.ts:
 //   POST /trades     -> 201 { network, trade }
 //   GET  /trades/:id ->     { network, trade }
 //   GET  /trades/my  ->     { network, trades }
@@ -325,14 +325,14 @@ export const markFiatPaid = (id: number) =>
 // NOTE: the legacy POST endpoints (/escrows/fund, /escrows/release,
 // /escrows/cancel, /escrows/dispute, /escrows/mark-fiat-paid) and the
 // fetch-by-tradeId GET were stale scaffolding — they were never wired up
-// in yapbay-api (verified via `git log -S` across the repo's full
+// in copiale-p2p-api (verified via `git log -S` across the repo's full
 // history). The on-chain lifecycle is implemented client-side in
 // `src/services/chainService.ts` via the Anchor program; only the
 // recording POST below remains.
 
 /**
  * POST /escrows/record response.
- * Shape matches yapbay-api/src/schemas/escrows.ts `escrowRecordResponseSchema`.
+ * Shape matches copiale-p2p-api/src/schemas/escrows.ts `escrowRecordResponseSchema`.
  */
 export type RecordEscrowResponse = {
   success: true;
@@ -350,7 +350,7 @@ export type RecordEscrowResponse = {
  * Per Design Invariant 5: per-family request shapes are separate types,
  * not optional-field unions. Backend strict-rejects EVM fields on Solana
  * requests and vice versa. Mirrors `solanaEscrowRecordSchema` in
- * yapbay-api/src/schemas/escrows.ts.
+ * copiale-p2p-api/src/schemas/escrows.ts.
  */
 export type RecordSolanaEscrowRequest = {
   trade_id: number;
@@ -482,7 +482,7 @@ export const getPrices = () => api.get<PricesResponse>('/prices');
 
 // Health API
 //
-// yapbay-api split health into three endpoints (commit 251a93d):
+// copiale-p2p-api split health into three endpoints (commit 251a93d):
 //   - /health/live  — cheap liveness, always 200 if process is alive
 //   - /health/ready — readiness with { status, checks } (200 / 503)
 //   - /health       — full aggregate (table counts, RPC ping, version)

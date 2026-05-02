@@ -20,7 +20,7 @@ const NoOffers: React.FC = () => {
           </Link>
 
           <a
-            href="https://t.me/Panmoni/802"
+            href="https://t.me/Copiale/802"
             target="_blank"
             rel="noopener noreferrer"
             className="bg-info-500 hover:bg-info-600 text-white px-6 py-2 rounded-md font-medium transition-colors"
@@ -36,7 +36,7 @@ const NoOffers: React.FC = () => {
           ayudamos en Español también.
         </p>
         <a
-          href="https://t.me/Panmoni/804"
+          href="https://t.me/Copiale/804"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block mt-2 text-info-500 hover:text-info-600 font-medium underline"

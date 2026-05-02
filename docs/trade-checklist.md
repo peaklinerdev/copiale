@@ -1,6 +1,6 @@
 # Successful Trade Checklist
 
-A step-by-step checklist for ensuring a trade completes successfully in YapBay.
+A step-by-step checklist for ensuring a trade completes successfully in Copiale-p2p.
 
 ## What Works
 

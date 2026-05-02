@@ -7,7 +7,7 @@
 // `crypto.randomUUID()` requires a secure context. We provide a v4 fallback
 // for non-secure dev previews (older Safari, http://192.x previews) so the
 // migration doesn't break in those environments. The fallback shape matches
-// the regex enforced by yapbay-api/src/middleware/idempotency.ts:34.
+// the regex enforced by copiale-p2p-api/src/middleware/idempotency.ts:34.
 
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 

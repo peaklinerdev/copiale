@@ -1,6 +1,6 @@
 /**
  * Solana Program Interface
- * Integrates with the YapBay escrow program using Anchor
+ * Integrates with the Copiale-p2p escrow program using Anchor
  */
 
 import { Program, AnchorProvider, BN } from '@coral-xyz/anchor';

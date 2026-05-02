@@ -1,10 +1,48 @@
 import React, { useEffect, useState } from 'react';
-import { getHealth, getReadiness, HealthResponse } from '@/api';
+import { getHealth, getReadiness, HealthResponse, ReadinessResponse } from '@/api';
 import Container from '@/components/Shared/Container';
 import { versionInfo } from '@/utils/version';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 
 // GitHub repository configuration - Replaced with generic placeholder
+const GITHUB_REPO_URL = 'https://github.com/Copiale/copiale-p2p';
+
+function explorerAddressUrl(
+  blockExplorerUrl: string | null | undefined,
+  address: string | null | undefined,
+): string | null {
+  if (!blockExplorerUrl || !address) return null;
+  try {
+    const base = new URL(blockExplorerUrl);
+    if (base.protocol !== 'http:' && base.protocol !== 'https:') return null;
+    return new URL(`/address/${encodeURIComponent(address)}`, base.origin).href;
+  } catch {
+    return null;
+  }
+}
+
+function getGitHubCommitUrl(commitHash: string | null | undefined): string | null {
+  if (!commitHash || commitHash === 'unknown') return null;
+  return `${GITHUB_REPO_URL}/commit/${commitHash}`;
+}
+
+function CommitHashLink({ 
+  commitHash, 
+}: { 
+  commitHash: string | null | undefined; 
+}) {
+  if (!commitHash || commitHash === 'unknown') {
+    return <span className="text-slate-500">Unknown</span>;
+  }
+
+  const shortHash = commitHash.length > 7 ? commitHash.substring(0, 7) : commitHash;
+  const url = getGitHubCommitUrl(commitHash);
+  
+  if (url) {
+    return <a href={url} target="_blank" rel="noopener noreferrer" className="font-mono text-sm text-gold-500 hover:text-gold-400 transition-colors">{shortHash}</a>;
+  }
+  return <span className="font-mono text-sm text-slate-300">{shortHash}</span>;
+}
 
 function formatWalletAddress(address: string | null | undefined): string {
   if (!address) return 'Not Connected';
@@ -30,13 +68,15 @@ function formatDate(dateString: string | null | undefined): string {
 export const Status: React.FC = () => {
   const { primaryWallet } = useDynamicContext();
   const [health, setHealth] = useState<HealthResponse | null>(null);
+  const [readiness, setReadiness] = useState<ReadinessResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [h] = await Promise.all([getHealth(), getReadiness().catch(() => null)]);
+        const [h, r] = await Promise.all([getHealth(), getReadiness().catch(() => null)]);
         setHealth(h.data);
+        setReadiness(r ? r.data : null);
       } catch (err) {
         setError('Failed to fetch system status');
         console.error('Health check failed:', err);
@@ -77,7 +117,7 @@ export const Status: React.FC = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">API Version</label>
-                    <span className="text-slate-200">{health.apiVersion.version}</span>
+                    <span className="text-slate-200">{health.apiVersion.version} <CommitHashLink commitHash={health.apiVersion.commitHash} /></span>
                   </div>
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Frontend Version</label>
@@ -96,6 +136,21 @@ export const Status: React.FC = () => {
                 </div>
               </div>
             </section>
+
+            {/* System Readiness */}
+            {readiness && (
+              <section className="bg-slate-900 border border-slate-800 rounded-2xl p-8">
+                <h2 className="text-xl font-bold mb-6 text-gold-500 uppercase tracking-widest text-sm">System Readiness</h2>
+                <div className="flex flex-wrap gap-4">
+                  {Object.entries(readiness.checks).map(([key, value]) => (
+                    <div key={key} className="bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full ${value ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500'}`} />
+                      <span className="text-sm font-medium text-slate-300 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Network Infrastructure */}
             <section className="bg-slate-900 border border-slate-800 rounded-2xl p-8">

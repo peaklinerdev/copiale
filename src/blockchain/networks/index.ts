@@ -66,7 +66,7 @@ export class NetworkRegistry {
       return enabled[0];
     }
 
-    throw new Error('No enabled networks found');
+    throw new Error('No enabled networks found in the registry. Please ensure at least one network is enabled via environment variables (e.g., VITE_SOLANA_RPC_URL_DEVNET).');
   }
 
   /**
@@ -193,6 +193,23 @@ export function initializeNetworks(): void {
         enabled: false, // Disabled by default
       });
     }
+  }
+
+  // Ensure at least one enabled network is registered to prevent application crash
+  if (networkRegistry.getEnabled().length === 0) {
+    console.warn('Network registry: No enabled networks found in environment, using default Solana Devnet');
+    networkRegistry.register({
+      id: 'solana-devnet',
+      type: NetworkType.SOLANA,
+      name: 'Solana Devnet (Default)',
+      rpcUrl: import.meta.env.VITE_SOLANA_RPC_URL_DEVNET || 'https://api.devnet.solana.com',
+      programId: import.meta.env.VITE_SOLANA_PROGRAM_ID_DEVNET || '4PonUp1nPEzDPnRMPjTqufLT3f37QuBJGk1CVnsTXx7x',
+      usdcMint: import.meta.env.VITE_SOLANA_USDC_MINT_DEVNET || '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU',
+      arbitratorAddress: import.meta.env.VITE_SOLANA_ARBITRATOR_ADDRESS || 'GGrXhNVxUZXaA2uMopsa5q23aPmoNvQF14uxqo8qENUr',
+      blockExplorerUrl: 'https://explorer.solana.com/?cluster=devnet',
+      isTestnet: true,
+      enabled: true,
+    });
   }
 }
 

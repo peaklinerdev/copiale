@@ -1,7 +1,7 @@
 // src/config/index.ts
 export const config = {
   apiUrl: import.meta.env.VITE_API_URL,
-  dynamicSdkId: import.meta.env.VITE_DYNAMIC_ENV_ID,
+  dynamicSdkId: import.meta.env.VITE_DYNAMIC_ENVIRONMENT_ID || import.meta.env.VITE_DYNAMIC_ENV_ID,
   arbitratorAddress: import.meta.env.VITE_ARBITRATOR_ADDRESS,
 
   // Network configurations

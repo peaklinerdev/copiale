@@ -131,7 +131,21 @@ export const Status: React.FC = () => {
                   </div>
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Connected Wallet</label>
-                    <span className="text-slate-300 font-mono text-sm">{formatWalletAddress(primaryWallet?.address)}</span>
+                    {primaryWallet?.address ? (
+                      <a 
+                        href={explorerAddressUrl(
+                          health.networks.find(n => n.isActive && n.networkFamily === 'solana') ? 'https://explorer.solana.com' : null,
+                          primaryWallet.address
+                        ) || '#'} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-slate-300 font-mono text-sm hover:text-gold-400 transition-colors underline decoration-slate-500/30"
+                      >
+                        {formatWalletAddress(primaryWallet.address)}
+                      </a>
+                    ) : (
+                      <span className="text-slate-500 font-mono text-sm">Not Connected</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -179,7 +193,21 @@ export const Status: React.FC = () => {
                         </div>
                         <div className="lg:col-span-2">
                           <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">Program ID</label>
-                          <span className="text-slate-400 font-mono text-xs break-all">{network.programId || 'N/A'}</span>
+                          {network.programId ? (
+                            <a 
+                              href={explorerAddressUrl(
+                                network.networkFamily === 'solana' ? 'https://explorer.solana.com' : null, 
+                                network.programId
+                              ) || '#'} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-gold-500 hover:text-gold-400 font-mono text-xs break-all underline decoration-gold-500/30"
+                            >
+                              {network.programId}
+                            </a>
+                          ) : (
+                            <span className="text-slate-400 font-mono text-xs">N/A</span>
+                          )}
                         </div>
                       </div>
                     </div>

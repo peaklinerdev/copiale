@@ -53,7 +53,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
   const [formData, setFormData] = useState({
     creator_account_id: account?.id || '',
     offer_type: 'BUY' as 'BUY' | 'SELL',
-    token: 'USDT',
+    token: 'USDC',
     min_amount: '',
     max_amount: '',
     total_available_amount: '',
@@ -129,8 +129,8 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
         total_available_amount: totalAmount,
         rate_adjustment: Number(formData.rate_adjustment),
         terms: fullTerms,
-        escrow_deposit_time_limit: { minutes: 15 },
-        fiat_payment_time_limit: { minutes: 30 },
+        escrow_deposit_time_limit: '15 minutes',
+        fiat_payment_time_limit: '30 minutes',
         fiat_currency: formData.fiat_currency,
       };
 
@@ -213,7 +213,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1e2329] border-[#2b3139] text-[#eaecef]">
-                    <SelectItem value="USDT">USDT</SelectItem>
+                    
                     <SelectItem value="USDC">USDC</SelectItem>
                   </SelectContent>
                 </Select>

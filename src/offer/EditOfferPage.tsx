@@ -50,8 +50,8 @@ function EditOfferPage() {
     total_available_amount: '0',
     rate_adjustment: 1,
     terms: '',
-    escrow_deposit_time_limit: { minutes: 60 },
-    fiat_payment_time_limit: { minutes: 60 },
+    escrow_deposit_time_limit: '60 minutes',
+    fiat_payment_time_limit: '60 minutes',
     fiat_currency: 'USD',
   });
 

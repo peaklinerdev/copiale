@@ -5,12 +5,10 @@ import {
   useDynamicContext,
   DynamicWidget,
   getAuthToken,
-  getNetwork,
   useWalletConnectorEvent,
 } from '@dynamic-labs/sdk-react-core';
 import { Account, setAuthToken, getPrices } from './api';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Menu, X, BarChart3 } from 'lucide-react';
 import {
@@ -19,7 +17,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import StatusBadge from '@/components/Shared/StatusBadge';
 import Container from '@/components/Shared/Container';
 import { useBlockchainService } from './hooks/useBlockchainService';
 
@@ -36,7 +33,7 @@ function Header({ isLoggedIn, account }: HeaderProps) {
   const [prices, setPrices] = useState<Record<string, { price: string; timestamp: number }> | null>(
     null
   );
-  const [priceError, setPriceError] = useState<string | null>(null);
+  const [_priceError, setPriceError] = useState<string | null>(null);
   const [usdtBalance, setUsdtBalance] = useState<string>('0.00');
   const [currentNetwork, setCurrentNetwork] = useState<number | string | null>(null);
 

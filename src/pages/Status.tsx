@@ -117,7 +117,7 @@ export const Status: React.FC = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">API Version</label>
-                    <span className="text-slate-200">{health.apiVersion.version} <CommitHashLink commitHash={health.apiVersion.commitHash} /></span>
+                    <span className="text-slate-200">{health.apiVersion.version} <CommitHashLink commitHash={health.apiVersion.gitCommitHash} /></span>
                   </div>
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Frontend Version</label>

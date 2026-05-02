@@ -7,7 +7,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,6 @@ import Container from '@/components/Shared/Container';
 import { ErrorBanner } from '@/components/Shared/ErrorBanner';
 import { ApiError, toApiError } from '@/api/errors';
 import OfferDescription from '@/components/Offer/OfferDescription';
-import { getMinutesFromTimeLimit } from '@/utils/timeUtils';
 
 // Form-state shape: amounts are strings (raw input values from <Input> elements);
 // rate_adjustment is a number factor (1.05 = 5% above market). Convert to the

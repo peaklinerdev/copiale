@@ -3,10 +3,9 @@ import { Offer } from '@/api';
 import { formatNumber } from '../../lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '../../components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import OfferActionButtons from '@/components/Offer/OfferActionButtons';
 import TradeConfirmationDialog from '@/components/Trade/TradeConfirmationDialog';
-import { abbreviateWallet, formatRate, rateAdjustmentDirection } from '../../utils/stringUtils';
+import { abbreviateWallet } from '../../utils/stringUtils';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 
 interface MobileOfferListProps {

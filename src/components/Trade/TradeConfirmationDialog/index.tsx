@@ -14,7 +14,6 @@ import { Label } from '@/components/ui/label';
 import { Offer } from '@/api';
 import { formatNumber } from '@/lib/utils';
 import { numericValue } from '@/utils/money-display';
-import { ExternalLink } from 'lucide-react';
 
 // Import our custom hooks and components
 import { useTradeConfirmation } from './useTradeConfirmation';

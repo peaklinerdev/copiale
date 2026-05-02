@@ -10,7 +10,7 @@ export const IntroMessageNotLoggedIn: React.FC = () => {
     <div className="bg-[#1e2329] border border-[#2b3139] p-8 md:p-12 mb-8 relative overflow-hidden">
       <div className="max-w-4xl relative z-10">
         <h2 className="text-4xl md:text-6xl font-extrabold text-[#eaecef] mb-6 tracking-tight">
-          Trade <span className="text-[#fcd535]">USDC/USDT</span> <br />
+          Trade <span className="text-[#fcd535]">USDT/USDC</span> <br />
           on Solana & EVM
         </h2>
         

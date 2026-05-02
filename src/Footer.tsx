@@ -36,7 +36,7 @@ export const Footer: React.FC = () => {
             </Link>
             <p className="text-xs text-[#848e9c] leading-relaxed">
               Professional P2P marketplace for <br />
-              <span className="text-[#fcd535] font-bold">USDC/USDT</span> on <span className="text-[#fcd535] font-bold">Solana/EVM</span>.
+              <span className="text-[#fcd535] font-bold">USDT/USDC</span> on <span className="text-[#fcd535] font-bold">Solana/EVM</span>.
             </p>
           </div>
 

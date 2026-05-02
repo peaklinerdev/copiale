@@ -10,26 +10,26 @@ function OfferTypeTooltip({ offerType }: OfferTypeTooltipProps) {
       <Tooltip>
         <TooltipTrigger asChild>
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${
+            className={`px-2 py-0.5 rounded-sm text-[10px] font-black uppercase tracking-wider ${
               offerType === "BUY"
-                ? "bg-success text-neutral-100"
-                : "bg-error text-neutral-100"
+                ? "bg-[#02c076] text-white"
+                : "bg-[#f84960] text-white"
             }`}
           >
             {offerType}
           </span>
         </TooltipTrigger>
         <TooltipContent
-          className={
+          className={`rounded-sm border-none font-bold text-[10px] uppercase tracking-wider ${
             offerType === "BUY"
-              ? "bg-success text-neutral-100"
-              : "bg-error text-neutral-100"
-          }
+              ? "bg-[#02c076] text-white"
+              : "bg-[#f84960] text-white"
+          }`}
         >
           <p>
             {offerType === "BUY"
-              ? "You are buying USDC from others"
-              : "You are selling USDC to others"}
+              ? "Advertiser wants to Buy USDT/USDC"
+              : "Advertiser wants to Sell USDT/USDC"}
           </p>
         </TooltipContent>
       </Tooltip>

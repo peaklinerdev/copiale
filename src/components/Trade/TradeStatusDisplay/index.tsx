@@ -143,31 +143,27 @@ const TradeStatusDisplay: React.FC<TradeStatusDisplayProps> = ({
   });
 
   return (
-    <div className="space-y-4 relative">
+    <div className="space-y-6 relative">
       {/* Main Status Display */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <StatusBadge className="text-base py-1.5 px-3">{trade.leg1_state}</StatusBadge>
-        {/* Updated Status Message */}
-        <p className="text-lg font-medium text-right">
-          <span className="text-sm font-normal text-muted-foreground mr-1">Current Status:</span>
-          {currentStatusMessage}
-        </p>
+      <div className="flex items-center justify-between flex-wrap gap-4 bg-[#1e2329] border border-[#2b3139] p-4 rounded-sm">
+        <StatusBadge className="text-sm font-black tracking-widest">{trade.leg1_state}</StatusBadge>
+        <div className="text-right">
+          <p className="text-[10px] font-bold text-[#848e9c] uppercase mb-1">Current Status</p>
+          <p className="text-lg font-bold text-[#eaecef]">{currentStatusMessage}</p>
+        </div>
       </div>
 
-      {/* --- Visual Status Overview (Replaces Progress Bar) --- */}
       <Collapsible open={isOverviewOpen} onOpenChange={setIsOverviewOpen} className="w-full">
-        <div className="flex justify-end mb-1">
-          {' '}
-          {/* Button to toggle */}
+        <div className="flex justify-end mb-2">
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="text-xs h-7 px-2">
-              {isOverviewOpen ? 'Hide' : 'Show'} Status Overview
+            <Button variant="ghost" size="sm" className="text-[10px] font-bold uppercase tracking-widest h-6 px-2 text-[#848e9c] hover:text-[#eaecef] hover:bg-[#2b3139]">
+              {isOverviewOpen ? 'Hide' : 'Show'} Trade Flow
               <ChevronsUpDown className="h-3 w-3 ml-1" />
             </Button>
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent>
-          <div className="flex space-x-1 md:space-x-2 overflow-x-auto py-2 items-stretch border rounded-md p-2 bg-background">
+          <div className="flex space-x-2 overflow-x-auto py-4 items-stretch border border-[#2b3139] p-3 bg-[#0b0e11] rounded-sm">
             {tradeVisualSteps.map(step => {
               const message =
                 tradeStateMessages[step.state]?.[userRole] ?? step.state.replace(/_/g, ' ');
@@ -214,41 +210,39 @@ const TradeStatusDisplay: React.FC<TradeStatusDisplayProps> = ({
               }
 
               const boxStyle = cn(
-                'flex-1 flex flex-col items-center justify-start p-2 rounded-md border text-center min-w-[100px] transition-colors duration-200', // Base
+                'flex-1 flex flex-col items-center justify-start p-3 rounded-sm border text-center min-w-[110px] transition-all duration-200',
                 isCurrent && step.state === TradeLegState.DISPUTED
-                  ? 'border-orange-500 bg-orange-500/10 text-orange-700 shadow-md'
+                  ? 'border-[#f84960] bg-[#f84960]/10 text-[#f84960]'
                   : isCurrent && step.state === TradeLegState.CANCELLED
-                  ? 'border-red-500 bg-red-500/10 text-red-700 shadow-md'
+                  ? 'border-[#848e9c] bg-[#848e9c]/10 text-[#848e9c]'
                   : isCurrent
-                  ? 'border-yellow-500 bg-yellow-500/10 text-yellow-700 shadow-md' // Pending - Yellow
+                  ? 'border-[#fcd535] bg-[#fcd535]/5 text-[#fcd535]' 
                   : isCompleted
-                  ? 'border-green-500 bg-green-500/10 text-green-700' // Completed - Green
+                  ? 'border-[#02c076] bg-[#02c076]/10 text-[#02c076]'
                   : isFuture
-                  ? 'text-muted-foreground opacity-60 border-border bg-card' // Future - Muted
-                  : 'border-border bg-card' // Default
+                  ? 'text-[#474d57] opacity-60 border-[#2b3139] bg-transparent'
+                  : 'border-[#2b3139] bg-transparent'
               );
               const iconStyle = cn(
-                'h-5 w-5 mb-1.5', // Base
+                'h-5 w-5 mb-2',
                 isCurrent && step.state === TradeLegState.DISPUTED
-                  ? 'text-orange-600'
+                  ? 'text-[#f84960]'
                   : isCurrent && step.state === TradeLegState.CANCELLED
-                  ? 'text-red-600'
+                  ? 'text-[#848e9c]'
                   : isCurrent
-                  ? 'text-yellow-600' // Pending Icon - Yellow
+                  ? 'text-[#fcd535]'
                   : isCompleted
-                  ? 'text-green-600' // Completed Icon - Green
-                  : isFuture
-                  ? 'text-muted-foreground'
-                  : ''
+                  ? 'text-[#02c076]'
+                  : 'text-[#474d57]'
               );
 
               return (
                 <div key={step.state} className={boxStyle}>
                   <Icon className={iconStyle} />
-                  <span className="text-[10px] uppercase font-semibold tracking-wider mb-0.5">
+                  <span className="text-[9px] uppercase font-black tracking-widest mb-1">
                     {step.state.replace(/_/g, ' ')}
                   </span>
-                  <span className="text-xs font-medium leading-tight">{message}</span>
+                  <span className="text-[10px] font-bold leading-tight uppercase opacity-80">{message}</span>
                 </div>
               );
             })}

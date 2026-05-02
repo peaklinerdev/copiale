@@ -117,7 +117,7 @@ const DesktopOfferTable: React.FC<DesktopOfferTableProps> = ({
                               : 'bg-[#f84960] hover:opacity-90'
                           } text-white font-bold h-9 px-6 rounded-sm text-sm min-w-[100px]`}
                         >
-                          {offer.offer_type === 'BUY' ? 'Sell USDC' : 'Buy USDC'}
+                          {offer.offer_type === 'BUY' ? 'Sell' : 'Buy'} {offer.token}
                         </Button>
                       }
                     />

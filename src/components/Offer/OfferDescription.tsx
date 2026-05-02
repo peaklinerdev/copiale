@@ -8,29 +8,32 @@ interface OfferDescriptionProps {
 }
 
 function OfferDescription({ offer, className = '' }: OfferDescriptionProps) {
-  // Removed local formatRate function
-
-  // Determine action based on offer type
   const action = offer.offer_type === 'BUY' ? 'buying' : 'selling';
 
   return (
-    <div className={`text-lg font-medium ${className}`}>
-      You are {action} {offer.token} for {offer.fiat_currency} at{' '}
-      <span
-        className={
-          rateAdjustmentDirection(offer.rate_adjustment) === 'up'
-            ? 'text-success-600'
-            : rateAdjustmentDirection(offer.rate_adjustment) === 'down'
-            ? 'text-red-600'
-            : 'text-neutral-600'
-        }
-      >
-        {formatRate(offer.rate_adjustment)}
-      </span>{' '}
-      of the market rate
-      <div className="text-sm text-neutral-600 mt-1">
-        Min: {formatNumber(offer.min_amount)} {offer.token} | Max: {formatNumber(offer.max_amount)}{' '}
-        {offer.token} | Total Available: {formatNumber(offer.total_available_amount)} {offer.token}
+    <div className={`space-y-1 ${className}`}>
+      <div className="text-sm font-bold text-[#eaecef]">
+        You are {action} <span className="text-[#fcd535]">{offer.token}</span> for {offer.fiat_currency}
+      </div>
+      <div className="text-xs text-[#848e9c]">
+        Rate: {' '}
+        <span
+          className={
+            rateAdjustmentDirection(offer.rate_adjustment) === 'up'
+              ? 'text-[#02c076]'
+              : rateAdjustmentDirection(offer.rate_adjustment) === 'down'
+              ? 'text-[#f84960]'
+              : 'text-[#eaecef]'
+          }
+        >
+          {formatRate(offer.rate_adjustment)}
+        </span>{' '}
+        of market price
+      </div>
+      <div className="text-[10px] text-[#5e6673] flex gap-3 uppercase font-bold tracking-tighter">
+        <span>Min: {formatNumber(offer.min_amount)}</span>
+        <span>Max: {formatNumber(offer.max_amount)}</span>
+        <span>Total: {formatNumber(offer.total_available_amount)}</span>
       </div>
     </div>
   );

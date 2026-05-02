@@ -15,14 +15,14 @@ interface OfferActionButtonsProps {
   offerId: number;
   onDelete: (offerId: number) => void;
   isMobile?: boolean;
-  isDeleting?: boolean; // Add isDeleting prop
+  isDeleting?: boolean;
 }
 
 function OfferActionButtons({
   offerId,
   onDelete,
   isMobile = false,
-  isDeleting = false, // Default to false
+  isDeleting = false,
 }: OfferActionButtonsProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -37,13 +37,13 @@ function OfferActionButtons({
 
   return (
     <>
-      <div className={`flex gap-2 justify-center ${isMobile ? 'mt-4' : ''}`}>
+      <div className={`flex gap-2 justify-center ${isMobile ? 'mt-4 w-full' : ''}`}>
         <Link to={`/offer/${offerId}`} className={isMobile ? 'flex-1' : ''}>
           <Button
             variant="outline"
-            className="border-primary-700 text-primary-700 hover:text-primary-800 hover:border-primary-800 w-full h-8 px-2"
-            aria-label="View offer"
-            title="View offer"
+            className="border-[#2b3139] text-[#848e9c] hover:text-[#eaecef] hover:bg-[#2b3139] w-full h-9 rounded-sm"
+            aria-label="View Ad"
+            title="View Ad"
           >
             <Eye size={16} />
           </Button>
@@ -51,9 +51,9 @@ function OfferActionButtons({
         <Link to={`/edit-offer/${offerId}`} className={isMobile ? 'flex-1' : ''}>
           <Button
             variant="outline"
-            className="border-primary-700 text-primary-700 hover:text-primary-800 hover:border-primary-800 w-full h-8 px-2"
-            aria-label="Edit offer"
-            title="Edit offer"
+            className="border-[#2b3139] text-[#848e9c] hover:text-[#eaecef] hover:bg-[#2b3139] w-full h-9 rounded-sm"
+            aria-label="Edit Ad"
+            title="Edit Ad"
           >
             <Pencil size={16} />
           </Button>
@@ -61,39 +61,37 @@ function OfferActionButtons({
         <Button
           variant="outline"
           onClick={openDeleteDialog}
-          className={`border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600 h-8 px-2 ${
+          className={`border-[#2b3139] text-[#f84960] hover:bg-[#f84960]/10 h-9 rounded-sm ${
             isMobile ? 'flex-1' : ''
-          } ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''}`}
-          aria-label="Delete offer"
-          title="Delete offer"
-          disabled={isDeleting} // Disable button when deleting
+          } ${isDeleting ? 'opacity-50' : ''}`}
+          aria-label="Delete Ad"
+          title="Delete Ad"
+          disabled={isDeleting}
         >
-          {isDeleting ? '...' : <Trash2 size={16} />} {/* Show indicator */}
+          {isDeleting ? '...' : <Trash2 size={16} />}
         </Button>
       </div>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="bg-neutral-100 z-999">
+        <DialogContent className="bg-[#1e2329] border-[#2b3139] text-[#eaecef] z-[999] rounded-sm max-w-sm">
           <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this offer? This action cannot be undone.
+            <DialogTitle className="text-lg font-bold">Remove Advertisement?</DialogTitle>
+            <DialogDescription className="text-[#848e9c]">
+              This will permanently remove your liquidity offer from the P2P market.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+          <DialogFooter className="mt-6 flex gap-3">
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} className="flex-1 border-[#2b3139] text-[#eaecef] hover:bg-[#2b3139] rounded-sm">
               Cancel
             </Button>
             <Button
-              variant="destructive"
               onClick={handleDelete}
-              className={`bg-red-500 hover:bg-red-600 text-white ${
-                isDeleting ? 'opacity-50 cursor-not-allowed' : ''
+              className={`flex-1 bg-[#f84960] hover:opacity-90 text-white font-bold rounded-sm ${
+                isDeleting ? 'opacity-50' : ''
               }`}
-              disabled={isDeleting} // Disable confirmation button too
+              disabled={isDeleting}
             >
-              {isDeleting ? 'Deleting...' : 'Delete Offer'}
+              {isDeleting ? 'Removing...' : 'Confirm Remove'}
             </Button>
           </DialogFooter>
         </DialogContent>

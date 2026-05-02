@@ -11,7 +11,7 @@ interface StatusBadgeProps
 }
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({
-  children = 'Devnet MVP',
+  children = 'Live Market',
   className = '',
   showOnMobile = false,
   ...props
@@ -19,7 +19,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
   return (
     <Badge
       variant="secondary"
-      className={`bg-primary-100 text-primary-700 text-[10px] uppercase font-semibold ${
+      className={`bg-[#fcd535]/10 text-[#fcd535] border-[#fcd535]/20 text-[9px] uppercase font-black tracking-widest ${
         showOnMobile ? '' : 'hidden sm:inline-flex'
       } ${className}`}
       {...props}

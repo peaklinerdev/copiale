@@ -85,38 +85,38 @@ const TradeConfirmationDialog = ({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       {triggerButton && <DialogTrigger asChild>{triggerButton}</DialogTrigger>}
-      <DialogContent className="bg-neutral-100 z-50 max-w-md w-full">
-        <DialogHeader>
-          <DialogTitle>Confirm Trade Details</DialogTitle>
-          <DialogDescription>Review the details of this trade before confirming.</DialogDescription>
+      <DialogContent className="bg-[#1e2329] border-[#2b3139] text-[#eaecef] z-50 max-w-md w-full rounded-sm">
+        <DialogHeader className="border-b border-[#2b3139] pb-4">
+          <DialogTitle className="text-[#eaecef] font-bold">Confirm Trade Details</DialogTitle>
+          <DialogDescription className="text-[#848e9c]">Review the details of this trade before confirming.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-1 mb-4 mt-2">
+        <div className="space-y-4 mb-4 mt-4">
           {/* Trade Type */}
-          <div className="flex justify-between items-center p-2 bg-neutral-100 rounded">
-            <span className="font-medium text-neutral-700">Trade Type</span>
+          <div className="flex justify-between items-center p-3 bg-[#0b0e11] rounded-sm border border-[#2b3139]">
+            <span className="text-xs font-bold text-[#848e9c] uppercase">Trade Type</span>
             <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${
+              className={`px-3 py-1 rounded-sm text-[10px] font-black uppercase tracking-wider ${
                 offer.offer_type === 'BUY'
-                  ? 'bg-secondary-200 text-secondary-900'
-                  : 'bg-primary-100 text-primary-800'
+                  ? 'bg-[#f84960]/10 text-[#f84960]'
+                  : 'bg-[#02c076]/10 text-[#02c076]'
               }`}
             >
-              {offer.offer_type === 'BUY' ? 'You are selling USDC' : 'You are buying USDC'}
+              {offer.offer_type === 'BUY' ? 'Selling USDT/USDC' : 'Buying USDT/USDC'}
             </span>
           </div>
 
           {/* Token */}
-          <div className="flex justify-between items-center p-2 bg-neutral-100 rounded">
-            <span className="font-medium text-neutral-700">Token</span>
-            <span>{offer.token}</span>
+          <div className="flex justify-between items-center p-3 bg-[#0b0e11] rounded-sm border border-[#2b3139]">
+            <span className="text-xs font-bold text-[#848e9c] uppercase">Asset</span>
+            <span className="text-sm font-bold text-[#fcd535]">{offer.token}</span>
           </div>
 
           {/* Market Price */}
           {priceData && (
-            <div className="flex justify-between items-center p-2 bg-neutral-100 rounded">
-              <span className="font-medium text-neutral-700">Current Market Price</span>
-              <span>
+            <div className="flex justify-between items-center p-3 bg-[#0b0e11] rounded-sm border border-[#2b3139]">
+              <span className="text-xs font-bold text-[#848e9c] uppercase">Market Price</span>
+              <span className="text-sm font-bold">
                 {formatNumber(
                   parseFloat(
                     priceData.data.USDC[offer.fiat_currency as keyof typeof priceData.data.USDC]
@@ -129,17 +129,17 @@ const TradeConfirmationDialog = ({
           )}
 
           {/* Rate */}
-          <div className="flex flex-col p-2 bg-neutral-100 rounded">
+          <div className="flex flex-col p-3 bg-[#0b0e11] rounded-sm border border-[#2b3139]">
             <div className="flex justify-between items-center">
-              <span className="font-medium text-neutral-700">Rate Adjustment</span>
+              <span className="text-xs font-bold text-[#848e9c] uppercase">Rate Adjustment</span>
               <span
-                className={
+                className={`text-sm font-bold ${
                   numericValue(offer.rate_adjustment) > 1
-                    ? 'text-green-600'
+                    ? 'text-[#02c076]'
                     : numericValue(offer.rate_adjustment) < 1
-                    ? 'text-red-600'
-                    : 'text-neutral-600'
-                }
+                    ? 'text-[#f84960]'
+                    : 'text-[#eaecef]'
+                }`}
               >
                 {numericValue(offer.rate_adjustment) > 1
                   ? `+${((numericValue(offer.rate_adjustment) - 1) * 100).toFixed(2)}%`
@@ -148,73 +148,49 @@ const TradeConfirmationDialog = ({
                   : '0%'}
               </span>
             </div>
-            <div className="text-xs text-neutral-500 mt-1">
-              {offer.offer_type === 'BUY'
-                ? `You are selling USDC at ${
-                    numericValue(offer.rate_adjustment) > 1
-                      ? `${((numericValue(offer.rate_adjustment) - 1) * 100).toFixed(2)}% above`
-                      : numericValue(offer.rate_adjustment) < 1
-                      ? `${((1 - numericValue(offer.rate_adjustment)) * 100).toFixed(2)}% below`
-                      : `the same as`
-                  } the market price.`
-                : `You are buying USDC at ${
-                    numericValue(offer.rate_adjustment) > 1
-                      ? `${((numericValue(offer.rate_adjustment) - 1) * 100).toFixed(2)}% above`
-                      : numericValue(offer.rate_adjustment) < 1
-                      ? `${((1 - numericValue(offer.rate_adjustment)) * 100).toFixed(2)}% below`
-                      : `the same as`
-                  } the market price.`}
-            </div>
           </div>
 
           {/* Amount Input */}
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount ({offer.token})</Label>
-            <div className="flex items-center space-x-2">
+            <Label htmlFor="amount" className="text-xs font-bold text-[#848e9c] uppercase tracking-wider">Amount ({offer.token})</Label>
+            <div className="relative">
               <Input
                 id="amount"
-                type="text" // Changed from "number" to "text" for better decimal control
-                inputMode="decimal" // Brings up numeric keyboard on mobile with decimal point
+                type="text"
+                inputMode="decimal"
                 value={amount}
                 onChange={handleAmountChange}
-                placeholder={`Enter amount (${offer.min_amount} - ${offer.max_amount})`}
-                className={`bg-neutral-100 ${
-                  amountError ? 'border-red-500 focus:ring-red-500' : ''
+                placeholder={`Min: ${offer.min_amount}`}
+                className={`bg-[#0b0e11] border-[#2b3139] text-[#eaecef] rounded-sm focus:ring-0 h-12 pr-16 ${
+                  amountError ? 'border-[#f84960] focus:ring-[#f84960]/20' : ''
                 }`}
                 readOnly={false}
                 autoFocus
-                min={offer.min_amount}
-                max={offer.max_amount}
-                step="0.01" // Allow increments of 0.01
               />
-              <span className="text-neutral-600 text-sm">{offer.token}</span>
+              <span className="absolute right-3 top-3.5 text-xs font-bold text-[#848e9c]">{offer.token}</span>
             </div>
             <div className="flex flex-col gap-1">
-              {/* Seller's USDC Balance, styled as requested */}
               {isSeller && (
-                <span className="text-neutral-600 text-xs">
-                  Your current balance:{' '}
+                <span className="text-[#848e9c] text-[10px] font-medium">
+                  Available: {' '}
                   {usdcLoading
-                    ? 'Loading...'
+                    ? '---'
                     : usdcError
                     ? `Error`
                     : usdcBalanceNum?.toLocaleString(undefined, { maximumFractionDigits: 6 }) ??
-                      '—'}{' '}
+                      '0.00'}{' '}
                   {offer.token}
                 </span>
               )}
-              {amountError && <div className="text-xs text-red-600 mt-1">{amountError}</div>}
-              {/* Insufficient warning */}
+              {amountError && <div className="text-[10px] font-bold text-[#f84960] mt-1">{amountError}</div>}
               {isSeller && insufficient && (
-                <div className="mt-1 text-xs text-red-700 bg-red-100 border border-red-200 rounded p-2">
-                  <b>Warning:</b> Your USDC balance is insufficient to fund this escrow. Please
-                  deposit more USDC to your wallet before proceeding.
+                <div className="mt-1 text-[10px] font-bold text-[#f84960] bg-[#f84960]/10 border border-[#f84960]/20 rounded-sm p-3">
+                  Warning: Insufficient {offer.token} balance to fund this escrow.
                 </div>
               )}
             </div>
           </div>
 
-          {/* Use our TradeCalculatedValues component */}
           <TradeCalculatedValues
             offer={offer}
             amount={amount}
@@ -225,80 +201,47 @@ const TradeConfirmationDialog = ({
           />
 
           {/* Time Limits */}
-          <div className="text-xs text-neutral-500 p-2 bg-neutral-100 rounded">
-            <p>
-              Escrow Deposit Time Limit:{' '}
-              {typeof offer.escrow_deposit_time_limit === 'string'
+          <div className="text-[10px] text-[#848e9c] font-medium p-3 bg-[#0b0e11] border border-[#2b3139] rounded-sm flex justify-between">
+            <span>Escrow: {typeof offer.escrow_deposit_time_limit === 'string'
                 ? offer.escrow_deposit_time_limit
-                : `${offer.escrow_deposit_time_limit.minutes} minutes`}
-            </p>
-            <p className="mt-1">
-              Fiat Payment Time Limit:{' '}
-              {typeof offer.fiat_payment_time_limit === 'string'
+                : `${offer.escrow_deposit_time_limit.minutes}m`}</span>
+            <span>Payment: {typeof offer.fiat_payment_time_limit === 'string'
                 ? offer.fiat_payment_time_limit
-                : `${offer.fiat_payment_time_limit.minutes} minutes`}
-            </p>
+                : `${offer.fiat_payment_time_limit.minutes}m`}</span>
           </div>
-
-          {/* Error Message */}
-          {error && <div className="p-2 text-sm text-red-600 bg-red-50 rounded">{error}</div>}
-
-          {/* Loading Message */}
-          {loading && (
-            <div className="p-2 text-sm text-neutral-600 bg-neutral-50 rounded">
-              Loading price data...
-            </div>
-          )}
 
           {/* Next Steps Note */}
           {!loading && !error && fiatAmount > 0 && (
-            <div className="p-3 bg-primary-100 text-primary-800 rounded text-sm">
+            <div className="p-3 bg-[#fcd535]/5 border border-[#fcd535]/20 rounded-sm text-[10px] leading-relaxed">
               {offer.offer_type === 'BUY' ? (
-                <p>
-                  <strong>Note:</strong> As the seller, you will be prompted to create the on-chain
-                  escrow account and to pay for it in SOL. Please ensure you have sufficient{' '}
-                  <a
-                    href="https://faucet.solana.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center"
-                  >
-                    devnet SOL
-                    <ExternalLink className="ml-1 h-3 w-3" />
-                  </a>{' '}
-                  and{' '}
-                  <a
-                    href="https://faucet.circle.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center"
-                  >
-                    devnet USDC
-                    <ExternalLink className="ml-1 h-3 w-3" />
-                  </a>
-                  .
+                <p className="text-[#fcd535]">
+                  <strong>Seller Note:</strong> You must fund the on-chain escrow. 
+                  Ensure you have sufficient SOL for gas and {offer.token} for the trade.
                 </p>
               ) : (
-                <p>
-                  <strong>Note:</strong> As the buyer, you will wait for the seller to escrow the
-                  crypto. Later, you will be prompted to make the fiat payment, and then confirm
-                  that via an on-chain action.
+                <p className="text-[#fcd535]">
+                  <strong>Buyer Note:</strong> After the seller funds the escrow, you must 
+                  send the fiat payment and confirm on-chain.
                 </p>
               )}
             </div>
           )}
         </div>
 
-        <DialogFooter className="mt-4 flex gap-2 justify-end">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-36">
+        <DialogFooter className="mt-6 flex gap-3">
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)} 
+            className="flex-1 border-[#2b3139] text-[#eaecef] hover:bg-[#2b3139] rounded-sm font-bold"
+          >
             Cancel
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={Boolean(loading || amountError || insufficient)}
-            className="bg-secondary-500 hover:bg-secondary-600 text-white w-36"
+            className="flex-1 bg-[#fcd535] hover:opacity-90 text-[#0b0e11] rounded-sm font-bold"
           >
-            Initiate Trade
+            Confirm Order
           </Button>
         </DialogFooter>
       </DialogContent>

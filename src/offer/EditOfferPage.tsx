@@ -191,18 +191,14 @@ function EditOfferPage() {
   }
 
   return (
-    <Container>
-      <Card>
-        <CardHeader>
+    <Container className="max-w-2xl">
+      <Card className="rounded-sm border-[#2b3139] bg-[#1e2329]">
+        <CardHeader className="border-b border-[#2b3139]">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <CardTitle className="text-primary-800 font-semibold">Edit Offer #{id}</CardTitle>
-              <CardDescription>Update your offer details</CardDescription>
+              <CardTitle className="text-[#eaecef] font-bold">Edit Advertisement #{id}</CardTitle>
               {!loading && formData && (
                 <div className="mt-4">
-                  {/* OfferDescription expects an Offer (response shape). The
-                      form's rate_adjustment is a number factor; the response
-                      shape uses string. Stringify here for display only. */}
                   <OfferDescription
                     offer={
                       {
@@ -211,171 +207,104 @@ function EditOfferPage() {
                       } as unknown as Offer
                     }
                   />
-                  <p className="text-xs text-neutral-500 mt-2">
-                    To change the offer type, token or fiat currency, please create a new offer.
+                  <p className="text-[10px] text-[#848e9c] mt-2 uppercase font-bold">
+                    Asset, Type, and Currency are fixed for security.
                   </p>
                 </div>
               )}
             </div>
             <Link to={`/offer/${id}`}>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" className="border-[#2b3139] text-[#eaecef] hover:bg-[#2b3139] rounded-sm">Cancel</Button>
             </Link>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           {error && <ErrorBanner error={error} className="mb-6" />}
 
           {success && (
-            <Alert className="mb-6 bg-secondary-200 border-secondary-300">
-              <AlertDescription className="text-secondary-900">{success}</AlertDescription>
+            <Alert className="mb-6 bg-[#02c076]/10 border-[#02c076]/20 rounded-sm">
+              <AlertDescription className="text-[#02c076]">{success}</AlertDescription>
             </Alert>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
-                    Offer Type
-                  </label>
-                  <Input
-                    value={
-                      formData.offer_type === 'BUY'
-                        ? 'BUY (You want to buy crypto)'
-                        : 'SELL (You want to sell crypto)'
-                    }
-                    className="bg-neutral-50"
-                    disabled
-                  />
-                  <p className="text-xs text-neutral-500 mt-1">Offer type cannot be changed</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">Token</label>
-                  <Input value={formData.token} className="bg-neutral-50" disabled />
-                  <p className="text-xs text-neutral-500 mt-1">Token cannot be changed</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
-                    Minimum Amount
-                  </label>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-[#848e9c] uppercase">Min Limit</label>
                   <Input
                     type="number"
                     name="min_amount"
                     value={formData.min_amount}
                     onChange={handleChange}
-                    min="0"
-                    step="0.01"
+                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0"
                     required
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
-                    Maximum Amount
-                  </label>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-[#848e9c] uppercase">Max Limit</label>
                   <Input
                     type="number"
                     name="max_amount"
                     value={formData.max_amount}
                     onChange={handleChange}
-                    min="0"
-                    step="0.01"
+                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0"
                     required
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
-                    Total Available Amount
-                  </label>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-[#848e9c] uppercase">Total Available</label>
                   <Input
                     type="number"
                     name="total_available_amount"
                     value={formData.total_available_amount}
                     onChange={handleChange}
-                    min="0"
-                    step="0.01"
+                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
-                    Rate Adjustment (%)
-                  </label>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-[#848e9c] uppercase">Price Multiplier (%)</label>
                   <Input
                     type="number"
                     name="rate_adjustment"
                     value={rateAdjustmentInput}
                     onChange={handleChange}
+                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0"
                     required
                   />
-                  <p className="text-xs text-neutral-500 mt-1">
-                    Positive values are above market rate, negative values are below
+                  <p className="text-[10px] text-[#848e9c]">
+                    Positive values are above market rate, negative are below.
                   </p>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
-                    Fiat Currency
-                  </label>
-                  <Input value={formData.fiat_currency} className="bg-neutral-50" disabled />
-                  <p className="text-xs text-neutral-500 mt-1">Fiat currency cannot be changed</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
-                    Escrow Deposit Time Limit (minutes)
-                  </label>
-                  <Input
-                    type="number"
-                    value={getMinutesFromTimeLimit(formData.escrow_deposit_time_limit)}
-                    className="bg-neutral-50"
-                    disabled
-                  />
-                  <p className="text-xs text-neutral-500 mt-1">
-                    Escrow deposit time limit cannot be changed
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">
-                    Fiat Payment Time Limit (minutes)
-                  </label>
-                  <Input
-                    type="number"
-                    value={getMinutesFromTimeLimit(formData.fiat_payment_time_limit)}
-                    className="bg-neutral-50"
-                    disabled
-                  />
-                  <p className="text-xs text-neutral-500 mt-1">
-                    Fiat payment time limit cannot be changed
-                  </p>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-[#848e9c] uppercase opacity-50">Fiat Currency (Fixed)</label>
+                  <Input value={formData.fiat_currency} className="border-[#2b3139] bg-[#0b0e11] text-[#848e9c] rounded-sm" disabled />
                 </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Terms and Conditions
-              </label>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#848e9c] uppercase">Terms and Conditions</label>
               <textarea
                 name="terms"
                 value={formData.terms}
                 onChange={handleChange}
                 rows={6}
-                className="w-full p-3 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-700 focus:border-transparent"
+                className="w-full border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0 p-3 text-sm resize-none"
                 placeholder="Specify your terms and conditions for this offer..."
               />
             </div>
 
             <CardFooter className="flex justify-end px-0 pt-4 pb-0">
-              <Button type="submit" className="bg-primary-700 hover:bg-primary-800 text-white">
-                Update Offer
+              <Button type="submit" className="bg-[#fcd535] hover:opacity-90 text-[#0b0e11] font-bold rounded-sm h-12 px-12 w-full sm:w-auto">
+                Update Advertisement
               </Button>
             </CardFooter>
           </form>

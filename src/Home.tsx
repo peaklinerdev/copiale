@@ -159,7 +159,7 @@ function HomePage() {
             {loading && (
               <div className="flex flex-col justify-center items-center py-32 gap-4">
                 <div className="w-10 h-10 border-2 border-[#fcd535]/20 border-t-[#fcd535] animate-spin rounded-full"></div>
-                <p className="text-[#848e9c] text-sm font-medium">Synchronizing Market Data...</p>
+                <p className="text-[#848e9c] text-sm font-medium">Synchronizing USDT/USDC Market Data...</p>
               </div>
             )}
 

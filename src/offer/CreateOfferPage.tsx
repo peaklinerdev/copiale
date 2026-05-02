@@ -20,6 +20,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import Container from '@/components/Shared/Container';
 import { ErrorBanner } from '@/components/Shared/ErrorBanner';
 import { ApiError, toApiError } from '@/api/errors';
+import { PAYMENT_METHODS, getPaymentMethodById } from '@/lib/paymentMethods';
 
 interface CreateOfferPageProps {
   account: Account | null;
@@ -52,29 +53,30 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
   const [formData, setFormData] = useState({
     creator_account_id: account?.id || '',
     offer_type: 'BUY' as 'BUY' | 'SELL',
-    token: 'USDC',
+    token: 'USDT',
     min_amount: '',
     max_amount: '',
     total_available_amount: '',
     rate_adjustment: '1.05',
-    terms: 'Cash only',
+    terms: '',
     escrow_deposit_time_limit: '15 minutes',
     fiat_payment_time_limit: '30 minutes',
-    fiat_currency: 'USD',
+    fiat_currency: 'ETB',
+    payment_method_id: 'telebirr',
+    payment_account: '',
+    payment_notes: '',
   });
   const [success, setSuccess] = useState('');
 
-  // Error state accepts either a plain string (form-side validation) or
-  // an ApiError (server-side validation_error / etc.); ErrorBanner handles
-  // both shapes including issuesByField rendering.
   const [error, setError] = useState<string | ApiError | ''>('');
+
+  const selectedPaymentMethod = getPaymentMethodById(formData.payment_method_id);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    // Ensure account ID is a number
     let accountId: number;
     if (typeof account?.id === 'string') {
       accountId = parseInt(account.id, 10);
@@ -82,15 +84,16 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
       accountId = account?.id as number;
     }
 
-    // Basic validation
     if (!accountId) {
       setError('Account ID is required');
       return;
     }
 
-    // Normalize at the boundary: form inputs are strings; API expects
-    // canonical decimal strings (Design Invariant 3). toUsdcString throws
-    // on malformed/zero/negative input; we surface those as form errors.
+    if (!formData.payment_account) {
+      setError(`Please provide your ${selectedPaymentMethod?.accountLabel}`);
+      return;
+    }
+
     let minAmount: string;
     let maxAmount: string;
     let totalAmount: string;
@@ -113,10 +116,10 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
       return;
     }
 
+    // Construct terms with payment info
+    const fullTerms = `Payment Method: ${selectedPaymentMethod?.name}\nAccount: ${formData.payment_account}\nNotes: ${formData.payment_notes}\n\nAdditional Terms: ${formData.terms || 'None'}`;
+
     try {
-      // Prepare offer data. Amounts are decimal strings (M3); rate_adjustment
-      // remains a number on request per backend `createOfferRequestSchema`
-      // (response widens to string).
       const data: CreateOfferRequest = {
         creator_account_id: accountId,
         offer_type: formData.offer_type as 'BUY' | 'SELL',
@@ -125,50 +128,32 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
         max_amount: maxAmount,
         total_available_amount: totalAmount,
         rate_adjustment: Number(formData.rate_adjustment),
-        terms: formData.terms,
+        terms: fullTerms,
         escrow_deposit_time_limit: { minutes: 15 },
         fiat_payment_time_limit: { minutes: 30 },
         fiat_currency: formData.fiat_currency,
       };
 
-      // Use network-aware API call (automatically uses Solana devnet)
       const response = await createOffer(data);
 
-      // Debug: Log the response structure
-      console.log('CreateOffer API Response:', response);
-
-      // Extract the offer ID from the response
-      // The API returns: { data: { network: "solana-devnet", offer: { id: 2, ... } } }
       const offerData = response.data?.offer;
       const offerId = offerData?.id;
-      console.log('Extracted offer ID:', offerId);
-      console.log('Full offer data:', offerData);
 
       if (!offerId) {
-        console.error('Failed to extract offer ID from response');
         setError('Failed to create offer - no ID returned');
         return;
       }
 
       setSuccess(`Offer created successfully with ID: ${offerId}.`);
 
-      // Reset form
       setFormData({
-        creator_account_id: account?.id?.toString() || '',
-        offer_type: 'BUY',
-        token: 'USDC',
+        ...formData,
         min_amount: '',
         max_amount: '',
         total_available_amount: '',
-        rate_adjustment: '1.05',
-        terms: 'Cash only',
-        escrow_deposit_time_limit: '15 minutes',
-        fiat_payment_time_limit: '30 minutes',
-        fiat_currency: 'USD',
+        terms: '',
       });
     } catch (err) {
-      // Server-side errors come through the axios interceptor as ApiError;
-      // keep the original object so ErrorBanner can render issues + ref.
       setError(toApiError(err));
       console.error('Create offer error:', err);
     }
@@ -177,13 +162,13 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
   if (!primaryWallet) {
     return (
       <Container className="max-w-2xl">
-        <Card>
+        <Card className="rounded-sm border-[#2b3139] bg-[#1e2329]">
           <CardHeader>
-            <CardTitle className="text-primary-800 font-semibold">Create an Offer</CardTitle>
+            <CardTitle className="text-[#eaecef] font-bold">Create Ad</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <Alert className="bg-neutral-50 border-neutral-200">
-              <AlertDescription>Please connect your wallet to create an offer.</AlertDescription>
+            <Alert className="bg-[#fcd535]/10 border-[#fcd535]/20 rounded-sm">
+              <AlertDescription className="text-[#fcd535]">Please connect your wallet to post an advertisement.</AlertDescription>
             </Alert>
           </CardContent>
         </Card>
@@ -193,24 +178,22 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
 
   return (
     <Container className="max-w-2xl">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-primary-800 font-semibold">Create an Offer</CardTitle>
+      <Card className="rounded-sm border-[#2b3139] bg-[#1e2329]">
+        <CardHeader className="border-b border-[#2b3139]">
+          <CardTitle className="text-[#eaecef] font-bold">Post P2P Advertisement</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
           {success && (
-            <Alert className="mb-6 bg-secondary-200 border-secondary-300">
-              <AlertDescription className="text-secondary-900">
+            <Alert className="mb-6 bg-[#02c076]/10 border-[#02c076]/20 rounded-sm">
+              <AlertDescription className="text-[#02c076]">
                 <span>
                   {success}{' '}
                   <Link
                     to="/offers"
-                    className="inline underline text-primary-800 hover:text-primary-600"
-                    style={{ display: 'inline !important' }}
+                    className="inline underline font-bold"
                   >
-                    View your offers
-                  </Link>{' '}
-                  to see and edit your offer.
+                    View Ads
+                  </Link>
                 </span>
               </AlertDescription>
             </Alert>
@@ -218,207 +201,176 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
 
           {error && <ErrorBanner error={error} className="mb-6" />}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-1">
-              <label
-                htmlFor="creator_account_id"
-                className="block text-sm font-medium text-neutral-700"
-              >
-                Your Account ID
-              </label>
-              <Input
-                id="creator_account_id"
-                type="text"
-                value={formData.creator_account_id}
-                className="border-neutral-300 focus:border-primary-500 focus:ring-primary-500"
-                onChange={e => setFormData({ ...formData, creator_account_id: e.target.value })}
-                disabled
-              />
-              <p className="text-xs text-neutral-500">This is your account identifier</p>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-[#848e9c] uppercase">Asset</label>
+                <Select
+                  value={formData.token}
+                  onValueChange={value => setFormData({ ...formData, token: value })}
+                >
+                  <SelectTrigger className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1e2329] border-[#2b3139] text-[#eaecef]">
+                    <SelectItem value="USDT">USDT</SelectItem>
+                    <SelectItem value="USDC">USDC</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-[#848e9c] uppercase">Fiat Currency</label>
+                <Select
+                  value={formData.fiat_currency}
+                  onValueChange={value => setFormData({ ...formData, fiat_currency: value })}
+                >
+                  <SelectTrigger className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1e2329] border-[#2b3139] text-[#eaecef]">
+                    <CurrencyOptions />
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="space-y-1">
-              <label htmlFor="network" className="block text-sm font-medium text-neutral-700">
-                Network
-              </label>
-              <Input
-                id="network"
-                type="text"
-                value="Solana Devnet"
-                className="border-neutral-300 focus:border-primary-500 focus:ring-primary-500"
-                disabled
-              />
-              <p className="text-xs text-neutral-500">(Network: solana-devnet)</p>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#848e9c] uppercase">Ad Type</label>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, offer_type: 'BUY' })}
+                  className={`rounded-sm font-bold border ${
+                    formData.offer_type === 'BUY'
+                      ? 'bg-[#02c076] border-[#02c076] text-white'
+                      : 'bg-transparent border-[#2b3139] text-[#848e9c] hover:bg-[#2b3139]'
+                  }`}
+                >
+                  Buy
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, offer_type: 'SELL' })}
+                  className={`rounded-sm font-bold border ${
+                    formData.offer_type === 'SELL'
+                      ? 'bg-[#f84960] border-[#f84960] text-white'
+                      : 'bg-transparent border-[#2b3139] text-[#848e9c] hover:bg-[#2b3139]'
+                  }`}
+                >
+                  Sell
+                </Button>
+              </div>
             </div>
 
-            <div className="space-y-1">
-              <label htmlFor="offer_type" className="block text-sm font-medium text-neutral-700">
-                Offer Type
-              </label>
-              <Select
-                value={formData.offer_type}
-                onValueChange={value =>
-                  setFormData({ ...formData, offer_type: value as 'BUY' | 'SELL' })
-                }
-              >
-                <SelectTrigger className="border-neutral-300 focus:ring-primary-500">
-                  <SelectValue placeholder="Select offer type" />
-                </SelectTrigger>
-                <SelectContent className="bg-neutral-100">
-                  <SelectItem value="BUY">Buy USDC</SelectItem>
-                  <SelectItem value="SELL">Sell USDC</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-neutral-500">
-                {formData.offer_type === 'BUY'
-                  ? 'You want to buy USDC with fiat currency'
-                  : 'You want to sell USDC for fiat currency'}
-              </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-[#848e9c] uppercase">Price (Rate)</label>
+                <div className="relative">
+                   <Input
+                    type="number"
+                    step="0.01"
+                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0 h-10 pr-12"
+                    value={formData.rate_adjustment}
+                    onChange={e => setFormData({ ...formData, rate_adjustment: e.target.value })}
+                  />
+                  <div className="absolute right-3 top-2.5 text-[10px] font-bold text-[#848e9c]">MULT</div>
+                </div>
+                <p className="text-[10px] text-[#848e9c]">1.00 = Market Price. 1.05 = +5% Price.</p>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-[#848e9c] uppercase">Total Amount</label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0 h-10 pr-12"
+                    value={formData.total_available_amount}
+                    onChange={e => setFormData({ ...formData, total_available_amount: e.target.value })}
+                  />
+                  <div className="absolute right-3 top-2.5 text-[10px] font-bold text-[#848e9c]">{formData.token}</div>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label htmlFor="min_amount" className="block text-sm font-medium text-neutral-700">
-                  Minimum Amount (USDC)
-                </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-[#848e9c] uppercase">Min Limit</label>
                 <Input
-                  id="min_amount"
                   type="number"
-                  placeholder="10"
-                  className="border-neutral-300 focus:border-primary-500 focus:ring-primary-500"
+                  className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0 h-10"
                   value={formData.min_amount}
                   onChange={e => setFormData({ ...formData, min_amount: e.target.value })}
                 />
               </div>
 
-              <div className="space-y-1">
-                <label htmlFor="max_amount" className="block text-sm font-medium text-neutral-700">
-                  Maximum Amount (USDC)
-                </label>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-[#848e9c] uppercase">Max Limit</label>
                 <Input
-                  id="max_amount"
                   type="number"
-                  placeholder="100"
-                  className="border-neutral-300 focus:border-primary-500 focus:ring-primary-500"
+                  className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0 h-10"
                   value={formData.max_amount}
                   onChange={e => setFormData({ ...formData, max_amount: e.target.value })}
                 />
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label
-                htmlFor="total_available_amount"
-                className="block text-sm font-medium text-neutral-700"
-              >
-                Total Available Amount (USDC)
-              </label>
-              <Input
-                id="total_available_amount"
-                type="number"
-                placeholder="1000"
-                className="border-neutral-300 focus:border-primary-500 focus:ring-primary-500"
-                value={formData.total_available_amount}
-                onChange={e => setFormData({ ...formData, total_available_amount: e.target.value })}
-              />
-              <p className="text-xs text-neutral-500">
-                Total amount of USDC available for all trades from this offer
-              </p>
+            <div className="p-4 bg-[#0b0e11] border border-[#2b3139] rounded-sm space-y-4">
+              <h3 className="text-xs font-black text-[#fcd535] uppercase tracking-widest">Payment Information</h3>
+              
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-[#848e9c] uppercase">Method</label>
+                <Select
+                  value={formData.payment_method_id}
+                  onValueChange={value => setFormData({ ...formData, payment_method_id: value })}
+                >
+                  <SelectTrigger className="border-[#2b3139] bg-[#1e2329] text-[#eaecef] rounded-sm focus:ring-0 h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1e2329] border-[#2b3139] text-[#eaecef]">
+                    {PAYMENT_METHODS.map(method => (
+                      <SelectItem key={method.id} value={method.id}>{method.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-[#848e9c] uppercase">{selectedPaymentMethod?.accountLabel}</label>
+                <Input
+                  className="border-[#2b3139] bg-[#1e2329] text-[#eaecef] rounded-sm focus:ring-0 h-9"
+                  value={formData.payment_account}
+                  onChange={e => setFormData({ ...formData, payment_account: e.target.value })}
+                />
+              </div>
+
+              {selectedPaymentMethod?.hasNotes && (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-[#848e9c] uppercase">{selectedPaymentMethod?.notesLabel}</label>
+                  <Input
+                    className="border-[#2b3139] bg-[#1e2329] text-[#eaecef] rounded-sm focus:ring-0 h-9"
+                    value={formData.payment_notes}
+                    onChange={e => setFormData({ ...formData, payment_notes: e.target.value })}
+                  />
+                </div>
+              )}
             </div>
 
-            <div className="space-y-1">
-              <label htmlFor="fiat_currency" className="block text-sm font-medium text-neutral-700">
-                Fiat Currency
-              </label>
-              <Select
-                value={formData.fiat_currency}
-                onValueChange={value => setFormData({ ...formData, fiat_currency: value })}
-              >
-                <SelectTrigger className="border-neutral-300 focus:ring-primary-500">
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent className="bg-neutral-100">
-                  <CurrencyOptions />
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-neutral-500">Currency you want to trade in</p>
-            </div>
-
-            <div className="space-y-1">
-              <label
-                htmlFor="rate_adjustment"
-                className="block text-sm font-medium text-neutral-700"
-              >
-                Rate Adjustment
-              </label>
-              <Input
-                id="rate_adjustment"
-                type="number"
-                step="0.01"
-                className="border-neutral-300 focus:border-primary-500 focus:ring-primary-500"
-                value={formData.rate_adjustment}
-                onChange={e => setFormData({ ...formData, rate_adjustment: e.target.value })}
-              />
-              <p className="text-xs text-neutral-500">
-                1.05 = +5% above market rate, 0.95 = -5% below market rate
-              </p>
-            </div>
-
-            <div className="space-y-1">
-              <label htmlFor="terms" className="block text-sm font-medium text-neutral-700">
-                Terms
-              </label>
-              <Input
-                id="terms"
-                type="text"
-                className="border-neutral-300 focus:border-primary-500 focus:ring-primary-500"
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#848e9c] uppercase">Additional Terms</label>
+              <textarea
+                className="w-full border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0 p-3 text-sm h-24 resize-none"
+                placeholder="Describe your trade terms..."
                 value={formData.terms}
                 onChange={e => setFormData({ ...formData, terms: e.target.value })}
               />
-              <p className="text-xs text-neutral-500">
-                Additional terms or payment methods you accept
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label
-                  htmlFor="escrow_deposit_time_limit"
-                  className="block text-sm font-medium text-neutral-700"
-                >
-                  Escrow Deposit Time Limit
-                </label>
-                <Input
-                  id="escrow_deposit_time_limit"
-                  type="text"
-                  className="border-neutral-300 focus:border-primary-500 focus:ring-primary-500"
-                  value={formData.escrow_deposit_time_limit}
-                  disabled
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label
-                  htmlFor="fiat_payment_time_limit"
-                  className="block text-sm font-medium text-neutral-700"
-                >
-                  Fiat Payment Time Limit
-                </label>
-                <Input
-                  id="fiat_payment_time_limit"
-                  type="text"
-                  className="border-neutral-300 focus:border-primary-500 focus:ring-primary-500"
-                  value={formData.fiat_payment_time_limit}
-                  disabled
-                />
-              </div>
             </div>
 
             <Button
               type="submit"
-              className="w-full bg-primary-700 hover:bg-primary-800 text-white mt-6"
+              className="w-full bg-[#fcd535] hover:opacity-90 text-[#0b0e11] font-bold h-12 rounded-sm"
             >
-              Create Offer
+              Post Advertisement
             </Button>
           </form>
         </CardContent>

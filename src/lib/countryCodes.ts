@@ -4,6 +4,7 @@ interface CountryCode {
 }
 
 export const countryCodes: CountryCode[] = [
+  { label: "Ethiopia (251)", value: "251" },
   { label: "Afghanistan (93)", value: "93" },
   { label: "Albania (355)", value: "355" },
   { label: "Algeria (213)", value: "213" },

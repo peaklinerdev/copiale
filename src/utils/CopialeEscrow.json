@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "Copiale-p2pEscrow",
-  "sourceName": "contracts/Copiale-p2pEscrow.sol",
+  "contractName": "CopialeP2PEscrow",
+  "sourceName": "contracts/CopialeP2PEscrow.sol",
   "abi": [
     {
       "anonymous": false,
@@ -720,7 +720,7 @@
           "type": "uint256"
         },
         {
-          "internalType": "enum Copiale-p2pEscrow.EscrowState",
+          "internalType": "enum CopialeP2PEscrow.EscrowState",
           "name": "state",
           "type": "uint8"
         },

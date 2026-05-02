@@ -37,13 +37,13 @@ function Header({ isLoggedIn, account }: HeaderProps) {
     null
   );
   const [priceError, setPriceError] = useState<string | null>(null);
-  const [usdcBalance, setUsdcBalance] = useState<string>('0.00');
+  const [usdtBalance, setUsdtBalance] = useState<string>('0.00');
   const [currentNetwork, setCurrentNetwork] = useState<number | string | null>(null);
 
   const fetchPrices = useCallback(async () => {
     try {
       const response = await getPrices();
-      setPrices(response.data.data.USDC);
+      setPrices(response.data.data.USDC); // Keep USDC price source for now if USDT not available
       setPriceError(null);
     } catch (err) {
       setPriceError(err instanceof Error ? err.message : 'Unknown error');
@@ -51,20 +51,20 @@ function Header({ isLoggedIn, account }: HeaderProps) {
   }, []);
 
   useEffect(() => {
-    const fetchUsdcBalance = async () => {
+    const fetchUsdtBalance = async () => {
       if (isConnected && primaryWallet?.address) {
         try {
           const balance = await blockchainService.getWalletBalance();
           const formattedBalance = (balance / 1_000_000).toFixed(2);
-          setUsdcBalance(formattedBalance);
+          setUsdtBalance(formattedBalance);
         } catch (error) {
-          console.error('Error fetching USDC balance:', error);
+          console.error('Error fetching USDT balance:', error);
         }
       }
     };
 
-    fetchUsdcBalance();
-    const interval = setInterval(fetchUsdcBalance, 30000);
+    fetchUsdtBalance();
+    const interval = setInterval(fetchUsdtBalance, 30000);
     return () => clearInterval(interval);
   }, [isConnected, primaryWallet, currentNetwork, blockchainService]);
 
@@ -117,7 +117,7 @@ function Header({ isLoggedIn, account }: HeaderProps) {
             
             <nav className="hidden md:flex items-center gap-6">
               <Link to="/" className="text-sm font-medium text-[#fcd535] hover:text-[#fcd535]">Market</Link>
-              <span className="text-xs text-[#848e9c] border border-[#2b3139] px-2 py-0.5 rounded-sm uppercase font-bold">USDC/USDT on Solana/EVM</span>
+              <span className="text-xs text-[#848e9c] border border-[#2b3139] px-2 py-0.5 rounded-sm uppercase font-bold">USDT/USDC on Solana/EVM</span>
             </nav>
           </div>
 
@@ -138,7 +138,7 @@ function Header({ isLoggedIn, account }: HeaderProps) {
               <div className="flex items-center gap-4">
                 <div className="hidden sm:flex flex-col items-end">
                   <span className="text-[10px] text-[#848e9c] uppercase font-bold tracking-wider">Balance</span>
-                  <span className="text-sm font-bold text-[#eaecef]">{usdcBalance} USDC</span>
+                  <span className="text-sm font-bold text-[#eaecef]">{usdtBalance} USDT</span>
                 </div>
                 <DynamicWidget />
                 <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>

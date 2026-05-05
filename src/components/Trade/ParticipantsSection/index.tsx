@@ -20,13 +20,13 @@ function ParticipantsSection({
   return (
     <Card className="border border-neutral-200 shadow-sm p-4">
       <CardHeader>
-        <CardTitle className="text-primary-800">Participants</CardTitle>
+        <CardTitle className="text-[#eaecef]">Participants</CardTitle>
         <CardDescription>People involved in this trade</CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {currentAccount?.id === sellerAccount?.id ? (
           <>
-            <div className="p-3 border border-neutral-200 rounded-md hover:bg-neutral-100">
+            <div className="p-3 border border-[#2b3139] rounded-sm hover:bg-[#2b3139]">
               <ParticipantCard
                 user={sellerAccount}
                 role="Seller"
@@ -35,7 +35,7 @@ function ParticipantsSection({
                 isSeller={true}
               />
             </div>
-            <div className="p-3 border border-neutral-200 rounded-md hover:bg-neutral-100">
+            <div className="p-3 border border-[#2b3139] rounded-sm hover:bg-[#2b3139]">
               <ParticipantCard
                 user={buyerAccount}
                 role="Buyer"
@@ -47,7 +47,7 @@ function ParticipantsSection({
           </>
         ) : (
           <>
-            <div className="p-3 border border-neutral-200 rounded-md hover:bg-neutral-100">
+            <div className="p-3 border border-[#2b3139] rounded-sm hover:bg-[#2b3139]">
               <ParticipantCard
                 user={buyerAccount}
                 role="Buyer"
@@ -56,7 +56,7 @@ function ParticipantsSection({
                 isBuyer={true}
               />
             </div>
-            <div className="p-3 border border-neutral-200 rounded-md hover:bg-neutral-100">
+            <div className="p-3 border border-[#2b3139] rounded-sm hover:bg-[#2b3139]">
               <ParticipantCard
                 user={sellerAccount}
                 role="Seller"

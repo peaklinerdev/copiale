@@ -10,7 +10,7 @@ import {
 import { Account, setAuthToken, getPrices } from './api';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Menu, X, BarChart3 } from 'lucide-react';
+import { User, Menu, X, Plus, LayoutDashboard, ScrollText, ClipboardList, LogOut } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +19,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import Container from '@/components/Shared/Container';
 import { useBlockchainService } from './hooks/useBlockchainService';
+import { loadFallbackPrices } from './lib/priceFallback';
+import { REFERENCE_CURRENCIES, TRADING_CURRENCIES } from './lib/currencies';
 
 interface HeaderProps {
   isLoggedIn: boolean;
@@ -40,10 +42,17 @@ function Header({ isLoggedIn, account }: HeaderProps) {
   const fetchPrices = useCallback(async () => {
     try {
       const response = await getPrices();
-      setPrices(response.data.data.USDC); // Keep USDC price source for now if USDT not available
+      setPrices(response.data.data.USDC);
       setPriceError(null);
     } catch (err) {
-      setPriceError(err instanceof Error ? err.message : 'Unknown error');
+      console.warn('[Header] Live prices unavailable, trying fallback…', err);
+      try {
+        const fallback = await loadFallbackPrices();
+        setPrices(fallback.data.USDC);
+        setPriceError(null);
+      } catch (fbErr) {
+        setPriceError('Price data unavailable');
+      }
     }
   }, []);
 
@@ -101,34 +110,47 @@ function Header({ isLoggedIn, account }: HeaderProps) {
   }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[#1e2329] border-b border-[#2b3139] h-14 flex items-center">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-[#111318]/80 backdrop-blur-xl border-b border-white/[0.04] shadow-[0_1px_4px_rgba(0,0,0,0.5)] h-14 flex items-center">
       <Container>
         <div className="flex justify-between items-center h-full">
           <div className="flex items-center gap-8">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#fcd535] rounded-sm flex items-center justify-center">
-                <BarChart3 size={20} className="text-[#0b0e11]" />
-              </div>
-              <span className="text-xl font-bold tracking-tight text-[#eaecef]">Copiale-p2p</span>
-            </Link>
+            <div className="flex items-center gap-2.5">
+              <Link to="/">
+                <img src="/copiale-p2p.svg" alt="Copiale" className="w-8 h-8" />
+              </Link>
+              <Link to="/manifesto" className="text-base font-extrabold tracking-tighter uppercase text-[#eaecef] hover:text-[#FF6B00] transition-colors">COPIALE-P2P</Link>
+            </div>
             
             <nav className="hidden md:flex items-center gap-6">
-              <Link to="/" className="text-sm font-medium text-[#fcd535] hover:text-[#fcd535]">Market</Link>
-              <span className="text-xs text-[#848e9c] border border-[#2b3139] px-2 py-0.5 rounded-sm uppercase font-bold">USDT/USDC on Solana/EVM</span>
+              <Link to="/" className="text-sm font-medium text-[#FF6B00] hover:text-[#FF6B00]">Market</Link>
             </nav>
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Desktop Prices */}
-            <div className="hidden lg:flex items-center gap-4 mr-4">
-              {prices && Object.entries(prices).slice(0, 3).map(([currency, priceData]) => (
-                <div key={currency} className="flex gap-2 items-center">
-                  <span className="text-[11px] font-bold text-[#848e9c]">{currency}</span>
-                  <span className="text-xs font-medium text-[#02c076]">
-                    {formatNumber(priceData.price)}
-                  </span>
-                </div>
-              ))}
+            {/* Desktop Prices — reference (USD/EUR) | trading */}
+            <div className="hidden lg:flex items-center gap-3 mr-4">
+              {prices && (() => {
+                const all = [...REFERENCE_CURRENCIES, ...TRADING_CURRENCIES];
+                return all.map((currency, i) => {
+                  const pd = prices[currency];
+                  if (!pd) return null;
+                  return (
+                    <span key={currency} className="flex items-center gap-3">
+                      {i === REFERENCE_CURRENCIES.length && (
+                        <span className="text-[#2b3139] font-light select-none">|</span>
+                      )}
+                      <span className="flex gap-1.5 items-center">
+                        <span className={`text-[11px] font-bold ${i < REFERENCE_CURRENCIES.length ? 'text-[#848e9c]/60' : 'text-[#848e9c]'}`}>
+                          {currency}
+                        </span>
+                        <span className={`text-xs font-medium ${i < REFERENCE_CURRENCIES.length ? 'text-[#02c076]/50' : 'text-[#02c076]'}`}>
+                          {formatNumber(pd.price)}
+                        </span>
+                      </span>
+                    </span>
+                  );
+                });
+              })()}
             </div>
 
             {isLoggedIn ? (
@@ -140,25 +162,41 @@ function Header({ isLoggedIn, account }: HeaderProps) {
                 <DynamicWidget />
                 <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
                   <DropdownMenuTrigger className="focus:outline-none">
-                    <Avatar className="w-8 h-8 rounded-sm ring-1 ring-[#2b3139] hover:ring-[#fcd535] transition-all">
+                    <Avatar className="w-8 h-8 rounded-sm ring-1 ring-[#2b3139] hover:ring-[#FF6B00] transition-all">
                       <AvatarImage src={account?.profile_photo_url} />
                       <AvatarFallback className="bg-[#2b3139] text-[#848e9c] rounded-sm">
                         <User className="h-4 w-4" />
                       </AvatarFallback>
                     </Avatar>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 mt-2 bg-[#1e2329] border-[#2b3139] text-[#eaecef] rounded-sm p-1">
+                  <DropdownMenuContent align="end" className="w-52 mt-2 bg-[#1e2329] border border-[#2b3139] text-[#eaecef] rounded-sm p-1.5">
                     <DropdownMenuItem asChild>
-                      <Link to="/account" className="cursor-pointer hover:bg-[#2b3139] rounded-sm">Dashboard</Link>
+                      <Link to="/account" className="cursor-pointer hover:bg-[#2b3139] rounded-sm flex items-center gap-3 px-3 py-2 text-sm">
+                        <LayoutDashboard size={15} className="text-[#848e9c] shrink-0" />
+                        Dashboard
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/offers" className="cursor-pointer hover:bg-[#2b3139] rounded-sm">My Ads</Link>
+                      <Link to="/offers" className="cursor-pointer hover:bg-[#2b3139] rounded-sm flex items-center gap-3 px-3 py-2 text-sm">
+                        <ScrollText size={15} className="text-[#848e9c] shrink-0" />
+                        My Ads
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/trades" className="cursor-pointer hover:bg-[#2b3139] rounded-sm">Orders</Link>
+                      <Link to="/create-offer" className="cursor-pointer hover:bg-[#2b3139] rounded-sm flex items-center gap-3 px-3 py-2 text-sm">
+                        <Plus size={15} className="text-[#848e9c] shrink-0" />
+                        Post Ad
+                      </Link>
                     </DropdownMenuItem>
-                    <div className="h-px bg-[#2b3139] my-1" />
-                    <DropdownMenuItem onClick={handleLogOut} className="text-[#f84960] cursor-pointer hover:bg-[#f84960]/10 rounded-sm">
+                    <DropdownMenuItem asChild>
+                      <Link to="/trades" className="cursor-pointer hover:bg-[#2b3139] rounded-sm flex items-center gap-3 px-3 py-2 text-sm">
+                        <ClipboardList size={15} className="text-[#848e9c] shrink-0" />
+                        Orders
+                      </Link>
+                    </DropdownMenuItem>
+                    <div className="h-px bg-[#2b3139] my-1.5 mx-1" />
+                    <DropdownMenuItem onClick={handleLogOut} className="cursor-pointer hover:bg-[#f84960]/10 rounded-sm flex items-center gap-3 px-3 py-2 text-sm text-[#f84960]">
+                      <LogOut size={15} className="text-[#f84960] shrink-0" />
                       Logout
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -167,7 +205,7 @@ function Header({ isLoggedIn, account }: HeaderProps) {
             ) : (
               <Button
                 onClick={() => setShowAuthFlow(true)}
-                className="bg-[#fcd535] hover:opacity-90 text-[#0b0e11] font-bold px-4 h-8 text-sm rounded-sm"
+                className="bg-[#FF6B00] hover:opacity-90 text-[#0b0e11] font-bold px-4 h-8 text-sm rounded-sm"
               >
                 Login / Register
               </Button>
@@ -192,6 +230,10 @@ function Header({ isLoggedIn, account }: HeaderProps) {
               <>
                 <Link to="/account" onClick={() => setMobileMenuOpen(false)} className="p-3 text-[#eaecef] bg-[#1e2329] rounded-sm">Dashboard</Link>
                 <Link to="/offers" onClick={() => setMobileMenuOpen(false)} className="p-3 text-[#eaecef] bg-[#1e2329] rounded-sm">My Ads</Link>
+                <Link to="/create-offer" onClick={() => setMobileMenuOpen(false)} className="p-3 text-[#eaecef] bg-[#1e2329] rounded-sm flex items-center gap-3">
+                  <Plus size={15} className="text-[#848e9c]" />
+                  Post Ad
+                </Link>
                 <Link to="/trades" onClick={() => setMobileMenuOpen(false)} className="p-3 text-[#eaecef] bg-[#1e2329] rounded-sm">Orders</Link>
               </>
             )}
@@ -199,7 +241,7 @@ function Header({ isLoggedIn, account }: HeaderProps) {
           {!isLoggedIn && (
             <Button
               onClick={() => { setShowAuthFlow(true); setMobileMenuOpen(false); }}
-              className="bg-[#fcd535] text-[#0b0e11] font-bold w-full h-12 rounded-sm"
+              className="bg-[#FF6B00] text-[#0b0e11] font-bold w-full h-12 rounded-sm"
             >
               Connect Wallet
             </Button>

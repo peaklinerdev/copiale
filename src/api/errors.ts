@@ -100,9 +100,14 @@ export function toApiError(err: unknown): ApiError {
     const body = ax.response?.data;
     const e = isApiErrorBody(body) ? body.error : undefined;
 
+    // e can be a string (e.g. { error: "No token provided" }) or an object with .message
+    const errMsg: string | undefined =
+      typeof e === 'string' ? e : e?.message;
     const message =
-      e?.message ?? (isApiErrorBody(body) ? body.message : undefined) ?? ax.message ?? 'Request failed';
-    const code = (e?.code as ApiErrorCode | undefined) ?? statusToCode(status) ?? 'unknown';
+      errMsg ?? (isApiErrorBody(body) ? body.message : undefined) ?? ax.message ?? 'Request failed';
+    const code =
+      (typeof e === 'object' ? (e?.code as ApiErrorCode | undefined) : undefined)
+      ?? statusToCode(status) ?? 'unknown';
 
     let retryAfter: number | undefined =
       typeof e?.details?.retry_after === 'number' ? e.details.retry_after : undefined;

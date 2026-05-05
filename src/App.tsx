@@ -3,7 +3,7 @@ import { useDynamicContext, getAuthToken } from '@dynamic-labs/sdk-react-core';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
-import { getAccount, setAuthToken } from './api';
+import { getAccount, setAuthToken, exchangeDynamicToken } from './api';
 import { Account } from './api';
 import Container from '@/components/Shared/Container';
 import { Toaster } from 'sonner';
@@ -28,6 +28,7 @@ const TradePage = lazy(() => import('./TradePage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 const Status = lazy(() => import('./pages/Status'));
 // NetworkTestPage is a named export, so we need to map it to default
+const ManifestoPage = lazy(() => import('@/pages/ManifestoPage'));
 const NetworkTestPage = lazy(() => 
   import('./pages/NetworkTestPage').then(module => ({ default: module.NetworkTestPage }))
 );
@@ -36,8 +37,8 @@ const NetworkTestPage = lazy(() =>
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[400px]">
     <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100 mx-auto"></div>
-      <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+      <img src="/copiale-p2p.svg" alt="Copiale" className="w-16 h-16 mx-auto mb-4 animate-pulse" />
+      <p className="text-[#848e9c] text-sm">Loading...</p>
     </div>
   </div>
 );
@@ -50,7 +51,19 @@ function App() {
     if (primaryWallet) {
       const token = getAuthToken();
       if (token) {
-        setAuthToken(token);
+        // Exchange the Dynamic RS256 JWT for a Copiale HS256 JWT.
+        // The backend verifies the Dynamic token against Dynamic's JWKS
+        // and returns a token signed with the server's JWT_SECRET.
+        // If exchange fails (e.g. JWKS unreachable), fall back to the
+        // raw Dynamic token — the requireJWT middleware handles both.
+        exchangeDynamicToken(token)
+          .then(copialeToken => {
+            setAuthToken(copialeToken);
+          })
+          .catch(err => {
+            console.warn('[App] Token exchange failed, using raw Dynamic token:', err.message);
+            setAuthToken(token);
+          });
       } else {
         console.error('No JWT token found after wallet connect!');
       }
@@ -106,6 +119,7 @@ function App() {
                 <Route path="/edit-offer/:id" element={<EditOfferPage />} />
                 <Route path="/trade/:id" element={<TradePage />} />
                 <Route path="/status" element={<Status />} />
+                <Route path="/manifesto" element={<ManifestoPage />} />
                 <Route path="/network-test" element={<NetworkTestPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>

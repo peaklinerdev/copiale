@@ -121,12 +121,8 @@ export const startTrade = async ({
   onError,
 }: StartTradeParams): Promise<void> => {
   try {
-    if (!offer) {
-      throw new Error('Offer not found');
-    }
+    if (!offer) throw new Error('Offer not found');
 
-    // Per Design Invariant 3: amounts go on the wire as decimal strings.
-    // toUsdcString / toFiatString validate at the boundary.
     const tradeData: CreateTradeRequest = {
       leg1_offer_id: offerId,
       leg1_crypto_amount: toUsdcString(amount),
@@ -139,11 +135,9 @@ export const startTrade = async ({
       tradeData as unknown as Parameters<typeof createTrade>[0]
     );
 
-    // M5: response shape is `{ network, trade }`.
     const tradeId = tradeResponse.data.trade.id;
 
     if (primaryWallet) {
-      // MVP: Escrow creation moved to TradePage to happen manually by user action
       onSuccess(tradeId);
     } else {
       alert(`Trade ${formatNumber(tradeId)} started, but no wallet connected`);
@@ -151,6 +145,7 @@ export const startTrade = async ({
     }
   } catch (err) {
     console.error('[TradeService] Trade failed:', err);
+    // Pass through the ApiError which now has the real server message
     onError(err instanceof Error ? err : new Error('Unknown error'));
   }
 };
@@ -191,12 +186,11 @@ export const createTradeEscrow = async ({
     // Create the escrow transaction on the Solana blockchain.
     // Validate amount as a string at the boundary, then coerce to number
     // for the on-chain BN; under the 100 USDC escrow cap precision is safe.
-    const cryptoAmountStr = toEscrowUsdcString(trade.leg1_crypto_amount || '0');
     const txResult = await createEscrowTransaction(primaryWallet, {
       tradeId: trade.id,
       escrowId: escrowId, // Pass the pre-generated ID
       buyer: buyerAddress,
-      amount: Number(cryptoAmountStr),
+      amount: toEscrowUsdcString(trade.leg1_crypto_amount || '0'),
       sequential: false,
       sequentialEscrowAddress: undefined,
       arbitrator: undefined, // Solana program handles arbitrator internally

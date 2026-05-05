@@ -193,11 +193,11 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
         <Container>
           <Card>
             <CardHeader className="border-b border-neutral-100">
-              <CardTitle className="text-primary-800 font-semibold">My Transactions</CardTitle>
+              <CardTitle className="text-[#eaecef] font-semibold">My Transactions</CardTitle>
               <CardDescription>View your transaction history</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <Alert className="bg-neutral-50 border-neutral-200">
+              <Alert className="bg-[#1e2329] border-[#2b3139] rounded-sm">
                 <AlertDescription>
                   Please connect your wallet to view your transactions.
                 </AlertDescription>
@@ -215,11 +215,11 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
         <Container>
           <Card>
             <CardHeader>
-              <CardTitle className="text-primary-800 font-semibold">My Transactions</CardTitle>
+              <CardTitle className="text-[#eaecef] font-semibold">My Transactions</CardTitle>
               <CardDescription>View your transaction history</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <Alert className="bg-amber-50 border-amber-200">
+              <Alert className="bg-[#FF6B00]/10 border-[#FF6B00]/30 rounded-sm">
                 <AlertDescription className="text-amber-700">
                   Please create an account first to view your transactions.
                 </AlertDescription>
@@ -238,7 +238,7 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
           <CardHeader>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <CardTitle className="text-primary-800 font-semibold">My Transactions</CardTitle>
+                <CardTitle className="text-[#eaecef] font-semibold">My Transactions</CardTitle>
                 <CardDescription>View your transaction history</CardDescription>
               </div>
               <div className="w-full sm:w-auto">
@@ -246,7 +246,7 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
                   <SelectTrigger className="w-full sm:w-[250px] border-neutral-300 focus:ring-primary-500">
                     <SelectValue placeholder="Filter by type" />
                   </SelectTrigger>
-                  <SelectContent className="bg-neutral-100">
+                  <SelectContent className="bg-[#1e2329] border border-[#2b3139] rounded-sm">
                     <SelectItem value="ALL">All Transaction Types</SelectItem>
                     <SelectItem value="CREATE_ESCROW">Create Escrow</SelectItem>
                     <SelectItem value="FUND_ESCROW">Fund Escrow</SelectItem>
@@ -263,7 +263,7 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
           </CardHeader>
           <CardContent className="px-6">
             {error && (
-              <Alert className="bg-red-50 border-red-200 mb-4">
+              <Alert className="bg-[#f84960]/10 border-[#f84960]/30 rounded-sm mb-4">
                 <AlertDescription className="text-red-700">{error}</AlertDescription>
               </Alert>
             )}
@@ -273,7 +273,7 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
               </div>
             ) : transactions.length === 0 ? (
-              <Alert className="bg-neutral-50 border-neutral-200">
+              <Alert className="bg-[#1e2329] border-[#2b3139] rounded-sm">
                 <AlertDescription>No transactions found.</AlertDescription>
               </Alert>
             ) : (
@@ -281,7 +281,7 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
                 {/* Mobile view */}
                 <div className="md:hidden space-y-6">
                   {transactions.map(tx => (
-                    <div key={tx.id} className="border rounded-lg p-5 hover:bg-neutral-50">
+                    <div key={tx.id} className="border rounded-lg p-5 hover:bg-[#2b3139]">
                       <div className="flex justify-between items-start mb-3">
                         <div>
                           <span className="font-medium text-neutral-800">
@@ -366,7 +366,7 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
                     </TableHeader>
                     <TableBody>
                       {transactions.map(tx => (
-                        <TableRow key={tx.id} className="hover:bg-neutral-50">
+                        <TableRow key={tx.id} className="hover:bg-[#2b3139]">
                           <TableCell className="font-medium">{tx.id}</TableCell>
                           <TableCell>{getTransactionTypeLabel(tx.transaction_type)}</TableCell>
                           <TableCell>

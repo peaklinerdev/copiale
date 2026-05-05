@@ -117,12 +117,29 @@ api.interceptors.response.use(
 export const setAuthToken = (token: string | null) => {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    localStorage.setItem('jwt_token', token); // Also store in localStorage
+    localStorage.setItem('jwt_token', token);
   } else {
     delete api.defaults.headers.common['Authorization'];
     localStorage.removeItem('jwt_token');
   }
 };
+
+/**
+ * Exchange a Dynamic RS256 JWT for a Copiale HS256 JWT.
+ * The Dynamic token is sent in the Authorization header; the backend
+ * verifies it against Dynamic's JWKS and returns a short-lived Copiale
+ * token signed with the server's JWT_SECRET.
+ */
+export async function exchangeDynamicToken(dynamicToken: string): Promise<string> {
+  // Use a plain axios instance without the interceptor (which would
+  // overwrite the Authorization header with the stale localStorage token).
+  const res = await axios.post(
+    `${config.apiUrl}/exchange`,
+    {},
+    { headers: { Authorization: `Bearer ${dynamicToken}` } },
+  );
+  return res.data.token;
+}
 
 /**
  * Build a per-request axios config carrying the X-Network-Name header.
@@ -417,13 +434,17 @@ export const recordTransaction = (data: {
   transaction_type:
     | 'CREATE_ESCROW'
     | 'FUND_ESCROW'
-    | 'MARK_FIAT_PAID'
     | 'RELEASE_ESCROW'
     | 'CANCEL_ESCROW'
-    | 'DISPUTE_ESCROW'
+    | 'MARK_FIAT_PAID'
     | 'OPEN_DISPUTE'
     | 'RESPOND_DISPUTE'
     | 'RESOLVE_DISPUTE'
+    | 'EVENT'
+    | 'INITIALIZE_BUYER_BOND'
+    | 'INITIALIZE_SELLER_BOND'
+    | 'UPDATE_SEQUENTIAL_ADDRESS'
+    | 'AUTO_CANCEL'
     | 'OTHER';
   from_address: string;
   to_address?: string;

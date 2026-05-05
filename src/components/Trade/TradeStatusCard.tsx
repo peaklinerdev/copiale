@@ -38,9 +38,9 @@ export function TradeStatusCard({
   console.log(`[TradeStatusCard] Trade ${trade?.id} state: ${trade?.leg1_state}`);
 
   return (
-    <Card className="border border-neutral-200 shadow-sm p-4">
+    <Card className="bg-[#111318]/60 backdrop-blur-xl border border-white/[0.04] rounded-sm p-4 shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
       <CardHeader>
-        <CardTitle className="text-primary-800">Trade Status</CardTitle>
+        <CardTitle className="text-[#eaecef]">Trade Status</CardTitle>
         <CardDescription>Current status and progress of this trade</CardDescription>
       </CardHeader>
       <CardContent>

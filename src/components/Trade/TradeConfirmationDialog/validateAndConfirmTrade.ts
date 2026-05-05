@@ -80,6 +80,14 @@ export const confirmTrade = (
     return false;
   }
 
-  onConfirm(offer.id, amount, fiatAmount);
+  // Guard: fiat amount must be calculated before confirming
+  if (!fiatAmount || fiatAmount <= 0) {
+    setError('Price data is still loading — please wait a moment and try again.');
+    return false;
+  }
+
+  // Round fiat to 2 decimals before passing to the wire
+  const roundedFiat = Math.round(fiatAmount * 100) / 100;
+  onConfirm(offer.id, amount, roundedFiat);
   return true;
 };

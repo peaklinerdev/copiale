@@ -73,12 +73,9 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
   const formatTimestamp = (timestamp: unknown) => {
     if (!timestamp || timestamp.toString() === '0') return 'Not set';
 
-    // Convert BN to number if needed
-    const timestampNumber =
-      typeof timestamp === 'object' && timestamp && 'toNumber' in timestamp
-        ? (timestamp as { toNumber: () => number }).toNumber()
-        : Number(timestamp);
-
+    // Per Invariant 4: handles native BigInt or number; u64 timestamps
+    // fit safely in JS number (up to 2^53 - 1 seconds, way beyond 2038).
+    const timestampNumber = Number(timestamp);
     const date = new Date(timestampNumber * 1000);
     return date.toLocaleString();
   };
@@ -111,20 +108,15 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
   };
 
   // Format amount for display.
-  // The on-chain value is u64 micro-USDC. Use BN.toString() (or fallback)
-  // to get a decimal string, then microToUsdcString for the canonical
-  // 6dp formatting — never coerce u64 to JS number directly (Invariant 4).
+  // The on-chain value is u64 micro-USDC. Canonical strings or BigInts
+  // are formatted via microToUsdcString for 6dp precision — never coerce
+  // u64 to JS number directly for logic (Invariant 4).
   const formatAmount = (amount: unknown) => {
     if (!amount) return '0';
 
-    let microStr: string;
-    if (typeof amount === 'object' && amount && 'toString' in amount) {
-      microStr = (amount as { toString: () => string }).toString();
-    } else {
-      microStr = String(amount);
-    }
     try {
-      return microToUsdcString(BigInt(microStr));
+      // microToUsdcString handles BigInt
+      return microToUsdcString(BigInt(amount as string | number | bigint));
     } catch {
       return '0';
     }
@@ -135,7 +127,7 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
       <Collapsible
         open={isOpen}
         onOpenChange={setIsOpen}
-        className="w-full border rounded-md p-2 mt-4 bg-white"
+        className="w-full border rounded-md p-2 mt-4 bg-[#1e2329]"
       >
         <div className="flex items-center justify-between">
           <CollapsibleTrigger asChild>
@@ -155,7 +147,7 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
                       : `Updated ${formatDistanceToNow(lastUpdated)} ago`}
                   </span>
                 </TooltipTrigger>
-                <TooltipContent className="bg-neutral-50">
+                <TooltipContent className="bg-[#2b3139] rounded-sm">
                   <p>Auto-refreshes every minute</p>
                 </TooltipContent>
               </Tooltip>
@@ -177,7 +169,7 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
           ) : escrowDetails ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="bg-neutral-50 p-3 rounded md:col-span-2">
+                <div className="bg-[#2b3139] p-3 rounded-sm md:col-span-2">
                   <div className="text-sm text-neutral-500">Escrow Address (PDA)</div>
                   <div className="font-medium flex items-center gap-1">
                     <span className="truncate">{formatAddress(escrowAddress)}</span>
@@ -191,15 +183,15 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
                     </a>
                   </div>
                 </div>
-                <div className="bg-neutral-50 p-3 rounded">
+                <div className="bg-[#2b3139] p-3 rounded-sm">
                   <div className="text-sm text-neutral-500">Escrow ID</div>
                   <div className="font-medium">{escrowDetails.escrowId.toString()}</div>
                 </div>
-                <div className="bg-neutral-50 p-3 rounded">
+                <div className="bg-[#2b3139] p-3 rounded-sm">
                   <div className="text-sm text-neutral-500">Trade ID</div>
                   <div className="font-medium">{escrowDetails.tradeId.toString()}</div>
                 </div>
-                <div className="bg-neutral-50 p-3 rounded">
+                <div className="bg-[#2b3139] p-3 rounded-sm">
                   <div className="text-sm text-neutral-500">State</div>
                   <div className="font-medium">
                     <Badge className={getStateBadgeColor(escrowDetails.state)}>
@@ -209,29 +201,29 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
                     </Badge>
                   </div>
                 </div>
-                <div className="bg-neutral-50 p-3 rounded">
+                <div className="bg-[#2b3139] p-3 rounded-sm">
                   <div className="text-sm text-neutral-500">Amount</div>
                   <div className="font-medium">{formatAmount(escrowDetails.amount)} USDC</div>
                 </div>
-                <div className="bg-neutral-50 p-3 rounded">
+                <div className="bg-[#2b3139] p-3 rounded-sm">
                   <div className="text-sm text-neutral-500">Current Balance</div>
                   <div className="font-medium">{balance} USDC</div>
                 </div>
-                <div className="bg-neutral-50 p-3 rounded">
+                <div className="bg-[#2b3139] p-3 rounded-sm">
                   <div className="text-sm text-neutral-500">Fiat Paid</div>
                   <div className="font-medium">{escrowDetails.fiatPaid ? 'Yes' : 'No'}</div>
                 </div>
-                <div className="bg-neutral-50 p-3 rounded">
+                <div className="bg-[#2b3139] p-3 rounded-sm">
                   <div className="text-sm text-neutral-500">Deposit Deadline</div>
                   <div className="font-medium">
                     {formatTimestamp(escrowDetails.depositDeadline)}
                   </div>
                 </div>
-                <div className="bg-neutral-50 p-3 rounded">
+                <div className="bg-[#2b3139] p-3 rounded-sm">
                   <div className="text-sm text-neutral-500">Fiat Deadline</div>
                   <div className="font-medium">{formatTimestamp(escrowDetails.fiatDeadline)}</div>
                 </div>
-                <div className="bg-neutral-50 p-3 rounded">
+                <div className="bg-[#2b3139] p-3 rounded-sm">
                   <div className="text-sm text-neutral-500">Seller</div>
                   <div className="font-medium flex items-center gap-1">
                     <span className="truncate">{formatAddress(escrowDetails.seller)}</span>
@@ -245,7 +237,7 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
                     </a>
                   </div>
                 </div>
-                <div className="bg-neutral-50 p-3 rounded">
+                <div className="bg-[#2b3139] p-3 rounded-sm">
                   <div className="text-sm text-neutral-500">Buyer</div>
                   <div className="font-medium flex items-center gap-1">
                     <span className="truncate">{formatAddress(escrowDetails.buyer)}</span>
@@ -259,7 +251,7 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
                     </a>
                   </div>
                 </div>
-                <div className="bg-neutral-50 p-3 rounded">
+                <div className="bg-[#2b3139] p-3 rounded-sm">
                   <div className="text-sm text-neutral-500">Arbitrator</div>
                   <div className="font-medium flex items-center gap-1">
                     <span className="truncate">{formatAddress(escrowDetails.arbitrator)}</span>
@@ -273,7 +265,7 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
                     </a>
                   </div>
                 </div>
-                <div className="bg-neutral-50 p-3 rounded">
+                <div className="bg-[#2b3139] p-3 rounded-sm">
                   <div className="text-sm text-neutral-500">Sequential</div>
                   <div className="font-medium">{escrowDetails.sequential ? 'Yes' : 'No'}</div>
                 </div>
@@ -289,7 +281,7 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
                     <Button
                       onClick={handleFundEscrow}
                       disabled={actionLoading}
-                      className="bg-amber-500 hover:bg-amber-600 text-white"
+                      className="bg-[#FF6B00] hover:opacity-90 text-[#0b0e11] font-bold"
                     >
                       {actionLoading ? (
                         <span className="flex items-center gap-2">

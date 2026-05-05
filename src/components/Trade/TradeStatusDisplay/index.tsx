@@ -216,7 +216,7 @@ const TradeStatusDisplay: React.FC<TradeStatusDisplayProps> = ({
                   : isCurrent && step.state === TradeLegState.CANCELLED
                   ? 'border-[#848e9c] bg-[#848e9c]/10 text-[#848e9c]'
                   : isCurrent
-                  ? 'border-[#fcd535] bg-[#fcd535]/5 text-[#fcd535]' 
+                  ? 'border-[#FF6B00] bg-[#FF6B00]/5 text-[#FF6B00]' 
                   : isCompleted
                   ? 'border-[#02c076] bg-[#02c076]/10 text-[#02c076]'
                   : isFuture
@@ -230,7 +230,7 @@ const TradeStatusDisplay: React.FC<TradeStatusDisplayProps> = ({
                   : isCurrent && step.state === TradeLegState.CANCELLED
                   ? 'text-[#848e9c]'
                   : isCurrent
-                  ? 'text-[#fcd535]'
+                  ? 'text-[#FF6B00]'
                   : isCompleted
                   ? 'text-[#02c076]'
                   : 'text-[#474d57]'

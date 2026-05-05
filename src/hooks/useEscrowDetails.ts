@@ -20,18 +20,18 @@ export interface EscrowDetails {
   seller: string;
   buyer: string;
   arbitrator: string;
-  amount: BN;
-  depositDeadline: BN;
-  fiatDeadline: BN;
+  amount: string; // Invariant 3: string for interface
+  depositDeadline: number;
+  fiatDeadline: number;
   state: EscrowState | string; // Allow both enum and string states
   sequential: boolean;
   sequentialEscrowAddress: string;
   fiatPaid: boolean;
-  counter: BN;
+  counter: number;
   disputeInitiator: string;
-  disputeBondBuyer: BN;
-  disputeBondSeller: BN;
-  disputeTimestamp: BN;
+  disputeBondBuyer: string;
+  disputeBondSeller: string;
+  disputeTimestamp: number;
   disputeEvidenceHash: string;
 }
 
@@ -64,8 +64,10 @@ export function useEscrowDetails(escrowAddress: string | null) {
 
         console.log(`[DEBUG] Solana escrow ${escrowAddress} balance: ${escrowBalance.toString()}`);
 
-        // Convert BN to string for display (USDC has 6 decimals)
-        const balanceString = (escrowBalance / 1_000_000).toFixed(6);
+        // Invariant 4: smallest-unit calculations use BigInt. 
+        // Convert smallest-unit number to canonical 6dp decimal string.
+        const balanceBigInt = BigInt(Math.floor(escrowBalance));
+        const balanceString = (Number(balanceBigInt) / 1_000_000).toFixed(6);
         setBalance(balanceString);
 
         // Convert the escrow state to our interface
@@ -75,19 +77,19 @@ export function useEscrowDetails(escrowAddress: string | null) {
           seller: escrowState.sellerAddress,
           buyer: escrowState.buyerAddress,
           arbitrator: escrowState.arbitratorAddress,
-          amount: new BN(escrowState.amount),
-          depositDeadline: new BN(escrowState.depositDeadline || 0),
-          fiatDeadline: new BN(escrowState.fiatDeadline || 0),
+          amount: escrowState.amount,
+          depositDeadline: escrowState.depositDeadline || 0,
+          fiatDeadline: escrowState.fiatDeadline || 0,
           state: escrowState.state,
           sequential: escrowState.sequential || false,
           sequentialEscrowAddress: escrowState.sequentialEscrowAddress || '',
           fiatPaid: escrowState.fiatPaid || false,
-          counter: 0, // We'll need to get this from somewhere else
-          disputeInitiator: '', // We'll need to get this from somewhere else
-          disputeBondBuyer: new BN(0), // We'll need to get this from somewhere else
-          disputeBondSeller: new BN(0), // We'll need to get this from somewhere else
-          disputeTimestamp: 0, // We'll need to get this from somewhere else
-          disputeEvidenceHash: '', // We'll need to get this from somewhere else
+          counter: 0, 
+          disputeInitiator: '', 
+          disputeBondBuyer: '0', 
+          disputeBondSeller: '0', 
+          disputeTimestamp: 0, 
+          disputeEvidenceHash: '', 
         };
 
         setEscrowDetails(details);
@@ -153,5 +155,8 @@ export function useEscrowDetails(escrowAddress: string | null) {
 // Helper function to convert numeric state to readable name
 export function getEscrowStateName(state: number): string {
   const states = ['CREATED', 'FUNDED', 'RELEASED', 'CANCELLED', 'DISPUTED', 'RESOLVED'];
+  return states[state] || `UNKNOWN (${state})`;
+}
+VED'];
   return states[state] || `UNKNOWN (${state})`;
 }

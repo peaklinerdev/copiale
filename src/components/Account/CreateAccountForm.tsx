@@ -96,8 +96,8 @@ function CreateAccountForm({ setAccount }: CreateAccountFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <Alert className="bg-red-50 border-red-200" variant="destructive">
-          <AlertDescription className="text-red-700">{error}</AlertDescription>
+        <Alert className="bg-[#f84960]/10 border-[#f84960]/30 rounded-sm" variant="destructive">
+          <AlertDescription className="text-[#f84960]">{error}</AlertDescription>
         </Alert>
       )}
 
@@ -108,20 +108,20 @@ function CreateAccountForm({ setAccount }: CreateAccountFormProps) {
       )}
 
       <div className="space-y-1">
-        <label htmlFor="wallet_address" className="block text-sm font-medium text-neutral-700">
+        <label htmlFor="wallet_address" className="block text-sm font-medium text-[#848e9c]">
           Wallet Address
         </label>
         <Input
           id="wallet_address"
           value={primaryWallet?.address || ''}
-          className="font-mono text-sm bg-neutral-50"
+          className="font-mono text-sm bg-[#0b0e11] border border-[#2b3139] rounded-sm"
           disabled
         />
-        <p className="text-xs text-neutral-500">This is your connected wallet address</p>
+        <p className="text-xs text-[#848e9c]">This is your connected wallet address</p>
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="username" className="block text-sm font-medium text-neutral-700">
+        <label htmlFor="username" className="block text-sm font-medium text-[#848e9c]">
           Username*
         </label>
         <Input
@@ -133,11 +133,11 @@ function CreateAccountForm({ setAccount }: CreateAccountFormProps) {
           required
           placeholder="Choose a username"
         />
-        <p className="text-xs text-neutral-500">This will be displayed to other users</p>
+        <p className="text-xs text-[#848e9c]">This will be displayed to other users</p>
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="email" className="block text-sm font-medium text-neutral-700">
+        <label htmlFor="email" className="block text-sm font-medium text-[#848e9c]">
           Email Address*
         </label>
         <Input
@@ -149,7 +149,7 @@ function CreateAccountForm({ setAccount }: CreateAccountFormProps) {
           required
           placeholder="example@email.com"
         />
-        <p className="text-xs text-neutral-500">We'll use this for important notifications</p>
+        <p className="text-xs text-[#848e9c]">We'll use this for important notifications</p>
       </div>
 
       <Button

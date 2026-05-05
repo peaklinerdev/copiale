@@ -44,14 +44,14 @@ function TradeDetailsCard({ trade, offer, userRole, counterparty }: TradeDetails
   const marketPosition = rateAdjustment > 1 ? 'above' : rateAdjustment < 1 ? 'below' : 'at';
 
   return (
-    <Card className="border border-neutral-200 shadow-sm p-4">
+    <Card className="bg-[#111318]/60 backdrop-blur-xl border border-white/[0.04] rounded-sm p-4 shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
       <CardHeader>
-        <h1 className="text-2xl font-bold text-primary-800">{`${
+        <h1 className="text-2xl font-bold text-[#eaecef]">{`${
           action === 'buying' ? 'Buying' : 'Selling'
         } ${formatNumber(trade.leg1_crypto_amount || 0)} ${token} for ${
           trade.leg1_fiat_amount ? formatNumber(parseFloat(trade.leg1_fiat_amount)) : 'N/A'
         } ${trade.from_fiat_currency} (Trade #${formatNumber(trade.id)})`}</h1>
-        <p className="text-neutral-500">
+        <p className="text-[#848e9c]">
           Created{' '}
           {new Date(trade.created_at).toLocaleString('en-US', {
             year: 'numeric',
@@ -62,7 +62,7 @@ function TradeDetailsCard({ trade, offer, userRole, counterparty }: TradeDetails
             hour12: false,
           })}{' '}
           -{' '}
-          <span className="text-neutral-400">
+          <span className="text-[#5e6673]">
             {formatDistanceToNow(new Date(trade.created_at))} ago
           </span>
         </p>
@@ -85,7 +85,7 @@ function TradeDetailsCard({ trade, offer, userRole, counterparty }: TradeDetails
                     ? 'text-success-600'
                     : rateAdjustment < 1
                     ? 'text-red-600'
-                    : 'text-neutral-600'
+                    : 'text-[#5e6673]'
                 }
               >
                 {formatRate(rateAdjustment)}
@@ -95,7 +95,7 @@ function TradeDetailsCard({ trade, offer, userRole, counterparty }: TradeDetails
                 <span className="ml-2">
                   <a
                     href={`/offer/${offer.id}`}
-                    className="text-primary-700 hover:text-primary-800 underline text-sm"
+                    className="text-[#FF6B00] hover:text-[#FF6B00] underline text-sm"
                   >
                     [view source offer]
                   </a>
@@ -106,7 +106,7 @@ function TradeDetailsCard({ trade, offer, userRole, counterparty }: TradeDetails
               <Button
                 variant="ghost"
                 size="sm"
-                className="mt-2 flex items-center text-neutral-600 hover:text-neutral-800"
+                className="mt-2 flex items-center text-[#848e9c] hover:text-[#eaecef]"
               >
                 {isDetailsOpen ? (
                   <>
@@ -124,7 +124,7 @@ function TradeDetailsCard({ trade, offer, userRole, counterparty }: TradeDetails
           </div>
 
           <CollapsibleContent>
-            <div className="mt-2 text-neutral-600">
+            <div className="mt-2 text-[#848e9c]">
               {otherParty && (
                 <div className="mt-2 flex items-center">
                   <strong className="mr-2">{otherPartyRole}:</strong>
@@ -144,11 +144,11 @@ function TradeDetailsCard({ trade, offer, userRole, counterparty }: TradeDetails
                     </div>
                     <span className="font-medium mr-1">{otherParty.username || 'Anonymous'}</span>
                     {otherParty.wallet_address && (
-                      <span className="text-xs text-neutral-500 mr-1">
+                      <span className="text-xs text-[#848e9c] mr-1">
                         ({abbreviateWallet(otherParty.wallet_address)})
                       </span>
                     )}
-                    <span className="text-xs text-neutral-500 mr-2">ID: {otherParty.id}</span>
+                    <span className="text-xs text-[#848e9c] mr-2">ID: {otherParty.id}</span>
                     {otherParty.telegram_username && (
                       <a
                         href={`https://t.me/${otherParty.telegram_username}`}
@@ -180,7 +180,7 @@ function TradeDetailsCard({ trade, offer, userRole, counterparty }: TradeDetails
                   <p className="mb-1">
                     <strong>Terms</strong>:
                   </p>
-                  <blockquote className="pl-3 border-l-2 border-neutral-300 italic text-neutral-600 text-base">
+                  <blockquote className="pl-3 border-l-2 border-[#2b3139] italic text-[#848e9c] text-base">
                     "{offer.terms}"
                   </blockquote>
                 </div>

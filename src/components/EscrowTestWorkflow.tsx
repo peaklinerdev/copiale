@@ -64,7 +64,7 @@ const EscrowStateDisplay: React.FC<{ state?: EscrowState }> = ({ state }) => {
       case 'CREATED':
         return 'bg-blue-100 text-blue-800';
       case 'FUNDED':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-[#FF6B00]/20 text-[#FF6B00]';
       case 'RELEASED':
         return 'bg-green-100 text-green-800';
       case 'CANCELLED':
@@ -79,7 +79,7 @@ const EscrowStateDisplay: React.FC<{ state?: EscrowState }> = ({ state }) => {
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg border">
+    <div className="bg-[#1e2329] p-4 rounded-sm border border-[#2b3139]">
       <h4 className="font-semibold text-gray-900 mb-3">Current Escrow State</h4>
       <div className="grid grid-cols-2 gap-4 text-sm">
         <div>
@@ -246,14 +246,14 @@ export const EscrowTestWorkflow: React.FC<EscrowTestWorkflowProps> = ({ blockcha
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-[#1e2329] rounded-sm border border-[#2b3139] p-6">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">🧪 Escrow Lifecycle Testing</h2>
 
       {/* Wallet Connection Status */}
       <div className="mb-6">
         <div
           className={`p-4 rounded-lg border ${
-            testState.walletConnected ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+            testState.walletConnected ? 'bg-[#02c076]/10 border-[#02c076]/30' : 'bg-[#f84960]/10 border-[#f84960]/30'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -275,7 +275,7 @@ export const EscrowTestWorkflow: React.FC<EscrowTestWorkflowProps> = ({ blockcha
               </div>
             </div>
             {!testState.walletConnected && (
-              <div className="text-sm text-red-700">Please connect your wallet to run tests</div>
+              <div className="text-sm text-[#f84960]">Please connect your wallet to run tests</div>
             )}
           </div>
         </div>
@@ -322,9 +322,9 @@ export const EscrowTestWorkflow: React.FC<EscrowTestWorkflowProps> = ({ blockcha
         </div>
 
         {testState.error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <div className="bg-[#f84960]/10 border border-[#f84960]/30 rounded-sm p-4 mb-4">
             <h4 className="text-red-800 font-semibold mb-2">❌ Test Error</h4>
-            <p className="text-red-700">{testState.error}</p>
+            <p className="text-[#f84960]">{testState.error}</p>
           </div>
         )}
       </div>

@@ -1,98 +1,106 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Offer } from '@/api';
-import { formatNumber } from '@/lib/utils';
 import { compareUsdcStrings } from '@/utils/money-display';
+import { numericValue } from '@/utils/money-display';
 
 interface UseAmountInputResult {
   amount: string;
   amountError: string | null;
   setAmount: React.Dispatch<React.SetStateAction<string>>;
   handleAmountChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  setQuickAmount: (pct: number) => void;
   validateAmount: (value: string) => string | null;
 }
 
+const QUICK_PRESETS = [0, 0.25, 0.5, 0.75, 1] as const; // 0 = min, 1 = max
+
 /**
  * Custom hook to handle amount input and validation
+ * — limited to 2 decimal places for USDC trading amounts
  */
 export const useAmountInput = (offer: Offer, isOpen: boolean): UseAmountInputResult => {
   const [amount, setAmount] = useState<string>('');
   const [amountError, setAmountError] = useState<string | null>(null);
+  const [hasUserEdited, setHasUserEdited] = useState(false);
 
-  // Validate amount against min/max/total limits
   const validateAmount = useCallback(
     (value: string): string | null => {
       if (!value) return null;
-
-      // Normalize the user's input to a decimal string and compare exactly
-      // against offer min/max/total via scaled BigInt — no float drift.
-      // If the input isn't a valid decimal, defer error to form validation.
       try {
+        if (compareUsdcStrings(value, '0') <= 0) return 'Enter an amount';
         if (compareUsdcStrings(value, offer.min_amount) < 0) {
-          return `Amount must be at least ${formatNumber(offer.min_amount)} ${offer.token}`;
+          return `Min ${numericValue(offer.min_amount).toFixed(2)} ${offer.token}`;
         }
         if (compareUsdcStrings(value, offer.max_amount) > 0) {
-          return `Amount cannot exceed ${formatNumber(offer.max_amount)} ${offer.token}`;
+          return `Max ${numericValue(offer.max_amount).toFixed(2)} ${offer.token}`;
         }
         if (compareUsdcStrings(value, offer.total_available_amount) > 0) {
-          return `Amount exceeds available amount of ${formatNumber(offer.total_available_amount)} ${
-            offer.token
-          }`;
+          return `Only ${numericValue(offer.total_available_amount).toFixed(2)} ${offer.token} available`;
         }
       } catch {
-        // Malformed string; let the form-level regex error path handle it.
         return null;
       }
-
       return null;
     },
     [offer]
   );
 
+  // Set a quick amount by percentage of min→max range
+  const setQuickAmount = useCallback(
+    (pct: number) => {
+      const min = numericValue(offer.min_amount);
+      const max = Math.min(
+        numericValue(offer.max_amount),
+        numericValue(offer.total_available_amount)
+      );
+      const val = pct === 0 ? min : pct === 1 ? max : min + (max - min) * pct;
+      const rounded = val.toFixed(2);
+      setAmount(rounded);
+      setAmountError(validateAmount(rounded));
+      setHasUserEdited(true);
+    },
+    [offer, validateAmount]
+  );
+
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    setHasUserEdited(true);
 
-    // Allow empty input for user to clear and type a new value
     if (value === '') {
-      setAmount(value);
+      setAmount('');
       setAmountError(null);
       return;
     }
 
-    // Validate that input is a number with up to 2 decimal places
-    const regex = /^\d*\.?\d{0,2}$/;
-    if (!regex.test(value)) {
-      return;
-    }
+    // Only allow digits and one dot, up to 2 decimal places
+    if (!/^\d*\.?\d{0,2}$/.test(value)) return;
 
-    // Update the amount state
     setAmount(value);
-
-    // Validate against min/max/total limits
-    const error = validateAmount(value);
-    setAmountError(error);
+    setAmountError(validateAmount(value));
   };
 
-  // Set a default amount when the dialog opens
+  // Set default min amount on open (only if user hasn't edited)
   useEffect(() => {
-    if (isOpen && offer && offer.min_amount) {
+    if (isOpen && offer?.min_amount) {
       setAmount(offer.min_amount);
       setAmountError(validateAmount(offer.min_amount));
+      setHasUserEdited(false);
     }
-  }, [isOpen, offer, validateAmount]);
-
-  // Reset form when dialog closes
-  useEffect(() => {
     if (!isOpen) {
       setAmount('');
       setAmountError(null);
+      setHasUserEdited(false);
     }
-  }, [isOpen]);
+  }, [isOpen, offer, validateAmount]);
 
   return {
     amount,
     amountError,
     setAmount,
     handleAmountChange,
+    setQuickAmount,
     validateAmount,
   };
 };
+
+export { QUICK_PRESETS };

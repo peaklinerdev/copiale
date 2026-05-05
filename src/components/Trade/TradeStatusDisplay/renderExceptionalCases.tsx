@@ -42,7 +42,7 @@ export const ExceptionalCases: React.FC<ExceptionalCasesProps> = ({
     parseFloat(balance || '0') < Number(escrowDetails.amount)
   ) {
     return (
-      <Alert className="mb-2 border-amber-300 bg-amber-50">
+      <Alert className="mb-2 border-[#FF6B00]/30 bg-[#FF6B00]/10 rounded-sm">
         {userRole === 'seller' ? (
           <>
             <AlertTitle className="text-amber-900">Action Required</AlertTitle>
@@ -69,7 +69,7 @@ export const ExceptionalCases: React.FC<ExceptionalCasesProps> = ({
                     }
                   }}
                   disabled={fundLoading}
-                  className="bg-amber-500 hover:bg-amber-600 text-white"
+                  className="bg-[#FF6B00] hover:opacity-90 text-[#0b0e11] font-bold"
                 >
                   {fundLoading ? (
                     <span className="flex items-center gap-2">

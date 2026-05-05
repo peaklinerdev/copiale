@@ -13,7 +13,7 @@ function OfferDescription({ offer, className = '' }: OfferDescriptionProps) {
   return (
     <div className={`space-y-1 ${className}`}>
       <div className="text-sm font-bold text-[#eaecef]">
-        You are {action} <span className="text-[#fcd535]">{offer.token}</span> for {offer.fiat_currency}
+        You are {action} <span className="text-[#FF6B00]">{offer.token}</span> for {offer.fiat_currency}
       </div>
       <div className="text-xs text-[#848e9c]">
         Rate: {' '}

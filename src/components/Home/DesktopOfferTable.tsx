@@ -44,7 +44,7 @@ const DesktopOfferTable: React.FC<DesktopOfferTableProps> = ({
 }) => {
   const { setShowAuthFlow } = useDynamicContext();
   return (
-    <div className="bg-[#1e2329] border border-[#2b3139] rounded-sm overflow-hidden">
+    <div className="bg-[#111318] border border-white/[0.04] rounded-sm overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
       <Table>
         <TableHeader className="bg-[#0b0e11]">
           <TableRow className="border-b border-[#2b3139] hover:bg-transparent">
@@ -77,17 +77,20 @@ const DesktopOfferTable: React.FC<DesktopOfferTableProps> = ({
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
                     <span className="text-[#848e9c] text-xs">Available</span>
-                    <span className="text-[#eaecef] text-xs font-bold">{formatNumber(offer.total_available_amount)} {offer.token}</span>
+                    <span className="text-[#eaecef] text-xs font-bold">{formatNumber(offer.total_available_amount)} <span className="text-[#5e6673]">{offer.token}</span> <span className="text-[9px] text-[#5e6673]">{offer.token === "XMR" ? "Monero" : "Solana"}</span></span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[#848e9c] text-xs">Limit</span>
-                    <span className="text-[#eaecef] text-xs font-bold">{formatNumber(offer.min_amount)} - {formatNumber(offer.max_amount)} {offer.token}</span>
+                    <span className="text-[#eaecef] text-xs font-bold">{formatNumber(offer.min_amount)} – {formatNumber(offer.max_amount)} <span className="text-[#5e6673]">{offer.token}</span></span>
                   </div>
                 </div>
               </TableCell>
               <TableCell className="py-4">
-                <span className="bg-[#2b3139] text-[#eaecef] text-[10px] font-bold px-2 py-1 border-l-2 border-[#fcd535]">
-                  On-chain Escrow
+                <span className="bg-[#2b3139] text-[#eaecef] text-[10px] font-bold px-2 py-1 border-l-2 border-[#FF6B00]">
+                  {(() => {
+                    const m = offer.terms?.match(/Payment Method:\s*(.+)/);
+                    return m ? m[1].trim() : 'On-chain Escrow';
+                  })()}
                 </span>
               </TableCell>
               <TableCell className="py-4 text-right">
@@ -123,7 +126,7 @@ const DesktopOfferTable: React.FC<DesktopOfferTableProps> = ({
                 ) : (
                   <Button
                     onClick={() => setShowAuthFlow(true)}
-                    className="bg-[#fcd535] hover:opacity-90 text-[#0b0e11] font-bold h-9 px-4 rounded-sm text-xs"
+                    className="bg-[#FF6B00] hover:opacity-90 text-[#0b0e11] font-bold h-9 px-4 rounded-sm text-xs"
                   >
                     Connect to Trade
                   </Button>

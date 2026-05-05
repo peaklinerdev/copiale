@@ -212,7 +212,7 @@ export const fundEscrowTransaction = async (
 export const checkAndFundEscrow = async (
   wallet: any,
   escrowId: string | number,
-  tradeData?: { id: number; leg1_crypto_amount: number }
+  tradeData?: { id: number; leg1_crypto_amount: string | number }
 ): Promise<string> => {
   try {
     console.log(`[DEBUG] Checking and funding Solana escrow ${escrowId}`);

@@ -143,7 +143,7 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
   const getStatusColor = (state: string) => {
     switch (state) {
       case 'CREATED':
-        return 'bg-primary-100 text-primary-800';
+        return 'bg-[#FF6B00]/10 text-[#FF6B00]';
       case 'FUNDED':
         return 'bg-amber-100 text-amber-800';
       case 'RELEASED':
@@ -174,11 +174,11 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
       <Container>
         <Card>
           <CardHeader>
-            <CardTitle className="text-primary-800 font-semibold">My Escrows</CardTitle>
+            <CardTitle className="text-[#eaecef] font-semibold">My Escrows</CardTitle>
             <CardDescription>View your escrow contracts</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            <Alert className="bg-neutral-50 border-neutral-200">
+            <Alert className="bg-[#1e2329] border-[#2b3139] rounded-sm">
               <AlertDescription>Please connect your wallet to view your escrows.</AlertDescription>
             </Alert>
           </CardContent>
@@ -192,11 +192,11 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
       <Container>
         <Card>
           <CardHeader>
-            <CardTitle className="text-primary-800 font-semibold">My Escrows</CardTitle>
+            <CardTitle className="text-[#eaecef] font-semibold">My Escrows</CardTitle>
             <CardDescription>View your escrow contracts</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            <Alert className="bg-amber-50 border-amber-200">
+            <Alert className="bg-[#FF6B00]/10 border-[#FF6B00]/30 rounded-sm">
               <AlertDescription className="text-amber-700">
                 Please create an account first to view your escrows.
               </AlertDescription>
@@ -213,7 +213,7 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <CardTitle className="text-primary-800 font-semibold">My Escrows</CardTitle>
+              <CardTitle className="text-[#eaecef] font-semibold">My Escrows</CardTitle>
               <CardDescription>View and manage your escrows</CardDescription>
             </div>
             <div className="w-full sm:w-auto">
@@ -221,7 +221,7 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
                 <SelectTrigger className="w-full sm:w-[250px] border-neutral-300 focus:ring-primary-500">
                   <SelectValue placeholder="Filter by state" />
                 </SelectTrigger>
-                <SelectContent className="bg-neutral-100">
+                <SelectContent className="bg-[#1e2329] rounded-sm">
                   <SelectItem value="ALL">All States</SelectItem>
                   <SelectItem value="CREATED">Created</SelectItem>
                   <SelectItem value="FUNDED">Funded</SelectItem>
@@ -239,7 +239,7 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-700"></div>
             </div>
           ) : error ? (
-            <Alert className="bg-red-50 border-red-200 mb-4">
+            <Alert className="bg-[#f84960]/10 border-[#f84960]/30 rounded-sm mb-4">
               <AlertDescription className="text-red-700">{error}</AlertDescription>
             </Alert>
           ) : myEscrows.length === 0 ? (
@@ -258,7 +258,7 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
                 {myEscrows.map(escrow => (
                   <div
                     key={escrow.uniqueKey}
-                    className="border border-neutral-200 rounded-lg p-4 hover:bg-neutral-50"
+                    className="border border-[#2b3139] rounded-sm p-4 hover:bg-[#2b3139]"
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div className="font-medium">
@@ -286,11 +286,11 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
                             Seller
                           </Badge>
                         ) : isUserBuyer(escrow) ? (
-                          <Badge className="bg-primary-100 text-primary-800 hover:bg-primary-200">
+                          <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20">
                             Buyer
                           </Badge>
                         ) : (
-                          <Badge className="bg-neutral-100 text-neutral-800">Observer</Badge>
+                          <Badge className="bg-[#2b3139] text-[#eaecef]">Observer</Badge>
                         )}
                       </div>
 
@@ -320,7 +320,7 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
                         <Link to={`/trade/${escrow.trade_id}`}>
                           <Button
                             variant="outline"
-                            className="border-primary-700 text-primary-700 hover:text-primary-800 hover:border-primary-800 w-full"
+                            className="border-[#FF6B00]/50 text-[#FF6B00] hover:text-[#FF6B00] hover:border-[#FF6B00] w-full"
                           >
                             View Trade
                           </Button>
@@ -349,7 +349,7 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
                   </TableHeader>
                   <TableBody>
                     {myEscrows.map(escrow => (
-                      <TableRow key={escrow.uniqueKey} className="hover:bg-neutral-50">
+                      <TableRow key={escrow.uniqueKey} className="hover:bg-[#2b3139]">
                         <TableCell className="font-medium">
                           {escrow.onchain_escrow_id || '-'}
                         </TableCell>
@@ -360,11 +360,11 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
                               Seller
                             </Badge>
                           ) : isUserBuyer(escrow) ? (
-                            <Badge className="bg-primary-100 text-primary-800 hover:bg-primary-200">
+                            <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20">
                               Buyer
                             </Badge>
                           ) : (
-                            <Badge className="bg-neutral-100 text-neutral-800">Observer</Badge>
+                            <Badge className="bg-[#2b3139] text-[#eaecef]">Observer</Badge>
                           )}
                         </TableCell>
                         <TableCell>{escrow.token_type}</TableCell>
@@ -388,7 +388,7 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
                           <Link to={`/trade/${escrow.trade_id}`}>
                             <Button
                               variant="outline"
-                              className="border-primary-700 text-primary-700 hover:text-primary-800 hover:border-primary-800 text-sm px-3 py-1 h-8"
+                              className="border-[#FF6B00]/50 text-[#FF6B00] hover:text-[#FF6B00] hover:border-[#FF6B00] text-sm px-3 py-1 h-8"
                             >
                               View Trade
                             </Button>

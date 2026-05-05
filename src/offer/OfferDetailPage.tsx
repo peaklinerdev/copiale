@@ -151,7 +151,10 @@ function OfferDetailPage() {
           <Card>
             <CardContent className="p-6">
               <div className="flex justify-center items-center py-16">
-                <p className="text-neutral-500">Loading offer details...</p>
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00] mx-auto mb-4"></div>
+                  <p className="text-[#848e9c]">Loading offer details...</p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -166,8 +169,8 @@ function OfferDetailPage() {
         <Container>
           <Card>
             <CardContent className="p-6">
-              <Alert variant="destructive" className="mb-0 border-none bg-red-50">
-                <AlertDescription className="text-red-700">{error}</AlertDescription>
+              <Alert variant="destructive" className="mb-0 border-none bg-[#f84960]/10 rounded-sm">
+                <AlertDescription className="text-[#f84960]">{error}</AlertDescription>
               </Alert>
             </CardContent>
           </Card>
@@ -182,8 +185,8 @@ function OfferDetailPage() {
         <Container>
           <Card>
             <CardContent className="p-6">
-              <Alert className="mb-0 bg-amber-50 border-amber-200">
-                <AlertDescription className="text-amber-700">
+              <Alert className="mb-0 bg-[#FF6B00]/10 border-[#FF6B00]/30 rounded-sm">
+                <AlertDescription className="text-[#FF6B00]">
                   Offer not found or has been deleted.
                 </AlertDescription>
               </Alert>
@@ -201,7 +204,7 @@ function OfferDetailPage() {
           <CardHeader>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <CardTitle className="text-primary-800 font-semibold">
+                <CardTitle className="text-[#eaecef] font-semibold">
                   Offer #{formatNumber(offer.id)}
                 </CardTitle>
                 <CardDescription>
@@ -221,7 +224,7 @@ function OfferDetailPage() {
                   <Link to={`/edit-offer/${offer.id}`}>
                     <Button
                       variant="outline"
-                      className="border-primary-700 text-primary-700 hover:text-primary-800 hover:border-primary-800"
+                      className="border-[#FF6B00]/50 text-[#FF6B00] hover:text-[#FF6B00] hover:border-[#FF6B00]"
                     >
                       Edit
                     </Button>
@@ -234,17 +237,17 @@ function OfferDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div className="flex justify-between items-center p-4">
-                  <span className="font-medium text-neutral-700">Type</span>
+                  <span className="font-medium text-[#eaecef]">Type</span>
                   <OfferTypeTooltip offerType={offer.offer_type} />
                 </div>
 
                 <div className="flex justify-between items-center p-4">
-                  <span className="font-medium text-neutral-700">Token</span>
+                  <span className="font-medium text-[#eaecef]">Token</span>
                   <span>{offer.token}</span>
                 </div>
 
                 <div className="flex justify-between items-center p-4">
-                  <span className="font-medium text-neutral-700">Amount Range</span>
+                  <span className="font-medium text-[#eaecef]">Amount Range</span>
                   <span>
                     {formatNumber(offer.min_amount)} - {formatNumber(offer.max_amount)}{' '}
                     {offer.token}
@@ -252,7 +255,7 @@ function OfferDetailPage() {
                 </div>
 
                 <div className="flex justify-between items-center p-4">
-                  <span className="font-medium text-neutral-700">Available Amount</span>
+                  <span className="font-medium text-[#eaecef]">Available Amount</span>
                   <span>
                     {formatNumber(offer.total_available_amount)} {offer.token}
                   </span>
@@ -261,14 +264,14 @@ function OfferDetailPage() {
 
               <div className="space-y-4">
                 <div className="flex justify-between items-center p-4">
-                  <span className="font-medium text-neutral-700">Rate Adjustment</span>
+                  <span className="font-medium text-[#eaecef]">Rate Adjustment</span>
                   <span
                     className={
                       rateAdjustmentDirection(offer.rate_adjustment) === 'up'
-                        ? 'text-success-600'
+                        ? 'text-[#02c076]'
                         : rateAdjustmentDirection(offer.rate_adjustment) === 'down'
-                        ? 'text-red-600'
-                        : 'text-neutral-600'
+                        ? 'text-[#f84960]'
+                        : 'text-[#848e9c]'
                     }
                   >
                     {formatRate(offer.rate_adjustment)}
@@ -276,19 +279,19 @@ function OfferDetailPage() {
                 </div>
 
                 <div className="flex justify-between items-center p-4">
-                  <span className="font-medium text-neutral-700">Fiat Currency</span>
+                  <span className="font-medium text-[#eaecef]">Fiat Currency</span>
                   <span>{offer.fiat_currency}</span>
                 </div>
 
                 <div className="flex justify-between items-center p-4">
-                  <span className="font-medium text-neutral-700">Escrow Deposit Time Limit</span>
+                  <span className="font-medium text-[#eaecef]">Escrow Deposit Time Limit</span>
                   <span>
                     {formatNumber(getMinutesFromTimeLimit(offer.escrow_deposit_time_limit))} minutes
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center p-4">
-                  <span className="font-medium text-neutral-700">Fiat Payment Time Limit</span>
+                  <span className="font-medium text-[#eaecef]">Fiat Payment Time Limit</span>
                   <span>
                     {formatNumber(getMinutesFromTimeLimit(offer.fiat_payment_time_limit))} minutes
                   </span>
@@ -297,17 +300,17 @@ function OfferDetailPage() {
             </div>
 
             <div className="mt-6">
-              <h3 className="font-medium text-neutral-700 mb-2">Terms and Conditions</h3>
+              <h3 className="font-medium text-[#eaecef] mb-2">Terms and Conditions</h3>
               <div className="p-4 whitespace-pre-wrap">{offer.terms || 'No terms specified'}</div>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col sm:flex-row gap-3 justify-end border-t border-neutral-100 p-6">
+          <CardFooter className="flex flex-col sm:flex-row gap-3 justify-end border-t border-[#2b3139] p-6">
             {isOwner ? (
               <>
                 <Link to={`/edit-offer/${offer.id}`}>
                   <Button
                     variant="outline"
-                    className="border-primary-700 text-primary-700 hover:text-primary-800 hover:border-primary-800 w-full sm:w-auto"
+                    className="border-[#FF6B00]/50 text-[#FF6B00] hover:text-[#FF6B00] hover:border-[#FF6B00] w-full sm:w-auto"
                   >
                     Edit Offer
                   </Button>
@@ -315,7 +318,7 @@ function OfferDetailPage() {
                 <Button
                   variant="outline"
                   onClick={openDeleteDialog}
-                  className="border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600 w-full sm:w-auto"
+                  className="border-[#f84960] text-[#f84960] hover:bg-[#f84960]/10 hover:text-[#f84960] w-full sm:w-auto"
                 >
                   Delete Offer
                 </Button>
@@ -323,14 +326,14 @@ function OfferDetailPage() {
             ) : primaryWallet ? (
               <Button
                 onClick={handleStartTrade}
-                className="bg-success-500 hover:bg-success-600 text-white w-full sm:w-auto"
+                className="bg-[#02c076] hover:bg-[#02c076]/90 text-white rounded-sm w-full sm:w-auto"
               >
                 Start Trade
               </Button>
             ) : (
               <Button
                 onClick={() => setShowAuthFlow(true)}
-                className="bg-primary-600 hover:bg-primary-700 text-white w-full sm:w-auto"
+                className="bg-[#FF6B00] hover:opacity-90 text-[#0b0e11] font-bold rounded-sm w-full sm:w-auto"
               >
                 Connect Wallet to Trade
               </Button>
@@ -341,7 +344,7 @@ function OfferDetailPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="bg-neutral-100 z-999">
+        <DialogContent className="bg-[#1e2329] border border-[#2b3139] rounded-sm z-999">
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
             <DialogDescription>
@@ -355,7 +358,7 @@ function OfferDetailPage() {
             <Button
               variant="destructive"
               onClick={handleDelete}
-              className="bg-red-500 hover:bg-red-600 text-white"
+              className="bg-[#f84960] hover:bg-[#f84960]/90 text-white"
               disabled={isDeletingOffer} // Ensure this uses the hook's state
             >
               {isDeletingOffer ? 'Deleting...' : 'Delete Offer'}

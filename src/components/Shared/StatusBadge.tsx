@@ -19,7 +19,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
   return (
     <Badge
       variant="secondary"
-      className={`bg-[#fcd535]/10 text-[#fcd535] border-[#fcd535]/20 text-[9px] uppercase font-black tracking-widest ${
+      className={`bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/20 text-[9px] uppercase font-black tracking-widest ${
         showOnMobile ? '' : 'hidden sm:inline-flex'
       } ${className}`}
       {...props}

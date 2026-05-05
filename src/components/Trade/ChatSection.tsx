@@ -22,7 +22,7 @@ function ChatSection({ counterparty }: ChatSectionProps) {
               onClick={() =>
                 window.open(`https://t.me/${counterparty.telegram_username}`, '_blank')
               }
-              className="bg-[#fcd535] hover:opacity-90 text-[#0b0e11] font-bold rounded-sm h-10 px-8"
+              className="bg-[#FF6B00] hover:opacity-90 text-[#0b0e11] font-bold rounded-sm h-10 px-8"
             >
               <Send size={16} className="mr-2" />
               Message on Telegram

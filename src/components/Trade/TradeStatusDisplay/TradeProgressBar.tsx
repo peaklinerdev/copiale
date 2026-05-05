@@ -51,9 +51,9 @@ const TradeProgressBar: React.FC<TradeProgressBarProps> = ({ state, isExceptiona
 
   // Determine progress bar color based on state
   const getProgressBarColor = () => {
-    if (isExceptional) return 'bg-red-500';
-    if (state === TradeLegState.DISPUTED) return 'bg-amber-500';
-    if (state === TradeLegState.CANCELLED) return 'bg-neutral-500';
+    if (isExceptional) return 'bg-[#f84960]';
+    if (state === TradeLegState.DISPUTED) return 'bg-[#FF6B00]';
+    if (state === TradeLegState.CANCELLED) return 'bg-[#474d57]';
     return 'bg-primary-600';
   };
 
@@ -82,11 +82,11 @@ const TradeProgressBar: React.FC<TradeProgressBarProps> = ({ state, isExceptiona
                 className={`w-5 h-5 rounded-full border-2 ${
                   milestone.completed
                     ? state === TradeLegState.CANCELLED
-                      ? 'bg-neutral-500 border-neutral-600'
+                      ? 'bg-[#474d57] border-[#5e6673]'
                       : state === TradeLegState.DISPUTED
-                      ? 'bg-amber-500 border-amber-600'
+                      ? 'bg-[#FF6B00] border-[#FF6B00]/60'
                       : isExceptional
-                      ? 'bg-red-500 border-red-600'
+                      ? 'bg-[#f84960] border-[#f84960]/60'
                       : 'bg-primary-600 border-primary-700'
                     : 'bg-neutral-200 border-neutral-300'
                 } -mt-1 ${

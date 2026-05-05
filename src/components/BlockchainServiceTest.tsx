@@ -77,7 +77,7 @@ export const BlockchainServiceTest: React.FC = () => {
       {/* Service Status */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-2">📊 Service Status</h3>
-        <div className="bg-white p-4 rounded border">
+        <div className="bg-[#1e2329] p-4 rounded-sm border border-[#2b3139]">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-600">Network</p>
@@ -102,7 +102,7 @@ export const BlockchainServiceTest: React.FC = () => {
       {/* Network Details */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-2">🔗 Network Details</h3>
-        <div className="bg-white p-4 rounded border">
+        <div className="bg-[#1e2329] p-4 rounded-sm border border-[#2b3139]">
           <div className="space-y-2">
             <div>
               <p className="text-sm text-gray-600">Network ID</p>
@@ -155,7 +155,7 @@ export const BlockchainServiceTest: React.FC = () => {
       {testResults.length > 0 && (
         <div>
           <h3 className="text-lg font-semibold mb-2">📋 Test Results</h3>
-          <div className="bg-white p-4 rounded border max-h-96 overflow-y-auto">
+          <div className="bg-[#1e2329] p-4 rounded-sm border border-[#2b3139] max-h-96 overflow-y-auto">
             <div className="space-y-1">
               {testResults.map((result, index) => (
                 <div key={index} className="text-sm font-mono">
@@ -171,7 +171,7 @@ export const BlockchainServiceTest: React.FC = () => {
       {error && (
         <div className="mt-4 p-4 bg-red-100 border border-red-300 rounded">
           <p className="text-red-800 font-semibold">Error:</p>
-          <p className="text-red-700">{error}</p>
+          <p className="text-[#f84960]">{error}</p>
         </div>
       )}
     </div>

@@ -28,8 +28,8 @@ function OfferTypeTooltip({ offerType }: OfferTypeTooltipProps) {
         >
           <p>
             {offerType === "BUY"
-              ? "Advertiser wants to Buy USDT/USDC"
-              : "Advertiser wants to Sell USDT/USDC"}
+              ? `Advertiser wants to Buy ${offer?.token ?? "crypto"}`
+              : `Advertiser wants to Sell ${offer?.token ?? "crypto"}`}
           </p>
         </TooltipContent>
       </Tooltip>

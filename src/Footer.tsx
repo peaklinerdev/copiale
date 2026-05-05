@@ -23,20 +23,17 @@ export const Footer: React.FC = () => {
   }, []);
 
   return (
-    <footer className="bg-[#0b0e11] border-t border-[#2b3139] py-12 mt-auto">
+    <footer className="bg-[#111318] border-t border-white/[0.04] shadow-[0_-1px_4px_rgba(0,0,0,0.3)] py-12 mt-auto">
       <Container>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           {/* Brand */}
           <div className="md:col-span-1 space-y-6">
             <Link to="/" className="flex items-center gap-2 group">
-              <div className="w-6 h-6 bg-[#fcd535] rounded-sm flex items-center justify-center">
-                <BarChart3 size={16} className="text-[#0b0e11]" />
-              </div>
+              <img src="/copiale-p2p.svg" alt="Copiale" className="w-6 h-6 opacity-80 group-hover:opacity-100 transition-opacity" />
               <span className="text-lg font-bold text-[#eaecef]">Copiale-p2p</span>
             </Link>
             <p className="text-xs text-[#848e9c] leading-relaxed">
-              Professional P2P marketplace for <br />
-              <span className="text-[#fcd535] font-bold">USDT/USDC</span> on <span className="text-[#fcd535] font-bold">Solana/EVM</span>.
+              Decentralized P2P escrow trading.
             </p>
           </div>
 
@@ -44,27 +41,27 @@ export const Footer: React.FC = () => {
           <div className="space-y-4">
             <h3 className="text-xs font-bold uppercase text-[#eaecef] tracking-wider">Service</h3>
             <nav className="flex flex-col gap-2 text-xs">
-              <Link to="/" className="text-[#848e9c] hover:text-[#fcd535]">P2P Trading</Link>
-              <Link to="/status" className="text-[#848e9c] hover:text-[#fcd535]">System Status</Link>
-              <a href="#" className="text-[#848e9c] hover:text-[#fcd535]">Fees & Limits</a>
+              <Link to="/" className="text-[#848e9c] hover:text-[#FF6B00]">P2P Trading</Link>
+              <Link to="/status" className="text-[#848e9c] hover:text-[#FF6B00]">System Status</Link>
+              <a href="#" className="text-[#848e9c] hover:text-[#FF6B00]">Fees & Limits</a>
             </nav>
           </div>
 
           <div className="space-y-4">
             <h3 className="text-xs font-bold uppercase text-[#eaecef] tracking-wider">Support</h3>
             <nav className="flex flex-col gap-2 text-xs">
-              <a href="mailto:support@copiale-p2p.com" className="text-[#848e9c] hover:text-[#fcd535]">Help Center</a>
-              <a href="#" className="text-[#848e9c] hover:text-[#fcd535]">API Documentation</a>
-              <a href="#" className="text-[#848e9c] hover:text-[#fcd535]">Contact Us</a>
+              <a href="mailto:support@copiale-p2p.com" className="text-[#848e9c] hover:text-[#FF6B00]">Help Center</a>
+              <a href="#" className="text-[#848e9c] hover:text-[#FF6B00]">API Documentation</a>
+              <a href="#" className="text-[#848e9c] hover:text-[#FF6B00]">Contact Us</a>
             </nav>
           </div>
 
           <div className="space-y-4">
             <h3 className="text-xs font-bold uppercase text-[#eaecef] tracking-wider">Legal</h3>
             <nav className="flex flex-col gap-2 text-xs">
-              <a href="#" className="text-[#848e9c] hover:text-[#fcd535]">Terms of Use</a>
-              <a href="#" className="text-[#848e9c] hover:text-[#fcd535]">Privacy Policy</a>
-              <a href="#" className="text-[#848e9c] hover:text-[#fcd535]">Risk Warning</a>
+              <a href="#" className="text-[#848e9c] hover:text-[#FF6B00]">Terms of Use</a>
+              <a href="#" className="text-[#848e9c] hover:text-[#FF6B00]">Privacy Policy</a>
+              <Link to="/manifesto" className="text-[#848e9c] hover:text-[#FF6B00]">Manifesto</Link>
             </nav>
           </div>
         </div>
@@ -76,11 +73,11 @@ export const Footer: React.FC = () => {
           
           {health && (
             <div className="flex gap-4 text-[9px] text-[#474d57] font-medium uppercase tracking-tighter">
-              <span>API: {health.apiVersion.version}</span>
+              <span>API: {health.apiVersion?.version ?? '—'}</span>
               <span>•</span>
-              <span>DB: {health.dbStatus}</span>
+              <span>DB: {health.dbStatus ?? '—'}</span>
               <span>•</span>
-              <span>Contract: {health.contractVersion}</span>
+              <span>Contract: {health.contractVersion ?? '—'}</span>
             </div>
           )}
         </div>

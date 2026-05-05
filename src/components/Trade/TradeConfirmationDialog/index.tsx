@@ -10,21 +10,20 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Offer } from '@/api';
-import { formatNumber } from '@/lib/utils';
 import { numericValue } from '@/utils/money-display';
+import { Zap, Clock, AlertTriangle } from 'lucide-react';
 
-// Import our custom hooks and components
 import { useTradeConfirmation } from './useTradeConfirmation';
 import { TradeCalculatedValues } from './TradeCalculatedValues';
+import { QUICK_PRESETS } from './useAmountInput';
 import { useDynamicContext, getNetwork } from '@dynamic-labs/sdk-react-core';
 
 interface TradeConfirmationDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   offer: Offer;
-  onConfirm: (leg1_offer_id: number, leg1_crypto_amount: string, leg1_fiat_amount: number) => void; // Updated parameter names
+  onConfirm: (leg1_offer_id: number, leg1_crypto_amount: string, leg1_fiat_amount: number) => void;
   triggerButton?: React.ReactNode;
 }
 
@@ -35,44 +34,30 @@ const TradeConfirmationDialog = ({
   onConfirm,
   triggerButton,
 }: TradeConfirmationDialogProps) => {
-  // Use our custom hook that combines all the logic
   const {
     amount,
     amountError,
-    priceData,
     loading,
     error,
     fiatAmount,
     platformFee,
     handleAmountChange,
+    setQuickAmount,
     handleConfirm,
   } = useTradeConfirmation(isOpen, offer, onConfirm);
 
-  // Debug: Log fiat amount when TradeConfirmationDialog loads
-  React.useEffect(() => {
-    if (isOpen && fiatAmount > 0) {
-      console.log('[TradeConfirmationDialog] fiatAmount:', fiatAmount);
-      console.log(
-        '[TradeConfirmationDialog] fiatAmount rounded to 2 decimals:',
-        Math.round(fiatAmount * 100) / 100
-      );
-    }
-  }, [isOpen, fiatAmount]);
-
   const { primaryWallet } = useDynamicContext();
+  const isSeller = offer.offer_type === 'BUY' && !!primaryWallet?.address;
+  const isBuy = offer.offer_type === 'SELL';
 
-  // Determine if the current user will be the seller in this trade
-  // If offer_type is 'BUY', the counterparty (taker) is the seller
-  // If offer_type is 'SELL', the counterparty (taker) is the buyer
-  const isSeller = offer.offer_type === 'BUY' && primaryWallet?.address;
   const {
     balance: usdcBalance,
     loading: usdcLoading,
     error: usdcError,
   } = useSellerUsdcBalance(isSeller ? primaryWallet?.address : undefined, isOpen, amount);
-  // Display-side numeric values (coercion delegated to money-display helper).
+
   const amountToEscrow = numericValue(amount);
-  const usdcBalanceNum = usdcBalance !== null ? numericValue(usdcBalance) / 1e6 : null;
+  const usdcBalanceNum = usdcBalance !== null ? Number(usdcBalance) / 1e6 : null;
   const insufficient =
     isSeller &&
     usdcBalanceNum !== null &&
@@ -81,77 +66,57 @@ const TradeConfirmationDialog = ({
     amountToEscrow > 0 &&
     usdcBalanceNum < amountToEscrow;
 
+  const canConfirm = !loading && !amountError && !insufficient && fiatAmount > 0 && amount !== '';
+  const rateNum = numericValue(offer.rate_adjustment);
+  const rateLabel = rateNum > 1 ? 'above' : rateNum < 1 ? 'below' : 'at';
+
+  const escrowMin = typeof offer.escrow_deposit_time_limit === 'object'
+    ? offer.escrow_deposit_time_limit.minutes
+    : parseInt(String(offer.escrow_deposit_time_limit)) || 0;
+  const payMin = typeof offer.fiat_payment_time_limit === 'object'
+    ? offer.fiat_payment_time_limit.minutes
+    : parseInt(String(offer.fiat_payment_time_limit)) || 0;
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       {triggerButton && <DialogTrigger asChild>{triggerButton}</DialogTrigger>}
-      <DialogContent className="bg-[#1e2329] border-[#2b3139] text-[#eaecef] z-50 max-w-md w-full rounded-sm">
-        <DialogHeader className="border-b border-[#2b3139] pb-4">
-          <DialogTitle className="text-[#eaecef] font-bold">Confirm Trade Details</DialogTitle>
-          <DialogDescription className="text-[#848e9c]">Review the details of this trade before confirming.</DialogDescription>
+      <DialogContent className="bg-[#1e2329] border border-[#2b3139] text-[#eaecef] z-50 max-w-md w-full rounded-sm p-0 gap-0">
+        {/* Header */}
+        <DialogHeader className="px-6 pt-6 pb-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-9 h-9 rounded-sm flex items-center justify-center ${
+              isBuy ? 'bg-[#02c076]/10' : 'bg-[#f84960]/10'
+            }`}>
+              <Zap size={16} className={isBuy ? 'text-[#02c076]' : 'text-[#f84960]'} />
+            </div>
+            <div>
+              <DialogTitle className="text-[#eaecef] text-base font-bold">
+                {isBuy ? `Buy ${offer.token}` : `Sell ${offer.token}`}
+              </DialogTitle>
+              <DialogDescription className="text-[#848e9c] text-xs">
+                {isBuy ? 'You pay fiat, you receive crypto' : 'You send crypto, you receive fiat'}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-4 mb-4 mt-4">
-          {/* Trade Type */}
-          <div className="flex justify-between items-center p-3 bg-[#0b0e11] rounded-sm border border-[#2b3139]">
-            <span className="text-xs font-bold text-[#848e9c] uppercase">Trade Type</span>
-            <span
-              className={`px-3 py-1 rounded-sm text-[10px] font-black uppercase tracking-wider ${
-                offer.offer_type === 'BUY'
-                  ? 'bg-[#f84960]/10 text-[#f84960]'
-                  : 'bg-[#02c076]/10 text-[#02c076]'
-              }`}
-            >
-              {offer.offer_type === 'BUY' ? 'Selling USDT/USDC' : 'Buying USDT/USDC'}
+        <div className="px-6 space-y-4 pb-2">
+          {/* Rate pill */}
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-[#848e9c]">Priced {rateLabel} market</span>
+            <span className={`font-bold ${
+              rateNum > 1 ? 'text-[#02c076]' : rateNum < 1 ? 'text-[#f84960]' : 'text-[#848e9c]'
+            }`}>
+              {rateNum > 1
+                ? `+${((rateNum - 1) * 100).toFixed(1)}%`
+                : rateNum < 1
+                ? `-${((1 - rateNum) * 100).toFixed(1)}%`
+                : '0%'}
             </span>
           </div>
 
-          {/* Token */}
-          <div className="flex justify-between items-center p-3 bg-[#0b0e11] rounded-sm border border-[#2b3139]">
-            <span className="text-xs font-bold text-[#848e9c] uppercase">Asset</span>
-            <span className="text-sm font-bold text-[#fcd535]">{offer.token}</span>
-          </div>
-
-          {/* Market Price */}
-          {priceData && (
-            <div className="flex justify-between items-center p-3 bg-[#0b0e11] rounded-sm border border-[#2b3139]">
-              <span className="text-xs font-bold text-[#848e9c] uppercase">Market Price</span>
-              <span className="text-sm font-bold">
-                {formatNumber(
-                  parseFloat(
-                    priceData.data.USDC[offer.fiat_currency as keyof typeof priceData.data.USDC]
-                      ?.price || '0'
-                  )
-                )}{' '}
-                {offer.fiat_currency}
-              </span>
-            </div>
-          )}
-
-          {/* Rate */}
-          <div className="flex flex-col p-3 bg-[#0b0e11] rounded-sm border border-[#2b3139]">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-bold text-[#848e9c] uppercase">Rate Adjustment</span>
-              <span
-                className={`text-sm font-bold ${
-                  numericValue(offer.rate_adjustment) > 1
-                    ? 'text-[#02c076]'
-                    : numericValue(offer.rate_adjustment) < 1
-                    ? 'text-[#f84960]'
-                    : 'text-[#eaecef]'
-                }`}
-              >
-                {numericValue(offer.rate_adjustment) > 1
-                  ? `+${((numericValue(offer.rate_adjustment) - 1) * 100).toFixed(2)}%`
-                  : numericValue(offer.rate_adjustment) < 1
-                  ? `-${((1 - numericValue(offer.rate_adjustment)) * 100).toFixed(2)}%`
-                  : '0%'}
-              </span>
-            </div>
-          </div>
-
-          {/* Amount Input */}
-          <div className="space-y-2">
-            <Label htmlFor="amount" className="text-xs font-bold text-[#848e9c] uppercase tracking-wider">Amount ({offer.token})</Label>
+          {/* Amount input */}
+          <div className="space-y-3">
             <div className="relative">
               <Input
                 id="amount"
@@ -159,37 +124,59 @@ const TradeConfirmationDialog = ({
                 inputMode="decimal"
                 value={amount}
                 onChange={handleAmountChange}
-                placeholder={`Min: ${offer.min_amount}`}
-                className={`bg-[#0b0e11] border-[#2b3139] text-[#eaecef] rounded-sm focus:ring-0 h-12 pr-16 ${
-                  amountError ? 'border-[#f84960] focus:ring-[#f84960]/20' : ''
-                }`}
-                readOnly={false}
+                placeholder="0.00"
+                className={`bg-[#0b0e11] border-2 text-[#eaecef] rounded-sm text-xl font-bold h-14 pl-4 pr-16
+                  focus-visible:ring-0 focus-visible:border-[#FF6B00]/50
+                  ${amountError ? 'border-[#f84960]' : 'border-[#2b3139]'}`}
                 autoFocus
               />
-              <span className="absolute right-3 top-3.5 text-xs font-bold text-[#848e9c]">{offer.token}</span>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-[#848e9c]">
+                {offer.token}
+              </span>
             </div>
-            <div className="flex flex-col gap-1">
-              {isSeller && (
-                <span className="text-[#848e9c] text-[10px] font-medium">
-                  Available: {' '}
-                  {usdcLoading
-                    ? '---'
-                    : usdcError
-                    ? `Error`
-                    : usdcBalanceNum?.toLocaleString(undefined, { maximumFractionDigits: 6 }) ??
-                      '0.00'}{' '}
+
+            {/* Quick presets */}
+            <div className="flex gap-1.5">
+              {QUICK_PRESETS.map((pct) => {
+                const labels = ['Min', '25%', '50%', '75%', 'Max'];
+                const idx = QUICK_PRESETS.indexOf(pct);
+                return (
+                  <button
+                    key={pct}
+                    type="button"
+                    onClick={() => setQuickAmount(pct)}
+                    className="flex-1 text-[10px] font-bold text-[#848e9c] hover:text-[#eaecef] hover:bg-[#2b3139] bg-[#0b0e11] border border-[#2b3139]/50 rounded-sm py-1.5 transition-colors"
+                  >
+                    {labels[idx]}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Balance / error */}
+            <div className="min-h-[20px]">
+              {isSeller && usdcBalanceNum !== null && (
+                <span className="text-[11px] text-[#848e9c]">
+                  Balance:{' '}
+                  <span className={insufficient ? 'text-[#f84960] font-bold' : 'text-[#eaecef]'}>
+                    {usdcBalanceNum.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                  </span>{' '}
                   {offer.token}
                 </span>
               )}
-              {amountError && <div className="text-[10px] font-bold text-[#f84960] mt-1">{amountError}</div>}
-              {isSeller && insufficient && (
-                <div className="mt-1 text-[10px] font-bold text-[#f84960] bg-[#f84960]/10 border border-[#f84960]/20 rounded-sm p-3">
-                  Warning: Insufficient {offer.token} balance to fund this escrow.
+              {amountError && (
+                <div className="text-[11px] font-medium text-[#f84960] mt-0.5">{amountError}</div>
+              )}
+              {insufficient && (
+                <div className="flex items-center gap-1.5 mt-1 text-[11px] font-bold text-[#f84960]">
+                  <AlertTriangle size={12} />
+                  Insufficient balance
                 </div>
               )}
             </div>
           </div>
 
+          {/* Calculated values card */}
           <TradeCalculatedValues
             offer={offer}
             amount={amount}
@@ -199,48 +186,30 @@ const TradeConfirmationDialog = ({
             error={error}
           />
 
-          {/* Time Limits */}
-          <div className="text-[10px] text-[#848e9c] font-medium p-3 bg-[#0b0e11] border border-[#2b3139] rounded-sm flex justify-between">
-            <span>Escrow: {typeof offer.escrow_deposit_time_limit === 'string'
-                ? offer.escrow_deposit_time_limit
-                : `${offer.escrow_deposit_time_limit.minutes}m`}</span>
-            <span>Payment: {typeof offer.fiat_payment_time_limit === 'string'
-                ? offer.fiat_payment_time_limit
-                : `${offer.fiat_payment_time_limit.minutes}m`}</span>
+          {/* Time limits */}
+          <div className="flex items-center gap-4 text-[11px] text-[#848e9c] py-1">
+            <Clock size={12} className="shrink-0" />
+            <span>Escrow: <span className="text-[#eaecef]">{escrowMin}m</span></span>
+            <span>·</span>
+            <span>Payment: <span className="text-[#eaecef]">{payMin}m</span></span>
           </div>
-
-          {/* Next Steps Note */}
-          {!loading && !error && fiatAmount > 0 && (
-            <div className="p-3 bg-[#fcd535]/5 border border-[#fcd535]/20 rounded-sm text-[10px] leading-relaxed">
-              {offer.offer_type === 'BUY' ? (
-                <p className="text-[#fcd535]">
-                  <strong>Seller Note:</strong> You must fund the on-chain escrow. 
-                  Ensure you have sufficient SOL for gas and {offer.token} for the trade.
-                </p>
-              ) : (
-                <p className="text-[#fcd535]">
-                  <strong>Buyer Note:</strong> After the seller funds the escrow, you must 
-                  send the fiat payment and confirm on-chain.
-                </p>
-              )}
-            </div>
-          )}
         </div>
 
-        <DialogFooter className="mt-6 flex gap-3">
-          <Button 
-            variant="outline" 
-            onClick={() => onOpenChange(false)} 
-            className="flex-1 border-[#2b3139] text-[#eaecef] hover:bg-[#2b3139] rounded-sm font-bold"
+        {/* Footer */}
+        <DialogFooter className="px-6 pb-6 pt-2 flex gap-3">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="flex-1 border-[#2b3139] text-[#eaecef] hover:bg-[#2b3139] hover:text-[#eaecef] rounded-sm font-medium h-11"
           >
             Cancel
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={Boolean(loading || amountError || insufficient)}
-            className="flex-1 bg-[#fcd535] hover:opacity-90 text-[#0b0e11] rounded-sm font-bold"
+            disabled={!canConfirm}
+            className="flex-1 bg-[#FF6B00] hover:opacity-90 disabled:opacity-40 !text-[#0b0e11] rounded-sm font-bold h-11"
           >
-            Confirm Order
+            {loading ? 'Loading price…' : 'Confirm Order'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -248,6 +217,7 @@ const TradeConfirmationDialog = ({
   );
 };
 
+/* ── USDC balance fetcher for sellers ── */
 function useSellerUsdcBalance(address: string | undefined, open: boolean, amount: string) {
   const [balance, setBalance] = React.useState<bigint | null>(null);
   const [loading, setLoading] = React.useState(false);
@@ -255,18 +225,13 @@ function useSellerUsdcBalance(address: string | undefined, open: boolean, amount
   const { primaryWallet } = useDynamicContext();
 
   React.useEffect(() => {
-    if (!address || !open) {
-      setBalance(null);
-      setError(null);
-      return;
-    }
+    if (!address || !open) { setBalance(null); setError(null); return; }
     let cancelled = false;
     setLoading(true);
     setError(null);
-
-    const fetchBalance = async () => {
+    (async () => {
       try {
-        let chainId: number | undefined = undefined;
+        let chainId: number | undefined;
         if (primaryWallet?.connector) {
           const networkId = await getNetwork(primaryWallet.connector);
           chainId = typeof networkId === 'number' ? networkId : undefined;
@@ -278,13 +243,8 @@ function useSellerUsdcBalance(address: string | undefined, open: boolean, amount
       } finally {
         if (!cancelled) setLoading(false);
       }
-    };
-
-    fetchBalance();
-
-    return () => {
-      cancelled = true;
-    };
+    })();
+    return () => { cancelled = true; };
   }, [address, open, amount, primaryWallet]);
 
   return { balance, loading, error };

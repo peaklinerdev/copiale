@@ -115,25 +115,34 @@ export interface Trade {
 export interface Escrow {
   id: number;
   trade_id: number;
+  network_id: number;
   escrow_address: string;
+  onchain_escrow_id: string | null;
   seller_address: string;
   buyer_address: string;
   arbitrator_address: string;
   token_type: string;
   amount: string;
-  state: 'CREATED' | 'FUNDED' | 'RELEASED' | 'CANCELLED' | 'DISPUTED' | 'RESOLVED';
+  current_balance?: string | null;
+  state: 'CREATED' | 'FUNDED' | 'RELEASED' | 'CANCELLED' | 'AUTO_CANCELLED' | 'DISPUTED' | 'RESOLVED';
   sequential: boolean;
   sequential_escrow_address: string | null;
-  onchain_escrow_id: string | null;
-  // Solana-specific fields
-  network_family?: 'evm' | 'solana';
-  program_id?: string;
-  escrow_pda?: string;
-  escrow_token_account?: string;
-  escrow_onchain_id?: string;
-  trade_onchain_id?: string;
-  network_id?: number;
-  network?: string;
+  fiat_paid: boolean;
+  counter: number;
+  deposit_deadline?: string | null;
+  fiat_deadline?: string | null;
+  dispute_id?: number | null;
+  completed_at?: string | null;
+  version?: string | null;
+  
+  // Network family and Solana-specific fields
+  network_family: 'evm' | 'solana';
+  program_id?: string | null;
+  escrow_pda?: string | null;
+  escrow_token_account?: string | null;
+  escrow_onchain_id?: string | null; // Solana escrow ID (u64 as string)
+  trade_onchain_id?: string | null; // Solana trade ID (u64 as string)
+  
   created_at: string;
   updated_at: string;
 }

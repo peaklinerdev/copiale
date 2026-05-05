@@ -10,37 +10,39 @@
 
 @theme {
   /* Binance Dark Palette */
-  --color-binance-black: #0b0e11;
-  --color-binance-dark: #1e2329;
-  --color-binance-gray: #2b3139;
-  --color-binance-yellow: #fcd535;
-  --color-binance-text: #eaecef;
-  --color-binance-muted: #848e9c;
+  --color-copiale-black: #050608;
+  --color-copiale-dark: #1e2329;
+  --color-copiale-gray: #2b3139;
+  --color-copiale-yellow: #FF6B00;
+  --color-copiale-text: #eaecef;
+  --color-copiale-muted: #848e9c;
   
   /* Action Colors */
   --color-buy-green: #02c076;
   --color-sell-red: #f84960;
+  --color-warning: #FF6B00;
+  --color-warning-dim: rgba(240, 185, 11, 0.1);
   
   /* Mapping Copiale-p2p Theme */
-  --color-primary-500: var(--color-binance-yellow);
-  --color-primary-600: #eec12e;
+  --color-primary-500: var(--color-copiale-yellow);
+  --color-primary-600: #E05A00;
   
-  --color-neutral-900: var(--color-binance-black);
-  --color-neutral-800: var(--color-binance-dark);
-  --color-neutral-700: var(--color-binance-gray);
+  --color-neutral-900: var(--color-copiale-black);
+  --color-neutral-800: var(--color-copiale-dark);
+  --color-neutral-700: var(--color-copiale-gray);
   --color-neutral-600: #474d57;
-  --color-neutral-500: var(--color-binance-muted);
+  --color-neutral-500: var(--color-copiale-muted);
   --color-neutral-400: #5e6673;
 }
 
 /* Copiale-p2p Binance-Style Variables */
 :root {
-  --bg-primary: var(--color-binance-black);
-  --bg-secondary: var(--color-binance-dark);
-  --bg-tertiary: var(--color-binance-gray);
-  --text-primary: var(--color-binance-text);
-  --text-secondary: var(--color-binance-muted);
-  --accent-gold: var(--color-binance-yellow);
+  --bg-primary: #050608;
+  --bg-secondary: var(--color-copiale-dark);
+  --bg-tertiary: var(--color-copiale-gray);
+  --text-primary: var(--color-copiale-text);
+  --text-secondary: var(--color-copiale-muted);
+  --accent-gold: var(--color-copiale-yellow);
   --color-success: var(--color-buy-green);
   --color-error: var(--color-sell-red);
   
@@ -61,7 +63,7 @@
 html {
   height: 100%;
   font-size: 100%;
-  background-color: var(--bg-primary);
+  background-color: #050608;
   color: var(--text-primary);
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
@@ -75,7 +77,12 @@ body {
   flex-direction: column;
   font-family: 'Inter', system-ui, sans-serif;
   line-height: 1.5;
-  background-color: var(--bg-primary);
+  background-color: #050608;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-attachment: fixed;
 }
 
 h1, h2, h3, h4 {
@@ -94,10 +101,18 @@ a:hover {
   color: #fff;
 }
 
+/* Don't recolor links inside gold/action buttons */
+a[class*="!text-"], 
+button a, 
+[class*="text-["] a {
+  color: inherit;
+}
+
 /* Layout components */
 .app-header {
   background-color: var(--bg-secondary);
-  border-bottom: 1px solid var(--color-binance-gray);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
   position: fixed;
   top: 0;
   left: 0;
@@ -118,7 +133,8 @@ a:hover {
 .card-container {
   background-color: var(--bg-secondary);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--color-binance-gray);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.02);
   overflow: hidden;
 }
 
@@ -137,7 +153,7 @@ a:hover {
 
 .btn-primary {
   background-color: var(--accent-gold);
-  color: var(--color-binance-black);
+  color: var(--color-copiale-black);
 }
 
 .btn-primary:hover {
@@ -157,23 +173,24 @@ a:hover {
 .btn-outline {
   background-color: transparent;
   color: var(--text-primary);
-  border: 1px solid var(--color-binance-gray);
+  border: 1px solid var(--color-copiale-gray);
 }
 
 .btn-outline:hover {
-  background-color: var(--color-binance-gray);
+  background-color: var(--color-copiale-gray);
 }
 
 /* Table styles */
 .table-container {
   background-color: var(--bg-primary);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--color-binance-gray);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .table-header {
   background-color: var(--bg-secondary);
-  border-bottom: 1px solid var(--color-binance-gray);
+  border-bottom: 1px solid var(--color-copiale-gray);
 }
 
 .table-header th {
@@ -185,7 +202,7 @@ a:hover {
 }
 
 .table-body tr {
-  border-bottom: 1px solid var(--color-binance-gray);
+  border-bottom: 1px solid var(--color-copiale-gray);
 }
 
 .table-body tr:hover {
@@ -200,13 +217,65 @@ a:hover {
 /* Footer styles */
 .site-footer {
   background-color: var(--bg-secondary);
-  border-top: 1px solid var(--color-binance-gray);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.3);
   padding: var(--space-xl) 0;
   margin-top: auto;
 }
 
 /* Remove all gradients and shadows */
-* {
-  box-shadow: none !important;
+/* Targeted reset on surface containers only — preserves shadcn/ui shadows */
+.card-container,
+.table-container,
+.app-header,
+.site-footer {
   background-image: none !important;
 }
+
+/* Glassmorphism utilities */
+.glass {
+  background: rgba(17, 19, 24, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.glass-light {
+  background: rgba(17, 19, 24, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.glass-card {
+  background: rgba(17, 19, 24, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 2px;
+}
+
+/* ===== Pennant: Post Ad tag hanging from navbar ===== */
+@keyframes pennant-sway {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(2.5deg);
+  }
+  75% {
+    transform: rotate(-2.5deg);
+  }
+}
+
+.pennant {
+  animation: pennant-sway 6s ease-in-out infinite;
+  will-change: transform;
+}
+
+.pennant:hover {
+  animation-play-state: paused;
+  background-color: #E05A00;
+}
+

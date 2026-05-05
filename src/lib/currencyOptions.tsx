@@ -1,11 +1,20 @@
 import { SelectItem } from "@/components/ui/select";
+import { TRADING_CURRENCIES } from "./currencies";
+
+const FLAGS: Record<string, string> = {
+  COP: "🇨🇴", NGN: "🇳🇬", VES: "🇻🇪", KES: "🇰🇪", ZAR: "🇿🇦", ETB: "🇪🇹",
+};
+const NAMES: Record<string, string> = {
+  COP: "Colombian Peso", NGN: "Nigerian Naira", VES: "Venezuelan Bolívar",
+  KES: "Kenyan Shilling", ZAR: "South African Rand", ETB: "Ethiopian Birr",
+};
 
 export const CurrencyOptions = () => (
   <>
-    <SelectItem value="ETB">Ethiopian Birr (ETB)</SelectItem>
-    <SelectItem value="USD">US Dollar (USD)</SelectItem>
-    <SelectItem value="NGN">Nigerian Naira (NGN)</SelectItem>
-    <SelectItem value="VES">Venezuelan Bolivar (VES)</SelectItem>
-    <SelectItem value="COP">Colombian Peso (COP)</SelectItem>
+    {TRADING_CURRENCIES.map((code) => (
+      <SelectItem key={code} value={code}>
+        {FLAGS[code]} {NAMES[code]} ({code})
+      </SelectItem>
+    ))}
   </>
 );

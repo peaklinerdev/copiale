@@ -8,8 +8,8 @@ export default {
         surface: "#1e2329",
         border: "#2b3139",
         primary: {
-          DEFAULT: "#fcd535",
-          foreground: "#0b0e11",
+          DEFAULT: "#FF6B00",
+          foreground: "#ffffff",
         },
         success: "#02c076",
         error: "#f84960",

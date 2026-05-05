@@ -104,7 +104,7 @@ const MobileOfferList: React.FC<MobileOfferListProps> = ({
               ) : (
                 <Button
                   onClick={() => setShowAuthFlow(true)}
-                  className="bg-[#fcd535] hover:opacity-90 text-[#0b0e11] font-bold h-9 px-4 rounded-sm text-xs w-full"
+                  className="bg-[#FF6B00] hover:opacity-90 text-[#0b0e11] font-bold h-9 px-4 rounded-sm text-xs w-full"
                 >
                   Trade Now
                 </Button>

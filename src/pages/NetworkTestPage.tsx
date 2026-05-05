@@ -67,11 +67,11 @@ export const NetworkTestPage: React.FC = () => {
         <h1 className="text-3xl font-bold text-gray-900 mb-8">🧪 Network Registry Test</h1>
 
         {/* Environment Variables Debug */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold text-yellow-800 mb-4">🔧 Environment Variables</h2>
+        <div className="bg-[#FF6B00]/10 border border-[#FF6B00]/30 rounded-sm p-6 mb-8">
+          <h2 className="text-xl font-semibold text-[#FF6B00] mb-4">🔧 Environment Variables</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Object.entries(envVars).map(([key, value]) => (
-              <div key={key} className="bg-white p-3 rounded border">
+              <div key={key} className="bg-[#1e2329] p-3 rounded-sm border border-[#2b3139]">
                 <p className="font-mono text-sm text-gray-600">{key}</p>
                 <p className="font-mono text-sm text-gray-900 break-all">{value}</p>
               </div>
@@ -80,7 +80,7 @@ export const NetworkTestPage: React.FC = () => {
         </div>
 
         {/* Registry Status */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
+        <div className="bg-[#1e2329] rounded-sm border border-[#2b3139] p-6 mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">📊 Registry Status</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
@@ -110,7 +110,7 @@ export const NetworkTestPage: React.FC = () => {
 
         {/* Default Network */}
         {defaultNetwork && (
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <div className="bg-[#1e2329] rounded-sm border border-[#2b3139] p-6 mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">🎯 Default Network</h2>
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -156,7 +156,7 @@ export const NetworkTestPage: React.FC = () => {
         )}
 
         {/* All Networks */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-[#1e2329] rounded-sm border border-[#2b3139] p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">🔗 All Networks</h2>
           <div className="space-y-4">
             {networks.map(network => (
@@ -175,7 +175,7 @@ export const NetworkTestPage: React.FC = () => {
                       {network.enabled ? 'Enabled' : 'Disabled'}
                     </span>
                     {network.isTestnet && (
-                      <span className="px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                      <span className="px-2 py-1 rounded-sm text-xs font-medium bg-[#FF6B00]/20 text-[#FF6B00]">
                         Testnet
                       </span>
                     )}

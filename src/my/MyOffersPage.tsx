@@ -135,11 +135,11 @@ function MyOffersPage({ account }: MyOffersPageProps) {
         <Container>
           <Card>
             <CardHeader className="border-b border-neutral-100">
-              <CardTitle className="text-primary-800 font-semibold">My Offers</CardTitle>
+              <CardTitle className="text-[#eaecef] font-semibold">My Offers</CardTitle>
               <CardDescription>Manage your active offers</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <Alert className="bg-neutral-50 border-neutral-200">
+              <Alert className="bg-[#1e2329] border-[#2b3139] rounded-sm">
                 <AlertDescription>Please connect your wallet to view your offers.</AlertDescription>
               </Alert>
             </CardContent>
@@ -155,11 +155,11 @@ function MyOffersPage({ account }: MyOffersPageProps) {
         <Container>
           <Card>
             <CardHeader>
-              <CardTitle className="text-primary-800 font-semibold">My Offers</CardTitle>
+              <CardTitle className="text-[#eaecef] font-semibold">My Offers</CardTitle>
               <CardDescription>Manage your active offers</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <Alert className="bg-amber-50 border-amber-200">
+              <Alert className="bg-[#FF6B00]/10 border-[#FF6B00]/30 rounded-sm">
                 <AlertDescription className="text-amber-700">
                   Please create an account first to manage your offers.
                 </AlertDescription>
@@ -178,7 +178,7 @@ function MyOffersPage({ account }: MyOffersPageProps) {
           <CardHeader className="border-b border-neutral-100">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <CardTitle className="text-primary-800 font-semibold">My Offers</CardTitle>
+                <CardTitle className="text-[#eaecef] font-semibold">My Offers</CardTitle>
                 <CardDescription>Manage your active offers</CardDescription>
               </div>
               <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
@@ -186,7 +186,7 @@ function MyOffersPage({ account }: MyOffersPageProps) {
                   <SelectTrigger className="w-full sm:w-[180px] border-neutral-300 focus:ring-primary-500">
                     <SelectValue placeholder="Filter by type" />
                   </SelectTrigger>
-                  <SelectContent className="bg-neutral-100">
+                  <SelectContent className="bg-[#1e2329] border border-[#2b3139] rounded-sm">
                     <SelectItem value="ALL">All Offers</SelectItem>
                     <SelectItem value="BUY">Buy Offers</SelectItem>
                     <SelectItem value="SELL">Sell Offers</SelectItem>
@@ -206,7 +206,7 @@ function MyOffersPage({ account }: MyOffersPageProps) {
                 <p className="text-neutral-500">Loading your offers...</p>
               </div>
             ) : error ? (
-              <Alert className="bg-red-50 border-red-200 mb-4">
+              <Alert className="bg-[#f84960]/10 border-[#f84960]/30 rounded-sm mb-4">
                 <AlertDescription className="text-red-700">{error}</AlertDescription>
               </Alert>
             ) : deleteSuccess ? (
@@ -217,7 +217,7 @@ function MyOffersPage({ account }: MyOffersPageProps) {
               <Alert className="">
                 <AlertDescription>
                   You don't have any offers yet.{' '}
-                  <Link to="/create-offer" className="text-primary-700 hover:text-primary-800">
+                  <Link to="/create-offer" className="text-[#FF6B00] hover:text-[#FF6B00]">
                     Create your first offer
                   </Link>
                 </AlertDescription>
@@ -229,7 +229,7 @@ function MyOffersPage({ account }: MyOffersPageProps) {
                   {myOffers.map(offer => (
                     <div
                       key={offer.id}
-                      className="border border-neutral-200 rounded-lg p-4 hover:bg-neutral-50"
+                      className="border border-[#2b3139] rounded-sm p-4 hover:bg-[#2b3139]"
                     >
                       <div className="flex justify-between items-start mb-3">
                         <div className="font-medium">#{formatNumber(offer.id)}</div>
@@ -308,7 +308,7 @@ function MyOffersPage({ account }: MyOffersPageProps) {
                     </TableHeader>
                     <TableBody>
                       {myOffers.map(offer => (
-                        <TableRow key={offer.id} className="hover:bg-neutral-50">
+                        <TableRow key={offer.id} className="hover:bg-[#2b3139]">
                           <TableCell>{formatNumber(offer.id)}</TableCell>
                           <TableCell>
                             <OfferTypeTooltip offerType={offer.offer_type} />

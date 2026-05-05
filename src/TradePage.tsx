@@ -189,22 +189,22 @@ function TradePage() {
     if (pendingTxs.length === 0) return null;
 
     return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-        <h3 className="text-lg font-semibold text-yellow-800 mb-2">Pending Transactions</h3>
+      <div className="bg-[#FF6B00]/10 border border-[#FF6B00]/30 rounded-sm p-4 mb-4">
+        <h3 className="text-lg font-semibold text-[#FF6B00] mb-2">Pending Transactions</h3>
         <div className="space-y-2">
           {pendingTxs.map(tx => (
             <div
               key={tx.txHash}
-              className="flex items-center justify-between bg-yellow-100 p-2 rounded"
+              className="flex items-center justify-between bg-[#FF6B00]/10 p-2 rounded-sm"
             >
               <div className="flex items-center">
                 <div className="animate-spin mr-2">⟳</div>
                 <div>
-                  <p className="text-sm text-yellow-700">
+                  <p className="text-sm text-[#FF6B00]">
                     {tx.type.replace(/_/g, ' ').toLowerCase()} - Transaction {tx.txHash.slice(0, 6)}
                     ...{tx.txHash.slice(-4)}
                   </p>
-                  <p className="text-xs text-yellow-600">
+                  <p className="text-xs text-[#848e9c]">
                     Submitted {new Date(tx.timestamp).toLocaleTimeString()}
                   </p>
                 </div>
@@ -212,7 +212,7 @@ function TradePage() {
               {tx.attempts > 10 && (
                 <button
                   onClick={() => handleRetryVerification(tx.txHash)}
-                  className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
+                  className="px-3 py-1 bg-[#FF6B00]/20 text-[#FF6B00] rounded-sm hover:bg-[#FF6B00]/30"
                 >
                   Retry
                 </button>
@@ -220,7 +220,7 @@ function TradePage() {
             </div>
           ))}
         </div>
-        <p className="mt-3 text-sm text-yellow-700">
+        <p className="mt-3 text-sm text-[#848e9c]">
           Your transaction has been submitted to the blockchain and is being processed. You can
           continue using the app while we wait for confirmation.
         </p>

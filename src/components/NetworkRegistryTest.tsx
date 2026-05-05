@@ -41,7 +41,7 @@ export const NetworkRegistryTest: React.FC = () => {
       {defaultNetwork && (
         <div className="mb-6">
           <h3 className="text-lg font-semibold mb-2">🎯 Default Network</h3>
-          <div className="bg-white p-3 rounded border">
+          <div className="bg-[#1e2329] p-3 rounded-sm border border-[#2b3139]">
             <p>
               <strong>ID:</strong> {defaultNetwork.id}
             </p>
@@ -71,7 +71,7 @@ export const NetworkRegistryTest: React.FC = () => {
         <h3 className="text-lg font-semibold mb-2">🔗 All Networks</h3>
         <div className="space-y-2">
           {networks.map(network => (
-            <div key={network.id} className="bg-white p-3 rounded border">
+            <div key={network.id} className="bg-[#1e2329] p-3 rounded-sm border border-[#2b3139]">
               <div className="flex justify-between items-start">
                 <div>
                   <p>
@@ -89,7 +89,7 @@ export const NetworkRegistryTest: React.FC = () => {
                     {network.enabled ? 'Enabled' : 'Disabled'}
                   </span>
                   {network.isTestnet && (
-                    <span className="ml-2 px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800">
+                    <span className="ml-2 px-2 py-1 rounded-sm text-xs bg-[#FF6B00]/20 text-[#FF6B00]">
                       Testnet
                     </span>
                   )}
@@ -103,13 +103,13 @@ export const NetworkRegistryTest: React.FC = () => {
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-2">📈 Network Statistics</h3>
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white p-3 rounded border text-center">
+          <div className="bg-[#1e2329] p-3 rounded-sm border border-[#2b3139] text-center">
             <p className="text-2xl font-bold text-blue-600">
               {networkRegistry.getByType(NetworkType.SOLANA).length}
             </p>
             <p className="text-sm text-gray-600">Solana Networks</p>
           </div>
-          <div className="bg-white p-3 rounded border text-center">
+          <div className="bg-[#1e2329] p-3 rounded-sm border border-[#2b3139] text-center">
             <p className="text-2xl font-bold text-purple-600">
               {networkRegistry.getByType(NetworkType.EVM).length}
             </p>

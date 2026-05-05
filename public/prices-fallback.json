@@ -1,0 +1,44 @@
+{
+  "status": "success",
+  "data": {
+    "USDC": {
+      "USD": {
+        "price": "1.0000",
+        "timestamp": 1746450000
+      },
+      "EUR": {
+        "price": "0.8556",
+        "timestamp": 1746450000
+      },
+      "COP": {
+        "price": "3660.00",
+        "timestamp": 1746450000
+      },
+      "NGN": {
+        "price": "1371.00",
+        "timestamp": 1746450000
+      },
+      "VES": {
+        "price": "10.46",
+        "timestamp": 1746450000
+      },
+      "KES": {
+        "price": "130.00",
+        "timestamp": 1746450000
+      },
+      "ZAR": {
+        "price": "16.80",
+        "timestamp": 1746450000
+      },
+      "ETB": {
+        "price": "181.59",
+        "timestamp": 1746450000
+      }
+    }
+  },
+  "_meta": {
+    "source": "CoinGecko / CryptoCompare / open.er-api.com — live-scraped mid-market rates",
+    "updated": "2026-05-05",
+    "note": "Static fallback when pricing server is unreachable. USD & EUR are reference; COP,NGN,VES,KES,ZAR,ETB are P2P trading currencies."
+  }
+}

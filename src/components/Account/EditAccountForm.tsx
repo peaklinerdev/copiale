@@ -126,26 +126,26 @@ function EditAccountForm({ account, onSaveSuccess, onCancel }: EditAccountFormPr
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <Alert className="bg-red-50 border-red-200" variant="destructive">
-          <AlertDescription className="text-red-700">{error}</AlertDescription>
+        <Alert className="bg-[#f84960]/10 border-[#f84960]/30 rounded-sm" variant="destructive">
+          <AlertDescription className="text-[#f84960]">{error}</AlertDescription>
         </Alert>
       )}
 
       <div className="space-y-1">
-        <label htmlFor="wallet_address" className="block text-sm font-medium text-neutral-700">
+        <label htmlFor="wallet_address" className="block text-sm font-medium text-[#848e9c]">
           Wallet Address
         </label>
         <Input
           id="wallet_address"
           value={account.wallet_address}
-          className="font-mono text-sm bg-neutral-50"
+          className="font-mono text-sm bg-[#0b0e11] border border-[#2b3139] rounded-sm"
           disabled
         />
-        <p className="text-xs text-neutral-500">Your connected wallet address cannot be changed</p>
+        <p className="text-xs text-[#848e9c]">Your connected wallet address cannot be changed</p>
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="username" className="block text-sm font-medium text-neutral-700">
+        <label htmlFor="username" className="block text-sm font-medium text-[#848e9c]">
           Username*
         </label>
         <Input
@@ -161,7 +161,7 @@ function EditAccountForm({ account, onSaveSuccess, onCancel }: EditAccountFormPr
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="email" className="block text-sm font-medium text-neutral-700">
+        <label htmlFor="email" className="block text-sm font-medium text-[#848e9c]">
           Email Address*
         </label>
         <Input
@@ -177,7 +177,7 @@ function EditAccountForm({ account, onSaveSuccess, onCancel }: EditAccountFormPr
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="telegram_username" className="block text-sm font-medium text-neutral-700">
+        <label htmlFor="telegram_username" className="block text-sm font-medium text-[#848e9c]">
           Telegram Username
         </label>
         <Input
@@ -192,7 +192,7 @@ function EditAccountForm({ account, onSaveSuccess, onCancel }: EditAccountFormPr
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="telegram_id" className="block text-sm font-medium text-neutral-700">
+        <label htmlFor="telegram_id" className="block text-sm font-medium text-[#848e9c]">
           Telegram ID
         </label>
         <Input
@@ -207,7 +207,7 @@ function EditAccountForm({ account, onSaveSuccess, onCancel }: EditAccountFormPr
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="phone_country_code" className="block text-sm font-medium text-neutral-700">
+        <label htmlFor="phone_country_code" className="block text-sm font-medium text-[#848e9c]">
           Country Code
         </label>
         <Select
@@ -217,7 +217,7 @@ function EditAccountForm({ account, onSaveSuccess, onCancel }: EditAccountFormPr
           <SelectTrigger className="border-neutral-300 focus:ring-primary-500">
             <SelectValue placeholder="Select country code" />
           </SelectTrigger>
-          <SelectContent className="bg-white shadow-md">
+          <SelectContent className="bg-[#1e2329] border border-[#2b3139] rounded-sm">
             {countryCodes.map(code => (
               <SelectItem key={code.label} value={code.label}>
                 {code.label}
@@ -228,7 +228,7 @@ function EditAccountForm({ account, onSaveSuccess, onCancel }: EditAccountFormPr
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="phone_number" className="block text-sm font-medium text-neutral-700">
+        <label htmlFor="phone_number" className="block text-sm font-medium text-[#848e9c]">
           Phone Number
         </label>
         <Input
@@ -243,7 +243,7 @@ function EditAccountForm({ account, onSaveSuccess, onCancel }: EditAccountFormPr
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="timezone" className="block text-sm font-medium text-neutral-700">
+        <label htmlFor="timezone" className="block text-sm font-medium text-[#848e9c]">
           Timezone
         </label>
         <Select
@@ -253,7 +253,7 @@ function EditAccountForm({ account, onSaveSuccess, onCancel }: EditAccountFormPr
           <SelectTrigger className="border-neutral-300 focus:ring-primary-500">
             <SelectValue placeholder="Select your timezone" />
           </SelectTrigger>
-          <SelectContent className="bg-white shadow-md">
+          <SelectContent className="bg-[#1e2329] border border-[#2b3139] rounded-sm">
             {timezones.map(timezone => (
               <SelectItem key={timezone} value={timezone}>
                 {timezone}
@@ -264,7 +264,7 @@ function EditAccountForm({ account, onSaveSuccess, onCancel }: EditAccountFormPr
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="available_from" className="block text-sm font-medium text-neutral-700">
+        <label htmlFor="available_from" className="block text-sm font-medium text-[#848e9c]">
           Available From
         </label>
         <Input
@@ -275,11 +275,11 @@ function EditAccountForm({ account, onSaveSuccess, onCancel }: EditAccountFormPr
           onChange={handleInputChange}
           className="border-neutral-300 focus:border-primary-500 focus:ring-primary-500"
         />
-        <p className="text-xs text-neutral-500">Your local time when you start being available</p>
+        <p className="text-xs text-[#848e9c]">Your local time when you start being available</p>
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="available_to" className="block text-sm font-medium text-neutral-700">
+        <label htmlFor="available_to" className="block text-sm font-medium text-[#848e9c]">
           Available To
         </label>
         <Input
@@ -290,11 +290,11 @@ function EditAccountForm({ account, onSaveSuccess, onCancel }: EditAccountFormPr
           onChange={handleInputChange}
           className="border-neutral-300 focus:border-primary-500 focus:ring-primary-500"
         />
-        <p className="text-xs text-neutral-500">Your local time when you stop being available</p>
+        <p className="text-xs text-[#848e9c]">Your local time when you stop being available</p>
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="profile_photo_url" className="block text-sm font-medium text-neutral-700">
+        <label htmlFor="profile_photo_url" className="block text-sm font-medium text-[#848e9c]">
           Profile Photo URL
         </label>
         <Input
@@ -306,7 +306,7 @@ function EditAccountForm({ account, onSaveSuccess, onCancel }: EditAccountFormPr
           className="border-neutral-300 focus:border-primary-500 focus:ring-primary-500"
           placeholder="https://example.com/photo.jpg"
         />
-        <p className="text-xs text-neutral-500">Enter a URL for your profile photo</p>
+        <p className="text-xs text-[#848e9c]">Enter a URL for your profile photo</p>
       </div>
 
       <div className="flex gap-3 pt-4">
@@ -320,7 +320,7 @@ function EditAccountForm({ account, onSaveSuccess, onCancel }: EditAccountFormPr
         <Button
           type="button"
           onClick={onCancel}
-          className="bg-neutral-100 hover:bg-neutral-200 text-neutral-700 flex-1"
+          className="border border-[#2b3139] text-[#eaecef] hover:bg-[#2b3139] flex-1 rounded-sm"
         >
           Cancel
         </Button>

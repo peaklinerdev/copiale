@@ -235,7 +235,7 @@ function EditOfferPage() {
                     name="min_amount"
                     value={formData.min_amount}
                     onChange={handleChange}
-                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0"
+                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus-visible:ring-[#FF6B00]/30 focus-visible:ring-[3px]"
                     required
                   />
                 </div>
@@ -247,7 +247,7 @@ function EditOfferPage() {
                     name="max_amount"
                     value={formData.max_amount}
                     onChange={handleChange}
-                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0"
+                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus-visible:ring-[#FF6B00]/30 focus-visible:ring-[3px]"
                     required
                   />
                 </div>
@@ -259,7 +259,7 @@ function EditOfferPage() {
                     name="total_available_amount"
                     value={formData.total_available_amount}
                     onChange={handleChange}
-                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0"
+                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus-visible:ring-[#FF6B00]/30 focus-visible:ring-[3px]"
                     required
                   />
                 </div>
@@ -273,7 +273,7 @@ function EditOfferPage() {
                     name="rate_adjustment"
                     value={rateAdjustmentInput}
                     onChange={handleChange}
-                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0"
+                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus-visible:ring-[#FF6B00]/30 focus-visible:ring-[3px]"
                     required
                   />
                   <p className="text-[10px] text-[#848e9c]">
@@ -295,13 +295,13 @@ function EditOfferPage() {
                 value={formData.terms}
                 onChange={handleChange}
                 rows={6}
-                className="w-full border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0 p-3 text-sm resize-none"
+                className="w-full border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus-visible:ring-[#FF6B00]/30 focus-visible:ring-[3px] p-3 text-sm resize-none"
                 placeholder="Specify your terms and conditions for this offer..."
               />
             </div>
 
             <CardFooter className="flex justify-end px-0 pt-4 pb-0">
-              <Button type="submit" className="bg-[#fcd535] hover:opacity-90 text-[#0b0e11] font-bold rounded-sm h-12 px-12 w-full sm:w-auto">
+              <Button type="submit" className="bg-[#FF6B00] hover:opacity-90 text-[#0b0e11] font-bold rounded-sm h-12 px-12 w-full sm:w-auto">
                 Update Advertisement
               </Button>
             </CardFooter>

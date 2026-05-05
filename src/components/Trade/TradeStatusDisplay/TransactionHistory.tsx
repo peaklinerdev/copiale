@@ -159,7 +159,7 @@ export const TransactionHistory = ({ tradeId, className = '' }: TransactionHisto
       <Collapsible
         open={isOpen}
         onOpenChange={setIsOpen}
-        className={`w-full border rounded-md p-2 mt-4 bg-white ${className}`}
+        className={`w-full border rounded-sm p-2 mt-4 bg-[#1e2329] border border-[#2b3139] ${className}`}
       >
         <div className="flex items-center justify-between">
           <CollapsibleTrigger asChild>
@@ -178,7 +178,7 @@ export const TransactionHistory = ({ tradeId, className = '' }: TransactionHisto
                       : `Updated ${formatDistanceToNow(lastUpdated)} ago`}
                   </span>
                 </TooltipTrigger>
-                <TooltipContent className="bg-neutral-50">
+                <TooltipContent className="bg-[#2b3139] rounded-sm">
                   <p>Auto-refreshes every minute</p>
                 </TooltipContent>
               </Tooltip>
@@ -222,7 +222,7 @@ export const TransactionHistory = ({ tradeId, className = '' }: TransactionHisto
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-[#0b0e11] divide-y divide-[#2b3139]">
                   {transactions.map(tx => (
                     <tr key={tx.id} className="hover:bg-gray-50">
                       <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">

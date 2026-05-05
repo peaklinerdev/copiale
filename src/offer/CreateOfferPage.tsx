@@ -162,13 +162,13 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
   if (!primaryWallet) {
     return (
       <Container className="max-w-2xl">
-        <Card className="rounded-sm border-[#2b3139] bg-[#1e2329]">
+        <Card className="rounded-sm border-white/[0.04] bg-[#111318] shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
           <CardHeader>
             <CardTitle className="text-[#eaecef] font-bold">Create Ad</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <Alert className="bg-[#fcd535]/10 border-[#fcd535]/20 rounded-sm">
-              <AlertDescription className="text-[#fcd535]">Please connect your wallet to post an advertisement.</AlertDescription>
+            <Alert className="bg-[#FF6B00]/10 border-[#FF6B00]/20 rounded-sm">
+              <AlertDescription className="text-[#FF6B00]">Please connect your wallet to post an advertisement.</AlertDescription>
             </Alert>
           </CardContent>
         </Card>
@@ -178,7 +178,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
 
   return (
     <Container className="max-w-2xl">
-      <Card className="rounded-sm border-[#2b3139] bg-[#1e2329]">
+      <Card className="rounded-sm border-white/[0.04] bg-[#111318] shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
         <CardHeader className="border-b border-[#2b3139]">
           <CardTitle className="text-[#eaecef] font-bold">Post P2P Advertisement</CardTitle>
         </CardHeader>
@@ -209,12 +209,13 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
                   value={formData.token}
                   onValueChange={value => setFormData({ ...formData, token: value })}
                 >
-                  <SelectTrigger className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0">
+                  <SelectTrigger className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus-visible:ring-[#FF6B00]/30 focus-visible:ring-[3px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1e2329] border-[#2b3139] text-[#eaecef]">
                     
                     <SelectItem value="USDC">USDC</SelectItem>
+                    <SelectItem value="XMR">XMR (Monero)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -225,7 +226,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
                   value={formData.fiat_currency}
                   onValueChange={value => setFormData({ ...formData, fiat_currency: value })}
                 >
-                  <SelectTrigger className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0">
+                  <SelectTrigger className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus-visible:ring-[#FF6B00]/30 focus-visible:ring-[3px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1e2329] border-[#2b3139] text-[#eaecef]">
@@ -270,7 +271,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
                    <Input
                     type="number"
                     step="0.01"
-                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0 h-10 pr-12"
+                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus-visible:ring-[#FF6B00]/30 focus-visible:ring-[3px] h-10 pr-12"
                     value={formData.rate_adjustment}
                     onChange={e => setFormData({ ...formData, rate_adjustment: e.target.value })}
                   />
@@ -284,7 +285,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
                 <div className="relative">
                   <Input
                     type="number"
-                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0 h-10 pr-12"
+                    className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus-visible:ring-[#FF6B00]/30 focus-visible:ring-[3px] h-10 pr-12"
                     value={formData.total_available_amount}
                     onChange={e => setFormData({ ...formData, total_available_amount: e.target.value })}
                   />
@@ -298,7 +299,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
                 <label className="text-xs font-bold text-[#848e9c] uppercase">Min Limit</label>
                 <Input
                   type="number"
-                  className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0 h-10"
+                  className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus-visible:ring-[#FF6B00]/30 focus-visible:ring-[3px] h-10"
                   value={formData.min_amount}
                   onChange={e => setFormData({ ...formData, min_amount: e.target.value })}
                 />
@@ -308,7 +309,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
                 <label className="text-xs font-bold text-[#848e9c] uppercase">Max Limit</label>
                 <Input
                   type="number"
-                  className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0 h-10"
+                  className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus-visible:ring-[#FF6B00]/30 focus-visible:ring-[3px] h-10"
                   value={formData.max_amount}
                   onChange={e => setFormData({ ...formData, max_amount: e.target.value })}
                 />
@@ -316,7 +317,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
             </div>
 
             <div className="p-4 bg-[#0b0e11] border border-[#2b3139] rounded-sm space-y-4">
-              <h3 className="text-xs font-black text-[#fcd535] uppercase tracking-widest">Payment Information</h3>
+              <h3 className="text-xs font-black text-[#FF6B00] uppercase tracking-widest">Payment Information</h3>
               
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-[#848e9c] uppercase">Method</label>
@@ -324,7 +325,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
                   value={formData.payment_method_id}
                   onValueChange={value => setFormData({ ...formData, payment_method_id: value })}
                 >
-                  <SelectTrigger className="border-[#2b3139] bg-[#1e2329] text-[#eaecef] rounded-sm focus:ring-0 h-9">
+                  <SelectTrigger className="border-white/[0.04] bg-[#111318] shadow-[0_1px_3px_rgba(0,0,0,0.4)] text-[#eaecef] rounded-sm focus-visible:ring-[#FF6B00]/30 focus-visible:ring-[3px] h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1e2329] border-[#2b3139] text-[#eaecef]">
@@ -338,7 +339,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-[#848e9c] uppercase">{selectedPaymentMethod?.accountLabel}</label>
                 <Input
-                  className="border-[#2b3139] bg-[#1e2329] text-[#eaecef] rounded-sm focus:ring-0 h-9"
+                  className="border-white/[0.04] bg-[#111318] shadow-[0_1px_3px_rgba(0,0,0,0.4)] text-[#eaecef] rounded-sm focus-visible:ring-[#FF6B00]/30 focus-visible:ring-[3px] h-9"
                   value={formData.payment_account}
                   onChange={e => setFormData({ ...formData, payment_account: e.target.value })}
                 />
@@ -348,7 +349,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-[#848e9c] uppercase">{selectedPaymentMethod?.notesLabel}</label>
                   <Input
-                    className="border-[#2b3139] bg-[#1e2329] text-[#eaecef] rounded-sm focus:ring-0 h-9"
+                    className="border-white/[0.04] bg-[#111318] shadow-[0_1px_3px_rgba(0,0,0,0.4)] text-[#eaecef] rounded-sm focus-visible:ring-[#FF6B00]/30 focus-visible:ring-[3px] h-9"
                     value={formData.payment_notes}
                     onChange={e => setFormData({ ...formData, payment_notes: e.target.value })}
                   />
@@ -359,7 +360,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
             <div className="space-y-2">
               <label className="text-xs font-bold text-[#848e9c] uppercase">Additional Terms</label>
               <textarea
-                className="w-full border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus:ring-0 p-3 text-sm h-24 resize-none"
+                className="w-full border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm focus-visible:ring-[#FF6B00]/30 focus-visible:ring-[3px] p-3 text-sm h-24 resize-none"
                 placeholder="Describe your trade terms..."
                 value={formData.terms}
                 onChange={e => setFormData({ ...formData, terms: e.target.value })}
@@ -368,7 +369,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
 
             <Button
               type="submit"
-              className="w-full bg-[#fcd535] hover:opacity-90 text-[#0b0e11] font-bold h-12 rounded-sm"
+              className="w-full bg-[#FF6B00] hover:opacity-90 text-[#0b0e11] font-bold h-12 rounded-sm"
             >
               Post Advertisement
             </Button>

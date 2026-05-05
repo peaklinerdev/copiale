@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { getOffers, Offer } from './api';
 
 // UI Components
-import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import FilterBar from '@/components/Home/FilterBar';
@@ -38,10 +38,20 @@ function HomePage() {
     useUserAccount(primaryWallet);
   const {
     filteredOffers,
+    tradeType,
+    currentCurrency,
+    currentAsset,
+    amount,
+    paymentMethod,
+    sortBy,
     currentPage,
     totalPages,
     handleCurrencyChange,
     handleTradeTypeChange,
+    handleAssetChange,
+    handleAmountChange,
+    handlePaymentMethodChange,
+    handleSortChange,
     handlePageChange,
   } = useOfferFiltering({
     offers,
@@ -115,42 +125,59 @@ function HomePage() {
         navigate(`/trade/${tradeId}`);
       },
       onError: error => {
-        alert('Trade failed: ' + error.message);
+        toast.error('Trade failed', { description: error.message });
       },
     });
   };
 
   return (
     <TooltipProvider>
-      <div className="w-full space-y-6">
+      <div className="w-full space-y-4">
         {!primaryWallet && <IntroMessageNotLoggedIn />}
-        
-        <div className="bg-[#1e2329] border border-[#2b3139] rounded-sm">
+
+        {/* Stats bar */}
+        {!loading && !error && (
+          <div className="flex items-center justify-between text-xs text-[#848e9c] px-1 backdrop-blur-sm">
+            <div className="flex items-center gap-6">
+              <span><span className="text-[#eaecef] font-bold">{offers.length}</span> active offers</span>
+              <span>Updated <span className="text-[#eaecef]">{new Date().toLocaleTimeString()}</span></span>
+            </div>
+            {primaryWallet && (
+              <Link to="/create-offer" className="text-sm font-medium text-[#FF6B00] hover:text-[#ff8033] transition-colors flex items-center gap-1">
+                <span className="text-base leading-none">+</span> Post Ad
+              </Link>
+            )}
+          </div>
+        )}
+
+        <div className="bg-[#111318]/60 backdrop-blur-xl border border-white/[0.04] rounded-sm shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
           {hasUsername === false && primaryWallet && (
-            <div className="bg-[#fcd535]/10 border-b border-[#fcd535]/20 p-4">
-              <p className="text-[#fcd535] text-sm font-medium">
-                You haven't set a username yet. <Link to="/account" className="underline font-bold">Complete your profile</Link> to start trading.
+            <div className="bg-[#FF6B00]/10 border-b border-[#FF6B00]/20 p-4">
+              <p className="text-[#FF6B00] text-sm font-medium">
+                Set your username to start trading.{' '} <Link to="/account" className="underline font-bold">Complete your profile →</Link>
               </p>
             </div>
           )}
 
-          <div className="p-6 border-b border-[#2b3139]">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-              <div className="space-y-1">
-                <h1 className="text-2xl font-bold text-[#eaecef]">P2P Market</h1>
-                <p className="text-sm text-[#848e9c]">Trade directly with peer-to-peer advertisements on Solana/EVM.</p>
-              </div>
-              
-              <div className="flex items-center gap-4 w-full sm:w-auto">
+          {/* Header bar with filters */}
+          <div className="px-6 py-4 border-b border-[#2b3139]/30">
+            <div className="flex items-center gap-4">
+              {/* FilterBar takes remaining space */}
+              <div className="flex-1 min-w-0">
                 <FilterBar
-                  onCurrencyChange={handleCurrencyChange}
+                  tradeType={tradeType}
                   onTradeTypeChange={handleTradeTypeChange}
+                  asset={currentAsset}
+                  onAssetChange={handleAssetChange}
+                  currency={currentCurrency}
+                  onCurrencyChange={handleCurrencyChange}
+                  amount={amount}
+                  onAmountChange={handleAmountChange}
+                  paymentMethod={paymentMethod}
+                  onPaymentMethodChange={handlePaymentMethodChange}
+                  sortBy={sortBy}
+                  onSortChange={handleSortChange}
                 />
-                {primaryWallet && (
-                  <Button asChild className="bg-[#fcd535] hover:opacity-90 text-[#0b0e11] font-bold rounded-sm h-10 px-6">
-                    <Link to="/create-offer">Post Ad</Link>
-                  </Button>
-                )}
               </div>
             </div>
           </div>
@@ -158,8 +185,8 @@ function HomePage() {
           <div className="p-0">
             {loading && (
               <div className="flex flex-col justify-center items-center py-32 gap-4">
-                <div className="w-10 h-10 border-2 border-[#fcd535]/20 border-t-[#fcd535] animate-spin rounded-full"></div>
-                <p className="text-[#848e9c] text-sm font-medium">Synchronizing USDT/USDC Market Data...</p>
+                <img src="/copiale-p2p.svg" alt="Copiale" className="w-12 h-12 mx-auto animate-pulse" />
+                <p className="text-[#848e9c] text-sm font-medium mt-3">Synchronizing market data...</p>
               </div>
             )}
 
@@ -181,6 +208,8 @@ function HomePage() {
 
             {!loading && !error && offers.length === 0 ? (
               <NoOffers />
+            ) : !loading && !error && filteredOffers.length === 0 ? (
+              <NoOffers isFiltered />
             ) : (
               !loading && !error && (
                 <>
@@ -218,7 +247,7 @@ function HomePage() {
             )}
 
             {!loading && !error && filteredOffers.length > 0 && (
-              <div className="p-6 border-t border-[#2b3139]">
+              <div className="p-6 border-t border-[#2b3139]/30">
                 <OfferPagination
                   currentPage={currentPage}
                   totalPages={totalPages}

@@ -11,7 +11,7 @@ interface TradeHeaderProps {
 export function TradeHeader({ userRole }: TradeHeaderProps) {
   return (
     <div className="bg-primary-100 p-3 rounded-md mb-4 text-center">
-      <p className="text-primary-800 font-medium">
+      <p className="text-[#eaecef] font-medium">
         Your role in this trade: <span className="font-bold uppercase">{userRole}</span>
         <TooltipProvider>
           <Tooltip>
@@ -20,7 +20,7 @@ export function TradeHeader({ userRole }: TradeHeaderProps) {
                 <Info size={16} />
               </span>
             </TooltipTrigger>
-            <TooltipContent className="bg-secondary-100 text-primary-800">
+            <TooltipContent className="bg-[#1e2329] text-[#eaecef] rounded-sm">
               <p>
                 {userRole.toLowerCase() === 'buyer'
                   ? 'As the buyer, you’ll wait until the seller fully funds the on-chain escrow, then complete your fiat payment and, finally, await crypto release.'

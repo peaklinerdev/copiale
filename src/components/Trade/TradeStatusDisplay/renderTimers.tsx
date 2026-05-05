@@ -17,7 +17,7 @@ export const renderTimers = ({ trade, userRole }: RenderTimersProps) => {
     const isExpired = isDeadlineExpired(trade.leg1_escrow_deposit_deadline);
     // console.log(`[DEBUG] User-requested decision logic: Rendering timer for CREATED state. Deadline: ${trade.leg1_escrow_deposit_deadline}, Expired: ${isExpired}`);
     return (
-      <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+      <div className="mt-4 p-3 bg-[#FF6B00]/10 border border-[#FF6B00]/30 rounded-sm">
         <TradeTimer
           deadline={trade.leg1_escrow_deposit_deadline}
           label={
@@ -46,7 +46,7 @@ export const renderTimers = ({ trade, userRole }: RenderTimersProps) => {
     const isExpired = isDeadlineExpired(trade.leg1_fiat_payment_deadline);
     // console.log(`[DEBUG] User-requested decision logic: Rendering timer for FUNDED state. Deadline: ${trade.leg1_fiat_payment_deadline}, Expired: ${isExpired}`);
     return (
-      <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+      <div className="mt-4 p-3 bg-[#FF6B00]/10 border border-[#FF6B00]/30 rounded-sm">
         <TradeTimer
           deadline={trade.leg1_fiat_payment_deadline}
           label={
@@ -74,7 +74,7 @@ export const renderTimers = ({ trade, userRole }: RenderTimersProps) => {
     const isExpired = isDeadlineExpired(trade.leg1_fiat_payment_deadline);
     // console.log(`[DEBUG] User-requested decision logic: Rendering timer for AWAITING_FIAT_PAYMENT state. Deadline: ${trade.leg1_fiat_payment_deadline}, Expired: ${isExpired}`);
     return (
-      <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+      <div className="mt-4 p-3 bg-[#FF6B00]/10 border border-[#FF6B00]/30 rounded-sm">
         <TradeTimer
           deadline={trade.leg1_fiat_payment_deadline}
           label={

@@ -41,7 +41,7 @@ function ParticipantCard({
           {isBuyer && (
             <Badge
               variant="outline"
-              className="bg-primary-100 text-primary-800 border-primary-300 text-xs"
+              className="bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/30 text-xs rounded-sm"
             >
               BUYER
             </Badge>

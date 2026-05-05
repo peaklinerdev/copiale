@@ -1,6 +1,7 @@
 import React from 'react';
 import { Offer } from '@/api';
-import { formatNumber } from '@/lib/utils';
+import { numericValue } from '@/utils/money-display';
+import { ArrowDown } from 'lucide-react';
 
 interface TradeCalculatedValuesProps {
   offer: Offer;
@@ -11,8 +12,12 @@ interface TradeCalculatedValuesProps {
   error: string | null;
 }
 
+function fmt(n: number, decimals = 2): string {
+  return n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
 /**
- * Component to render calculated trade values
+ * Modern swap-style summary — "You pay → You receive" with rate and fee inline
  */
 export const TradeCalculatedValues: React.FC<TradeCalculatedValuesProps> = ({
   offer,
@@ -22,101 +27,79 @@ export const TradeCalculatedValues: React.FC<TradeCalculatedValuesProps> = ({
   loading,
   error,
 }) => {
-  if (loading || error || fiatAmount <= 0) {
-    return null;
+  if (loading) {
+    return (
+      <div className="rounded-sm bg-[#0b0e11]/60 border border-[#2b3139]/30 p-4 space-y-3 animate-pulse">
+        <div className="h-4 bg-[#2b3139] rounded w-1/3" />
+        <div className="h-8 bg-[#2b3139] rounded" />
+        <div className="h-4 bg-[#2b3139] rounded w-2/3" />
+      </div>
+    );
   }
 
+  if (error || fiatAmount <= 0) return null;
+
   const feeFlag = import.meta.env.VITE_FEE_FLAG === 'true';
-  // Ensure platformFee is calculated based on the flag within calculateAmounts
-  // showFee determines if *any* fee section (even informational) should be shown
-  const showFeeSection = feeFlag; // Show fee section if flag is true, regardless of amount
-  const actualFeeCharged = feeFlag && platformFee > 0; // Is a fee actually being calculated?
-  const escrowAmount = amount
-    ? parseFloat(amount) + (feeFlag && offer.offer_type === 'BUY' ? platformFee : 0)
-    : 0;
+  const amountNum = numericValue(amount);
+  const escrowAmount = amountNum + (feeFlag && offer.offer_type === 'BUY' ? platformFee : 0);
+  const rate = amountNum > 0 ? fiatAmount / amountNum : 0;
+  const isSell = offer.offer_type === 'BUY';
 
   return (
-    <div className="space-y-3 py-3 bg-neutral-100 rounded">
-      <div className="font-medium text-neutral-700 border-b pb-1 mb-2">Details</div>
-      {offer.offer_type === 'BUY' ? (
-        // Selling USDC (User is the Seller)
-        <>
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-neutral-700">You are selling</span>
-            <span className="font-medium">{amount && formatNumber(parseFloat(amount))} USDC</span>
+    <div className="rounded-sm bg-[#0b0e11]/60 border border-[#2b3139]/30 overflow-hidden">
+      {/* Rate bar */}
+      <div className="px-4 py-2.5 flex items-center justify-between border-b border-[#2b3139]/20">
+        <span className="text-xs font-medium text-[#848e9c] uppercase tracking-wider">Rate</span>
+        <span className="text-xs font-bold text-[#eaecef]">
+          1 {offer.token} ≈ {fmt(rate, 4)} {offer.fiat_currency}
+        </span>
+      </div>
+
+      {/* Swap-style pay/receive */}
+      <div className="p-4 space-y-3">
+        {/* You pay */}
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-[#848e9c]">
+            {isSell ? 'You send' : 'You pay'}
+          </span>
+          <span className="text-sm font-bold text-[#eaecef]">
+            {isSell ? `${fmt(amountNum)} ${offer.token}` : `${fmt(fiatAmount)} ${offer.fiat_currency}`}
+          </span>
+        </div>
+
+        {/* Arrow */}
+        <div className="flex justify-center">
+          <div className="w-6 h-6 rounded-full bg-[#2b3139]/50 flex items-center justify-center border border-[#2b3139]/30">
+            <ArrowDown size={12} className="text-[#848e9c]" />
           </div>
+        </div>
 
-          {showFeeSection && (
-            <>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-neutral-700">Copiale-p2p Fee (1%)</span>
-                <span className="font-medium">{formatNumber(platformFee)} USDC</span>
-              </div>
-              {actualFeeCharged && (
-                <div className="text-xs text-neutral-500 pl-2">
-                  <span>50% of this fee can go to the referral program</span>
-                </div>
-              )}
-            </>
-          )}
+        {/* You receive */}
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-[#848e9c]">You receive</span>
+          <span className="text-sm font-bold text-[#02c076]">
+            {isSell ? `${fmt(fiatAmount)} ${offer.fiat_currency}` : `${fmt(amountNum)} ${offer.token}`}
+          </span>
+        </div>
 
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-neutral-700">You will escrow</span>
-            <span className="font-medium">
-              {/* Escrow includes base amount + fee if applicable */}
-              {formatNumber(escrowAmount)} USDC
+        {/* Fee row */}
+        {feeFlag && platformFee > 0 && (
+          <div className="flex justify-between items-center pt-2 border-t border-[#2b3139]/20">
+            <span className="text-xs text-[#848e9c]">
+              Platform fee {isSell ? `(${fmt(platformFee)} ${offer.token})` : '(paid by seller)'}
             </span>
+            <span className="text-xs text-[#848e9c]">1%</span>
           </div>
+        )}
 
-          <div className="pt-2 mt-2 flex justify-between items-center bg-amber-100 rounded p-2">
-            <span className="font-medium text-neutral-700">You will receive</span>
-            <span className="font-bold text-primary-800">
-              {formatNumber(fiatAmount)} {offer.fiat_currency}
-            </span>
+        {/* Escrow note for sellers */}
+        {isSell && feeFlag && (
+          <div className="flex justify-between items-center text-[10px]">
+            <span className="text-[#848e9c]/70">Total escrowed</span>
+            <span className="text-[#848e9c]/70">{fmt(escrowAmount)} {offer.token}</span>
           </div>
-        </>
-      ) : (
-        // Buying USDC (User is the Buyer)
-        <>
-          <div className="flex justify-between items-center bg-amber-100 rounded p-2">
-            <span className="text-sm text-neutral-700">You will pay</span>
-            <span className="font-medium">
-              {formatNumber(fiatAmount)} {offer.fiat_currency}
-            </span>
-          </div>
-
-          {showFeeSection && (
-            <>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-neutral-700">Copiale-p2p Fee</span>
-                {/* Buyer pays 0 fiat fee */}
-                <span className="font-medium">0 {offer.fiat_currency}</span>
-              </div>
-              <div className="text-xs text-neutral-500 pl-2">
-                {/* Show the fee the seller pays */}
-                <span>
-                  Seller pays the 1% Copiale-p2p fee ({formatNumber(platformFee)} USDC ≈{' '}
-                  {formatNumber(platformFee * (fiatAmount / parseFloat(amount)))}{' '}
-                  {offer.fiat_currency})
-                </span>
-              </div>
-            </>
-          )}
-          {!feeFlag && (
-            <div className="text-xs text-neutral-500 pl-2 pt-1">
-              <span>No platform fee is currently charged for this trade.</span>
-            </div>
-          )}
-
-          <div className="border-t pt-2 mt-2 flex justify-between items-center">
-            <span className="font-medium text-neutral-700">You will receive</span>
-            <span className="font-bold text-primary-800">
-              {/* Buyer receives the base amount */}
-              {amount && formatNumber(parseFloat(amount))} USDC
-            </span>
-          </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 };

@@ -132,11 +132,11 @@ function MyTradesPage({ account }: MyTradesPageProps) {
       <Container>
         <Card>
           <CardHeader>
-            <CardTitle className="text-primary-800 font-semibold">My Trades</CardTitle>
+            <CardTitle className="text-[#eaecef] font-semibold">My Trades</CardTitle>
             <CardDescription>View and manage your active trades</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            <Alert className="bg-neutral-50 border-neutral-200">
+            <Alert className="bg-[#1e2329] border-[#2b3139] rounded-sm">
               <AlertDescription>Please connect your wallet to view your trades.</AlertDescription>
             </Alert>
           </CardContent>
@@ -150,11 +150,11 @@ function MyTradesPage({ account }: MyTradesPageProps) {
       <Container>
         <Card>
           <CardHeader>
-            <CardTitle className="text-primary-800 font-semibold">My Trades</CardTitle>
+            <CardTitle className="text-[#eaecef] font-semibold">My Trades</CardTitle>
             <CardDescription>View and manage your active trades</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            <Alert className="bg-amber-50 border-amber-200">
+            <Alert className="bg-[#FF6B00]/10 border-[#FF6B00]/30 rounded-sm">
               <AlertDescription className="text-amber-700">
                 Please create an account first to view your trades.
               </AlertDescription>
@@ -171,7 +171,7 @@ function MyTradesPage({ account }: MyTradesPageProps) {
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <CardTitle className="text-primary-800 font-semibold">My Trades</CardTitle>
+              <CardTitle className="text-[#eaecef] font-semibold">My Trades</CardTitle>
               <CardDescription>View and manage your active trades</CardDescription>
             </div>
             <div className="w-full sm:w-auto">
@@ -179,7 +179,7 @@ function MyTradesPage({ account }: MyTradesPageProps) {
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
-                <SelectContent className="bg-neutral-50">
+                <SelectContent className="bg-[#1e2329] border border-[#2b3139] rounded-sm">
                   <SelectItem value="ALL">All Statuses</SelectItem>
                   <SelectItem value="CREATED">Created</SelectItem>
                   <SelectItem value="FUNDED">Funded</SelectItem>
@@ -202,7 +202,7 @@ function MyTradesPage({ account }: MyTradesPageProps) {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-700"></div>
             </div>
           ) : error ? (
-            <Alert className="bg-red-50 border-red-200 mb-4">
+            <Alert className="bg-[#f84960]/10 border-[#f84960]/30 rounded-sm mb-4">
               <AlertDescription className="text-red-700">{error}</AlertDescription>
             </Alert>
           ) : myTrades.length === 0 ? (
@@ -221,7 +221,7 @@ function MyTradesPage({ account }: MyTradesPageProps) {
                 {myTrades.map(trade => (
                   <div
                     key={trade.id}
-                    className="border border-neutral-200 rounded-lg p-4 hover:bg-neutral-50"
+                    className="border border-neutral-200 rounded-lg p-4 hover:bg-[#2b3139]"
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div className="font-medium">#{trade.id}</div>
@@ -255,7 +255,7 @@ function MyTradesPage({ account }: MyTradesPageProps) {
                       <div className="mt-4 space-y-2">
                         <Button
                           variant="outline"
-                          className="border-primary-700 text-primary-700 hover:text-primary-800 hover:border-primary-800 w-full"
+                          className="border-[#FF6B00]/50 text-[#FF6B00] hover:text-[#FF6B00] hover:border-[#FF6B00] w-full"
                         >
                           <Link to={`/trade/${trade.id}`} className="w-full block">
                             Details
@@ -282,7 +282,7 @@ function MyTradesPage({ account }: MyTradesPageProps) {
                   </TableHeader>
                   <TableBody>
                     {myTrades.map(trade => (
-                      <TableRow key={trade.id} className="hover:bg-neutral-50">
+                      <TableRow key={trade.id} className="hover:bg-[#2b3139]">
                         <TableCell className="font-medium">#{trade.id}</TableCell>
                         <TableCell>{trade.leg1_crypto_token}</TableCell>
                         <TableCell>{trade.leg1_crypto_amount}</TableCell>
@@ -302,7 +302,7 @@ function MyTradesPage({ account }: MyTradesPageProps) {
                           <div className="flex gap-2">
                             <Button
                               variant="outline"
-                              className="border-primary-700 text-primary-700 hover:text-primary-800 hover:border-primary-800 text-sm px-3 py-1 h-8"
+                              className="border-[#FF6B00]/50 text-[#FF6B00] hover:text-[#FF6B00] hover:border-[#FF6B00] text-sm px-3 py-1 h-8"
                             >
                               <Link to={`/trade/${trade.id}`}>Details</Link>
                             </Button>

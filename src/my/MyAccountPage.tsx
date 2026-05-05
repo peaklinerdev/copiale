@@ -40,11 +40,11 @@ function AccountPage({ account, setAccount }: AccountPageProps) {
       <Container className="max-w-5xl">
         <Card>
           <CardHeader>
-            <CardTitle className="text-primary-800 font-semibold">Account Profile</CardTitle>
+            <CardTitle className="text-[#eaecef] font-semibold">Account Profile</CardTitle>
             <CardDescription>View and manage your account settings</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            <Alert className="bg-neutral-50 border-neutral-200">
+            <Alert className="bg-[#1e2329] border-[#2b3139] rounded-sm">
               <AlertDescription>
                 Please connect your wallet to view or create your account.
               </AlertDescription>
@@ -72,14 +72,14 @@ function AccountPage({ account, setAccount }: AccountPageProps) {
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <CardTitle className="text-primary-800 font-semibold">Account Profile</CardTitle>
+              <CardTitle className="text-[#eaecef] font-semibold">Account Profile</CardTitle>
               <CardDescription>View and manage your account settings</CardDescription>
             </div>
 
             {account && !isEditing && (
               <Button
                 onClick={() => setIsEditing(true)}
-                className="bg-primary-700 hover:bg-primary-800 text-white"
+                className="bg-[#FF6B00] hover:opacity-90 text-[#0b0e11] font-bold rounded-sm"
                 size="sm"
               >
                 <Pencil className="h-4 w-4 mr-2" />
@@ -90,9 +90,9 @@ function AccountPage({ account, setAccount }: AccountPageProps) {
         </CardHeader>
         <CardContent className="p-6">
           {updateSuccess && (
-            <Alert className="mb-6 bg-secondary-50 border border-secondary-200 text-secondary-800">
+            <Alert className="mb-6 bg-[#02c076]/10 border border-[#02c076]/30 rounded-sm">
               <CheckCircle className="h-4 w-4 text-secondary-500 mr-2" />
-              <AlertDescription className="text-secondary-800">{updateSuccess}</AlertDescription>
+              <AlertDescription className="text-[#02c076]">{updateSuccess}</AlertDescription>
             </Alert>
           )}
 
@@ -124,24 +124,24 @@ function ProfileDisplay({ account }: { account: Account }) {
         {/* Left column - Profile photo and key info */}
         <div className="md:col-span-4 space-y-6">
           {/* Profile Photo Section */}
-          <div className="flex flex-col items-center p-4 bg-white rounded-lg shadow-sm border border-neutral-100">
+          <div className="flex flex-col items-center p-4 bg-[#1e2329] rounded-sm border border-[#2b3139]">
             <div className="relative mb-4">
               {account.profile_photo_url ? (
                 <img
                   src={account.profile_photo_url}
                   alt="Profile"
-                  className="w-32 h-32 rounded-full object-cover border-2 border-primary-200 shadow-md"
+                  className="w-32 h-32 rounded-sm object-cover border border-[#2b3139]"
                 />
               ) : (
-                <div className="w-32 h-32 rounded-full bg-primary-100 flex items-center justify-center shadow-md">
+                <div className="w-32 h-32 rounded-sm bg-[#2b3139] flex items-center justify-center">
                   <User className="h-16 w-16 text-primary-400" />
                 </div>
               )}
-              <div className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-green-400 border-2 border-white"></div>
+              <div className="absolute bottom-1 right-1 w-4 h-4 rounded-sm bg-[#02c076] border border-[#2b3139]"></div>
             </div>
 
             {/* Username with flag */}
-            <h2 className="text-xl font-semibold text-neutral-800 mb-1 flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-[#eaecef] mb-1 flex items-center gap-2">
               {account.username || 'Anonymous User'}
               {account.phone_country_code && countryCodeToFlag(account.phone_country_code) && (
                 <span>{countryCodeToFlag(account.phone_country_code)}</span>
@@ -151,9 +151,9 @@ function ProfileDisplay({ account }: { account: Account }) {
             {/* Wallet Address with copy button */}
             <div className="w-full mt-3 mb-2">
               <div className="flex items-center justify-center">
-                <div className="flex items-center space-x-1 bg-neutral-50 rounded-md px-3 py-1.5 w-auto overflow-hidden">
-                  <Wallet className="h-4 w-4 text-neutral-500 flex-shrink-0" />
-                  <p className="text-xs font-mono text-neutral-600 mx-1">
+                <div className="flex items-center space-x-1 bg-[#2b3139] rounded-sm px-3 py-1.5 w-auto overflow-hidden">
+                  <Wallet className="h-4 w-4 text-[#848e9c] flex-shrink-0" />
+                  <p className="text-xs font-mono text-[#eaecef] mx-1">
                     {abbreviateWallet(account.wallet_address)}
                   </p>
                   <Button
@@ -172,7 +172,7 @@ function ProfileDisplay({ account }: { account: Account }) {
             </div>
 
             {/* Member Since */}
-            <div className="flex items-center justify-center text-sm text-neutral-500 mt-2">
+            <div className="flex items-center justify-center text-sm text-[#848e9c] mt-2">
               <Clock className="h-3.5 w-3.5 mr-1.5" />
               <span>
                 Member since{' '}
@@ -185,23 +185,23 @@ function ProfileDisplay({ account }: { account: Account }) {
             </div>
             {/* Reputation Score & Trade Completion Rate placeholders */}
             <div className="flex flex-col items-center mt-4 space-y-2">
-              <span className="text-sm text-neutral-700 font-medium">
-                Trusted Accounts: <span className="text-neutral-400">(soon)</span>
+              <span className="text-sm text-[#eaecef] font-medium">
+                Trusted Accounts: <span className="text-[#848e9c]">(soon)</span>
               </span>
-              <span className="text-sm text-neutral-700 font-medium">
-                Trusted By Accounts: <span className="text-neutral-400">(soon)</span>
+              <span className="text-sm text-[#eaecef] font-medium">
+                Trusted By Accounts: <span className="text-[#848e9c]">(soon)</span>
               </span>
-              <span className="text-sm text-neutral-700 font-medium">
-                Blocked Accounts: <span className="text-neutral-400">(soon)</span>
+              <span className="text-sm text-[#eaecef] font-medium">
+                Blocked Accounts: <span className="text-[#848e9c]">(soon)</span>
               </span>
-              <span className="text-sm text-neutral-700 font-medium">
-                Blocked By Accounts: <span className="text-neutral-400">(soon)</span>
+              <span className="text-sm text-[#eaecef] font-medium">
+                Blocked By Accounts: <span className="text-[#848e9c]">(soon)</span>
               </span>
-              <span className="text-sm text-neutral-700 font-medium">
-                Reputation Score: <span className="text-neutral-400">(soon)</span>
+              <span className="text-sm text-[#eaecef] font-medium">
+                Reputation Score: <span className="text-[#848e9c]">(soon)</span>
               </span>
-              <span className="text-sm text-neutral-700 font-medium">
-                Trade Completion Rate: <span className="text-neutral-400">(soon)</span>
+              <span className="text-sm text-[#eaecef] font-medium">
+                Trade Completion Rate: <span className="text-[#848e9c]">(soon)</span>
               </span>
             </div>
           </div>
@@ -210,36 +210,36 @@ function ProfileDisplay({ account }: { account: Account }) {
         {/* Right column - Detailed information */}
         <div className="md:col-span-8 space-y-6">
           {/* Contact Information Section */}
-          <div className="bg-white rounded-lg shadow-sm border border-neutral-100 overflow-hidden">
-            <div className="px-4 py-3 bg-neutral-50 border-b border-neutral-100">
-              <h3 className="text-sm font-medium text-neutral-700 flex items-center">
-                <Mail className="h-4 w-4 mr-2 text-primary-500" />
+          <div className="bg-[#1e2329] rounded-sm border border-[#2b3139] overflow-hidden">
+            <div className="px-4 py-3 bg-[#0b0e11] border-b border-[#2b3139]">
+              <h3 className="text-sm font-medium text-[#eaecef] flex items-center">
+                <Mail className="h-4 w-4 mr-2 text-[#FF6B00]" />
                 Contact Information
               </h3>
             </div>
             <div className="p-4 space-y-4">
               {/* Email */}
               <div className="flex items-start">
-                <div className="w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center mr-3 flex-shrink-0">
-                  <AtSign className="h-4 w-4 text-primary-500" />
+                <div className="w-8 h-8 rounded-sm bg-[#FF6B00]/10 flex items-center justify-center mr-3 flex-shrink-0">
+                  <AtSign className="h-4 w-4 text-[#FF6B00]" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-medium text-neutral-500">Email</h4>
-                  <p className="text-sm text-neutral-800">{account.email || '-'}</p>
+                  <h4 className="text-xs font-medium text-[#848e9c]">Email</h4>
+                  <p className="text-sm text-[#eaecef]">{account.email || '-'}</p>
                 </div>
               </div>
 
               {/* Telegram */}
               <div className="flex items-start">
-                <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center mr-3 flex-shrink-0">
-                  <Send className="h-4 w-4 text-blue-500" />
+                <div className="w-8 h-8 rounded-sm bg-[#1A5FA8]/10 flex items-center justify-center mr-3 flex-shrink-0">
+                  <Send className="h-4 w-4 text-[#7AB8F5]" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-medium text-neutral-500">Telegram</h4>
-                  <p className="text-sm text-neutral-800">
+                  <h4 className="text-xs font-medium text-[#848e9c]">Telegram</h4>
+                  <p className="text-sm text-[#eaecef]">
                     {account.telegram_username ? `@${account.telegram_username}` : '-'}
                     {account.telegram_id && (
-                      <span className="text-xs text-neutral-400 ml-2">
+                      <span className="text-xs text-[#848e9c] ml-2">
                         ID: {account.telegram_id}
                       </span>
                     )}
@@ -249,12 +249,12 @@ function ProfileDisplay({ account }: { account: Account }) {
 
               {/* Phone */}
               <div className="flex items-start">
-                <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center mr-3 flex-shrink-0">
-                  <Phone className="h-4 w-4 text-green-500" />
+                <div className="w-8 h-8 rounded-sm bg-[#02c076]/10 flex items-center justify-center mr-3 flex-shrink-0">
+                  <Phone className="h-4 w-4 text-[#02c076]" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-medium text-neutral-500">Phone</h4>
-                  <p className="text-sm text-neutral-800">
+                  <h4 className="text-xs font-medium text-[#848e9c]">Phone</h4>
+                  <p className="text-sm text-[#eaecef]">
                     {account.phone_country_code && account.phone_number
                       ? `+${account.phone_country_code} ${account.phone_number}`
                       : '-'}
@@ -265,33 +265,33 @@ function ProfileDisplay({ account }: { account: Account }) {
           </div>
 
           {/* Preferences Section */}
-          <div className="bg-white rounded-lg shadow-sm border border-neutral-100 overflow-hidden">
-            <div className="px-4 py-3 bg-neutral-50 border-b border-neutral-100">
-              <h3 className="text-sm font-medium text-neutral-700 flex items-center">
-                <Settings className="h-4 w-4 mr-2 text-primary-500" />
+          <div className="bg-[#1e2329] rounded-sm border border-[#2b3139] overflow-hidden">
+            <div className="px-4 py-3 bg-[#0b0e11] border-b border-[#2b3139]">
+              <h3 className="text-sm font-medium text-[#eaecef] flex items-center">
+                <Settings className="h-4 w-4 mr-2 text-[#FF6B00]" />
                 Preferences
               </h3>
             </div>
             <div className="p-4 space-y-4">
               {/* Timezone */}
               <div className="flex items-start">
-                <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center mr-3 flex-shrink-0">
-                  <Globe className="h-4 w-4 text-orange-500" />
+                <div className="w-8 h-8 rounded-sm bg-[#FF6B00]/10 flex items-center justify-center mr-3 flex-shrink-0">
+                  <Globe className="h-4 w-4 text-[#FF6B00]" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-medium text-neutral-500">Timezone</h4>
-                  <p className="text-sm text-neutral-800">{account.timezone || '-'}</p>
+                  <h4 className="text-xs font-medium text-[#848e9c]">Timezone</h4>
+                  <p className="text-sm text-[#eaecef]">{account.timezone || '-'}</p>
                 </div>
               </div>
 
               {/* Available Hours */}
               <div className="flex items-start">
-                <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center mr-3 flex-shrink-0">
-                  <Clock className="h-4 w-4 text-purple-500" />
+                <div className="w-8 h-8 rounded-sm bg-[#534AB7]/10 flex items-center justify-center mr-3 flex-shrink-0">
+                  <Clock className="h-4 w-4 text-[#AFA9EC]" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-medium text-neutral-500">Available Hours</h4>
-                  <p className="text-sm text-neutral-800">
+                  <h4 className="text-xs font-medium text-[#848e9c]">Available Hours</h4>
+                  <p className="text-sm text-[#eaecef]">
                     {account.available_from && account.available_to
                       ? `${account.available_from} - ${account.available_to}`
                       : '-'}

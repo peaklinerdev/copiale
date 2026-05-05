@@ -11,10 +11,10 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-API_REPO="${YAPBAY_API_REPO:-$REPO_ROOT/../copiale-p2p-api}"
+API_REPO="${COPIALE_API_REPO:-$REPO_ROOT/../copiale-p2p-api}"
 
 if [ ! -d "$API_REPO" ]; then
-  echo "copiale-p2p-api not found at $API_REPO. Set YAPBAY_API_REPO env var." >&2
+  echo "copiale-p2p-api not found at $API_REPO. Set COPIALE_API_REPO env var." >&2
   exit 1
 fi
 

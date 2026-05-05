@@ -39,27 +39,27 @@ export const config = {
 
 // Helper function to get network config based on chain ID or network name
 export const getNetworkConfig = (chainId: number) => {
-  if (chainId === 42220) {
+  if (chainId === 3) {
+    return config.networks.solanaDevnet;
+  } else if (chainId === 42220) {
     return config.networks.mainnet;
   } else if (chainId === 44787) {
     return config.networks.testnet;
-  } else if (chainId === 3) {
-    return config.networks.solanaDevnet;
   } else {
-    // Default to testnet for unknown networks
-    return config.networks.testnet;
+    // Default to Solana devnet for unknown networks
+    return config.networks.solanaDevnet;
   }
 };
 
 // Helper function to get network config by network name
 export const getNetworkConfigByName = (networkName: string) => {
   switch (networkName) {
+    case 'solana-devnet':
+      return config.networks.solanaDevnet;
     case 'celo-mainnet':
       return config.networks.mainnet;
     case 'celo-alfajores':
       return config.networks.testnet;
-    case 'solana-devnet':
-      return config.networks.solanaDevnet;
     default:
       return config.networks.solanaDevnet; // Default to Solana devnet
   }

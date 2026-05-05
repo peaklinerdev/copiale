@@ -157,6 +157,3 @@ export function getEscrowStateName(state: number): string {
   const states = ['CREATED', 'FUNDED', 'RELEASED', 'CANCELLED', 'DISPUTED', 'RESOLVED'];
   return states[state] || `UNKNOWN (${state})`;
 }
-VED'];
-  return states[state] || `UNKNOWN (${state})`;
-}

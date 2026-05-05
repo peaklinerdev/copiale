@@ -190,7 +190,7 @@ export const createTradeEscrow = async ({
       tradeId: trade.id,
       escrowId: escrowId, // Pass the pre-generated ID
       buyer: buyerAddress,
-      amount: toEscrowUsdcString(trade.leg1_crypto_amount || '0'),
+      amount: Number(toEscrowUsdcString(trade.leg1_crypto_amount || '0')),
       sequential: false,
       sequentialEscrowAddress: undefined,
       arbitrator: undefined, // Solana program handles arbitrator internally
@@ -229,7 +229,7 @@ export const createTradeEscrow = async ({
       transaction_type: 'CREATE_ESCROW',
       from_address: sellerAddress,
       to_address: recordEscrowData.escrow_pda, // Use the escrow PDA as the destination
-      amount: cryptoAmountStr,
+      amount: toEscrowUsdcString(trade.leg1_crypto_amount || '0'),
       token_type: leg1CryptoToken,
       status: 'SUCCESS',
       slot: Number(txResult.blockNumber), // Use blockNumber as slot for Solana

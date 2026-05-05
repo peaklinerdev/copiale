@@ -115,6 +115,7 @@ export interface Trade {
 export interface Escrow {
   id: number;
   trade_id: number;
+  network?: string;
   network_id: number;
   escrow_address: string;
   onchain_escrow_id: string | null;

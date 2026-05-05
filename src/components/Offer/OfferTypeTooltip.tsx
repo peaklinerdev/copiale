@@ -2,9 +2,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 interface OfferTypeTooltipProps {
   offerType: string;
+  token?: string;
 }
 
-function OfferTypeTooltip({ offerType }: OfferTypeTooltipProps) {
+function OfferTypeTooltip({ offerType, token }: OfferTypeTooltipProps) {
   return (
     <TooltipProvider>
       <Tooltip>
@@ -28,8 +29,8 @@ function OfferTypeTooltip({ offerType }: OfferTypeTooltipProps) {
         >
           <p>
             {offerType === "BUY"
-              ? `Advertiser wants to Buy ${offer?.token ?? "crypto"}`
-              : `Advertiser wants to Sell ${offer?.token ?? "crypto"}`}
+              ? `Advertiser wants to Buy ${token ?? "crypto"}`
+              : `Advertiser wants to Sell ${token ?? "crypto"}`}
           </p>
         </TooltipContent>
       </Tooltip>

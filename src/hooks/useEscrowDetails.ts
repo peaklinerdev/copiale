@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { blockchainService } from '../services/blockchainService.js';
 import { toast } from 'sonner';
-import { BN } from '@coral-xyz/anchor';
 
 // Define the escrow state type based on the Solana program
 export enum EscrowState {

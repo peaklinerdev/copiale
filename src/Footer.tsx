@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Container from '@/components/Shared/Container';
 import { getHealth, HealthResponse } from '@/api';
-import { BarChart3 } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   const [health, setHealth] = useState<HealthResponse | null>(null);

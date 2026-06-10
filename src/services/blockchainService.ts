@@ -21,6 +21,7 @@ import {
 import { networkRegistry } from '../blockchain/networks/index.js';
 import { SolanaProgram } from '../blockchain/networks/solana/program.js';
 import { Connection, PublicKey } from '@solana/web3.js';
+import { config } from '../config/index.js';
 
 export interface BlockchainService {
   // Network management (simplified for Solana devnet only)
@@ -47,6 +48,9 @@ export interface BlockchainService {
   getEscrowBalance(escrowId: number, tradeId: number): Promise<number>;
   getEscrowStateByAddress(escrowAddress: string): Promise<EscrowState>;
   getEscrowBalanceByAddress(escrowAddress: string): Promise<number>;
+
+  // Platform config
+  initializeConfig(arbitrator: string, acceptedMint: string): Promise<TransactionResult>;
 
   // Event monitoring
   subscribeToEscrowEvents(
@@ -76,7 +80,9 @@ export class UnifiedBlockchainService implements BlockchainService {
       const connection = new Connection(this.currentNetwork.rpcUrl, 'confirmed');
       const programId = new PublicKey(this.currentNetwork.programId);
       const usdcMint = new PublicKey(this.currentNetwork.usdcMint);
-      this.solanaProgram = new SolanaProgram(connection, programId, usdcMint);
+      const usdtMint = new PublicKey(this.currentNetwork.usdtMint || this.currentNetwork.usdcMint);
+      const gasPayerPubkey = config.gasPayerPubkey ? new PublicKey(config.gasPayerPubkey) : undefined;
+      this.solanaProgram = new SolanaProgram(connection, programId, usdcMint, undefined, usdtMint, gasPayerPubkey, config.apiUrl);
     }
   }
 
@@ -109,7 +115,9 @@ export class UnifiedBlockchainService implements BlockchainService {
       const connection = new Connection(this.currentNetwork.rpcUrl, 'confirmed');
       const programId = new PublicKey(this.currentNetwork.programId);
       const usdcMint = new PublicKey(this.currentNetwork.usdcMint);
-      this.solanaProgram = new SolanaProgram(connection, programId, usdcMint, wallet);
+      const usdtMint = new PublicKey(this.currentNetwork.usdtMint || this.currentNetwork.usdcMint);
+      const gasPayerPubkey = config.gasPayerPubkey ? new PublicKey(config.gasPayerPubkey) : undefined;
+      this.solanaProgram = new SolanaProgram(connection, programId, usdcMint, wallet, usdtMint, gasPayerPubkey, config.apiUrl);
     }
   }
 
@@ -184,6 +192,13 @@ export class UnifiedBlockchainService implements BlockchainService {
     }
 
     return this.solanaProgram.cancelEscrow(params);
+  }
+
+  async initializeConfig(arbitrator: string, acceptedMint: string): Promise<TransactionResult> {
+    if (!this.solanaProgram) {
+      throw new Error('Solana program not initialized');
+    }
+    return this.solanaProgram.initializeConfig(arbitrator, acceptedMint);
   }
 
   // Dispute Operations (Solana devnet only for now)

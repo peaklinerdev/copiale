@@ -54,6 +54,9 @@ export interface SolanaProgramInterface {
   // Wallet balance queries
   getUsdcBalance(): Promise<number>;
   getUsdtBalance(): Promise<number>;
+
+  // Platform config
+  initializeConfig(arbitrator: string, acceptedMint: string): Promise<TransactionResult>;
 }
 
 export class SolanaProgram implements SolanaProgramInterface {
@@ -872,6 +875,29 @@ export class SolanaProgram implements SolanaProgramInterface {
       return parseInt(balance);
     } catch {
       return 0;
+    }
+  }
+
+  async initializeConfig(arbitrator: string, acceptedMint: string): Promise<TransactionResult> {
+    try {
+      const { provider, program } = await this.getProviderAndProgram();
+
+      const tx = await program.methods
+        .initializeConfig(new PublicKey(arbitrator), new PublicKey(acceptedMint))
+        .accounts({
+          authority: new PublicKey(this.dynamicWallet.address),
+          config: PublicKey.findProgramAddressSync([Buffer.from('config')], this.programId)[0],
+          system_program: new PublicKey('11111111111111111111111111111111'),
+        })
+        .transaction();
+
+      const useRelay = this.gasPayerPubkey !== null;
+      const signature = await this.sendTransaction(tx, useRelay);
+
+      return { success: true, signature, slot: await this.connection.getSlot() };
+    } catch (error) {
+      console.error('[ERROR] initializeConfig failed:', error);
+      return { success: false, error: this.handleError(error) };
     }
   }
 

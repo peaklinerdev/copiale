@@ -327,19 +327,34 @@ export class SolanaProgram implements SolanaProgramInterface {
       const buyerTokenAccount = await getAssociatedTokenAddress(escrowMintKey, buyer);
       const arbitratorTokenAccount = await getAssociatedTokenAddress(escrowMintKey, arbitrator);
 
-      const ataInstructions: TransactionInstruction[] = [];
+      const { blockhash } = await this.connection.getLatestBlockhash();
+      const ataIxs: import('@solana/web3.js').TransactionInstruction[] = [];
 
       const buyerAccountInfo = await this.connection.getAccountInfo(buyerTokenAccount);
       if (!buyerAccountInfo) {
-        ataInstructions.push(createAssociatedTokenAccountInstruction(authority, buyerTokenAccount, buyer, escrowMintKey));
+        console.warn('Buyer USDT ATA missing, creating:', buyerTokenAccount.toBase58());
+        ataIxs.push(createAssociatedTokenAccountInstruction(authority, buyerTokenAccount, buyer, escrowMintKey));
+      } else {
+        console.log('Buyer USDT ATA exists:', buyerTokenAccount.toBase58(), 'owner:', buyerAccountInfo.owner.toBase58(), 'len:', buyerAccountInfo.data.length);
       }
 
       const arbitratorAccountInfo = await this.connection.getAccountInfo(arbitratorTokenAccount);
       if (!arbitratorAccountInfo) {
-        ataInstructions.push(createAssociatedTokenAccountInstruction(authority, arbitratorTokenAccount, arbitrator, escrowMintKey));
+        console.warn('Arbitrator USDT ATA missing, creating:', arbitratorTokenAccount.toBase58());
+        ataIxs.push(createAssociatedTokenAccountInstruction(authority, arbitratorTokenAccount, arbitrator, escrowMintKey));
+      } else {
+        console.log('Arbitrator USDT ATA exists:', arbitratorTokenAccount.toBase58(), 'owner:', arbitratorAccountInfo.owner.toBase58(), 'len:', arbitratorAccountInfo.data.length);
       }
 
-      const releaseTx = await program.methods
+      console.log('Escrow address:', escrowPDA.toBase58());
+      console.log('Escrow token PDA:', escrowTokenPDA.toBase58());
+      console.log('Mint:', escrowMintKey.toBase58());
+      console.log('Authority/Seller:', authority.toBase58());
+      console.log('Buyer:', buyer.toBase58());
+      console.log('Arbitrator:', arbitrator.toBase58());
+      console.log('ATC creation count:', ataIxs.length);
+
+      const tx = await program.methods
         .releaseEscrow()
         .accounts({
           authority: authority,
@@ -353,9 +368,7 @@ export class SolanaProgram implements SolanaProgramInterface {
         } as any)
         .transaction();
 
-      const tx = new Transaction();
-      for (const ix of ataInstructions) tx.add(ix);
-      for (const ix of releaseTx.instructions) tx.add(ix);
+      for (const ix of ataIxs) tx.add(ix);
 
       const signature = await this.sendTransaction(tx, params.useRelay);
 

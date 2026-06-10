@@ -324,11 +324,11 @@ export class SolanaProgram implements SolanaProgramInterface {
       );
 
 
-      // Build transaction - releaseEscrow takes no parameters, but we need to provide the PDAs explicitly
       const tx = await program.methods
         .releaseEscrow()
         .accounts({
           authority: authority,
+          seller: authority,
           escrow: escrowPDA,
           escrowTokenAccount: escrowTokenPDA,
           buyerTokenAccount: buyerTokenAccount,

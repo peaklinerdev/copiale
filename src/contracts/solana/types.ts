@@ -38,12 +38,12 @@ export type LocalsolanaContracts = {
               {
                 kind: 'account';
                 path: 'escrow.escrow_id';
-                account: 'Escrow';
+                account: 'escrow';
               },
               {
                 kind: 'account';
                 path: 'escrow.trade_id';
-                account: 'Escrow';
+                account: 'escrow';
               }
             ];
           };
@@ -102,12 +102,12 @@ export type LocalsolanaContracts = {
               {
                 kind: 'account';
                 path: 'escrow.escrow_id';
-                account: 'Escrow';
+                account: 'escrow';
               },
               {
                 kind: 'account';
                 path: 'escrow.trade_id';
-                account: 'Escrow';
+                account: 'escrow';
               }
             ];
           };
@@ -228,12 +228,12 @@ export type LocalsolanaContracts = {
               {
                 kind: 'account';
                 path: 'escrow.escrow_id';
-                account: 'Escrow';
+                account: 'escrow';
               },
               {
                 kind: 'account';
                 path: 'escrow.trade_id';
-                account: 'Escrow';
+                account: 'escrow';
               }
             ];
           };
@@ -320,12 +320,14 @@ export type LocalsolanaContracts = {
                 value: [101, 115, 99, 114, 111, 119];
               },
               {
-                kind: 'arg';
-                path: 'escrowId';
+                kind: 'account';
+                path: 'escrow.escrow_id';
+                account: 'escrow';
               },
               {
-                kind: 'arg';
-                path: 'tradeId';
+                kind: 'account';
+                path: 'escrow.trade_id';
+                account: 'escrow';
               }
             ];
           };
@@ -366,16 +368,7 @@ export type LocalsolanaContracts = {
           address: 'SysvarRent111111111111111111111111111111111';
         }
       ];
-      args: [
-        {
-          name: 'escrowId';
-          type: 'u64';
-        },
-        {
-          name: 'tradeId';
-          type: 'u64';
-        }
-      ];
+      args: [];
     },
     {
       name: 'initializeBuyerBondAccount';
@@ -540,12 +533,12 @@ export type LocalsolanaContracts = {
               {
                 kind: 'account';
                 path: 'escrow.escrow_id';
-                account: 'Escrow';
+                account: 'escrow';
               },
               {
                 kind: 'account';
                 path: 'escrow.trade_id';
-                account: 'Escrow';
+                account: 'escrow';
               }
             ];
           };
@@ -574,12 +567,12 @@ export type LocalsolanaContracts = {
               {
                 kind: 'account';
                 path: 'escrow.escrow_id';
-                account: 'Escrow';
+                account: 'escrow';
               },
               {
                 kind: 'account';
                 path: 'escrow.trade_id';
-                account: 'Escrow';
+                account: 'escrow';
               }
             ];
           };
@@ -655,12 +648,12 @@ export type LocalsolanaContracts = {
               {
                 kind: 'account';
                 path: 'escrow.escrow_id';
-                account: 'Escrow';
+                account: 'escrow';
               },
               {
                 kind: 'account';
                 path: 'escrow.trade_id';
-                account: 'Escrow';
+                account: 'escrow';
               }
             ];
           };
@@ -726,12 +719,12 @@ export type LocalsolanaContracts = {
               {
                 kind: 'account';
                 path: 'escrow.escrow_id';
-                account: 'Escrow';
+                account: 'escrow';
               },
               {
                 kind: 'account';
                 path: 'escrow.trade_id';
-                account: 'Escrow';
+                account: 'escrow';
               }
             ];
           };
@@ -835,12 +828,12 @@ export type LocalsolanaContracts = {
               {
                 kind: 'account';
                 path: 'escrow.escrow_id';
-                account: 'Escrow';
+                account: 'escrow';
               },
               {
                 kind: 'account';
                 path: 'escrow.trade_id';
-                account: 'Escrow';
+                account: 'escrow';
               }
             ];
           };
@@ -916,12 +909,12 @@ export type LocalsolanaContracts = {
               {
                 kind: 'account';
                 path: 'escrow.escrow_id';
-                account: 'Escrow';
+                account: 'escrow';
               },
               {
                 kind: 'account';
                 path: 'escrow.trade_id';
-                account: 'Escrow';
+                account: 'escrow';
               }
             ];
           };

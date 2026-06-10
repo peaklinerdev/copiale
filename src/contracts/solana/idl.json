@@ -4,8 +4,7 @@
     "name": "localsolana_contracts",
     "version": "0.1.2",
     "spec": "0.1.0",
-    "description": "Created with Anchor",
-    "address": "7vLeWZWgLn6Bt5Uay8wgFPwHYU8YVYXiG2epGScDPbpG"
+    "description": "Created with Anchor"
   },
   "instructions": [
     {

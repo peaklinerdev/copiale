@@ -359,11 +359,11 @@ export class SolanaProgram implements SolanaProgramInterface {
         .accounts({
           authority: authority,
           escrow: escrowPDA,
-          escrow_token_account: escrowTokenPDA,
-          buyer_token_account: buyerTokenAccount,
-          arbitrator_token_account: arbitratorTokenAccount,
-          sequential_escrow_token_account: sequentialEscrowTokenAccount,
-          token_program: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
+          escrowTokenAccount: escrowTokenPDA,
+          buyerTokenAccount: buyerTokenAccount,
+          arbitratorTokenAccount: arbitratorTokenAccount,
+          sequentialEscrowTokenAccount: sequentialEscrowTokenAccount,
+          tokenProgram: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
         } as any)
         .transaction();
 

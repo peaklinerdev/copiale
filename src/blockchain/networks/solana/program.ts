@@ -293,20 +293,15 @@ export class SolanaProgram implements SolanaProgramInterface {
 
   async releaseEscrow(params: ReleaseEscrowParams): Promise<TransactionResult> {
     try {
-
-      // Get provider and program with Dynamic.xyz wallet
       const { provider, program } = await this.getProviderAndProgram();
 
-      // Convert addresses to PublicKeys
       const authority = new PublicKey(params.authorityAddress);
-      const buyerTokenAccount = new PublicKey(params.buyerTokenAccount);
-      const arbitratorTokenAccount = new PublicKey(params.arbitratorTokenAccount);
+      const buyer = new PublicKey(params.buyerAddress);
+      const arbitrator = new PublicKey(params.arbitratorAddress);
       const sequentialEscrowTokenAccount = params.sequentialEscrowTokenAccount
         ? new PublicKey(params.sequentialEscrowTokenAccount)
         : null;
 
-
-      // Derive the escrow PDA using the same seeds as the contract
       const [escrowPDA] = PublicKey.findProgramAddressSync(
         [
           Buffer.from('escrow'),
@@ -316,27 +311,40 @@ export class SolanaProgram implements SolanaProgramInterface {
         this.programId
       );
 
-
-      // Derive the escrow token account PDA
       const [escrowTokenPDA] = PublicKey.findProgramAddressSync(
         [Buffer.from('escrow_token'), escrowPDA.toBuffer()],
         this.programId
       );
 
+      const escrowTokenAccount = await this.connection.getTokenAccountBalance(escrowTokenPDA).catch(() => null);
+      const escrowMint = escrowTokenAccount ? (await this.connection.getParsedAccountInfo(escrowTokenPDA)).value?.data : null;
+      const escrowMintPubkey = (escrowMint as { parsed?: { info?: { mint?: string } } })?.parsed?.info?.mint;
 
-      const buyer = new PublicKey(params.buyerAddress);
-      const accountInfo = await this.connection.getAccountInfo(buyerTokenAccount);
-      if (!accountInfo) {
-        const { createAssociatedTokenAccountInstruction } = await import('@solana/spl-token');
-        const usdcMint = this.usdcMint || this.usdtMint;
-        const ataIx = createAssociatedTokenAccountInstruction(
-          authority,
-          buyerTokenAccount,
-          buyer,
-          usdcMint,
-        );
-        const { blockhash } = await this.connection.getLatestBlockhash();
-        const ataTx = new Transaction().add(ataIx);
+      if (!escrowMintPubkey) {
+        throw new Error('Could not determine escrow token mint');
+      }
+      const escrowMintKey = new PublicKey(escrowMintPubkey);
+
+      const buyerTokenAccount = await getAssociatedTokenAddress(escrowMintKey, buyer);
+      const arbitratorTokenAccount = await getAssociatedTokenAddress(escrowMintKey, arbitrator);
+
+      const { createAssociatedTokenAccountInstruction } = await import('@solana/spl-token');
+      const { blockhash } = await this.connection.getLatestBlockhash();
+      const ataIxs: import('@solana/web3.js').TransactionInstruction[] = [];
+
+      const buyerAccountInfo = await this.connection.getAccountInfo(buyerTokenAccount);
+      if (!buyerAccountInfo) {
+        ataIxs.push(createAssociatedTokenAccountInstruction(authority, buyerTokenAccount, buyer, escrowMintKey));
+      }
+
+      const arbitratorAccountInfo = await this.connection.getAccountInfo(arbitratorTokenAccount);
+      if (!arbitratorAccountInfo) {
+        ataIxs.push(createAssociatedTokenAccountInstruction(authority, arbitratorTokenAccount, arbitrator, escrowMintKey));
+      }
+
+      if (ataIxs.length > 0) {
+        const ataTx = new Transaction();
+        for (const ix of ataIxs) ataTx.add(ix);
         ataTx.feePayer = this.gasPayerPubkey || authority;
         ataTx.recentBlockhash = blockhash;
         await this.sendTransaction(ataTx, params.useRelay);
@@ -355,7 +363,6 @@ export class SolanaProgram implements SolanaProgramInterface {
           tokenProgram: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
         } as any)
         .transaction();
-
 
       const signature = await this.sendTransaction(tx, params.useRelay);
 

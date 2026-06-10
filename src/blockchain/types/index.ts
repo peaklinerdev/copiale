@@ -100,8 +100,9 @@ export interface ReleaseEscrowParams {
   tradeId: number;
   authorityAddress: string;
   buyerAddress: string;
-  buyerTokenAccount: string;
-  arbitratorTokenAccount: string;
+  arbitratorAddress: string;
+  buyerTokenAccount?: string;
+  arbitratorTokenAccount?: string;
   sequentialEscrowTokenAccount?: string;
   useRelay?: boolean;
 }

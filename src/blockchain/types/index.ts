@@ -15,7 +15,8 @@ export interface NetworkConfig {
   rpcUrl: string;
   programId?: string; // For Solana networks
   contractAddress?: string; // For EVM networks
-  usdcMint?: string; // For Solana networks
+  usdcMint?: string; // For Solana networks (USDC mint)
+  usdtMint?: string; // For Solana networks (USDT mint)
   usdcAddress?: string; // For EVM networks
   arbitratorAddress: string;
   blockExplorerUrl: string;
@@ -75,6 +76,7 @@ export interface CreateEscrowParams {
   fiatDeadline: number;
   sequential?: boolean;
   sequentialEscrowAddress?: string;
+  useRelay?: boolean;
 }
 
 export interface FundEscrowParams {
@@ -83,21 +85,25 @@ export interface FundEscrowParams {
   amount: string;
   sellerAddress: string;
   sellerTokenAccount: string;
+  useRelay?: boolean;
 }
 
 export interface MarkFiatPaidParams {
   escrowId: number;
   tradeId: number;
   buyerAddress: string;
+  useRelay?: boolean;
 }
 
 export interface ReleaseEscrowParams {
   escrowId: number;
   tradeId: number;
   authorityAddress: string;
+  buyerAddress: string;
   buyerTokenAccount: string;
   arbitratorTokenAccount: string;
   sequentialEscrowTokenAccount?: string;
+  useRelay?: boolean;
 }
 
 export interface CancelEscrowParams {
@@ -106,6 +112,7 @@ export interface CancelEscrowParams {
   sellerAddress: string;
   authorityAddress: string;
   sellerTokenAccount: string;
+  useRelay?: boolean;
 }
 
 export interface OpenDisputeParams {

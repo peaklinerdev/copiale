@@ -324,6 +324,24 @@ export class SolanaProgram implements SolanaProgramInterface {
       );
 
 
+      const buyer = new PublicKey(params.buyerAddress);
+      const accountInfo = await this.connection.getAccountInfo(buyerTokenAccount);
+      if (!accountInfo) {
+        const { createAssociatedTokenAccountInstruction } = await import('@solana/spl-token');
+        const usdcMint = this.usdcMint || this.usdtMint;
+        const ataIx = createAssociatedTokenAccountInstruction(
+          authority,
+          buyerTokenAccount,
+          buyer,
+          usdcMint,
+        );
+        const { blockhash } = await this.connection.getLatestBlockhash();
+        const ataTx = new Transaction().add(ataIx);
+        ataTx.feePayer = this.gasPayerPubkey || authority;
+        ataTx.recentBlockhash = blockhash;
+        await this.sendTransaction(ataTx, params.useRelay);
+      }
+
       const tx = await program.methods
         .releaseEscrow()
         .accounts({
@@ -339,7 +357,6 @@ export class SolanaProgram implements SolanaProgramInterface {
         .transaction();
 
 
-      // Send transaction using Dynamic.xyz wallet (or relay if configured)
       const signature = await this.sendTransaction(tx, params.useRelay);
 
       return {

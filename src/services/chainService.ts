@@ -315,6 +315,7 @@ export const releaseEscrowTransaction = async (
       escrowId: escrowState.id,
       tradeId: escrowState.tradeId,
       authorityAddress: wallet.address,
+      buyerAddress: escrowState.buyerAddress,
       buyerTokenAccount: buyerTokenAccount.toString(),
       arbitratorTokenAccount: arbitratorTokenAccount.toString(),
       sequentialEscrowTokenAccount: undefined,

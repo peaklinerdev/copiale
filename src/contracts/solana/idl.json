@@ -1,10 +1,11 @@
 {
-  "address": "4PonUp1nPEzDPnRMPjTqufLT3f37QuBJGk1CVnsTXx7x",
+  "address": "7vLeWZWgLn6Bt5Uay8wgFPwHYU8YVYXiG2epGScDPbpG",
   "metadata": {
     "name": "localsolana_contracts",
     "version": "0.1.2",
     "spec": "0.1.0",
-    "description": "Created with Anchor"
+    "description": "Created with Anchor",
+    "address": "7vLeWZWgLn6Bt5Uay8wgFPwHYU8YVYXiG2epGScDPbpG"
   },
   "instructions": [
     {

@@ -300,7 +300,7 @@ export class SolanaProgram implements SolanaProgramInterface {
       const arbitrator = new PublicKey(params.arbitratorAddress);
       const sequentialEscrowTokenAccount = params.sequentialEscrowTokenAccount
         ? new PublicKey(params.sequentialEscrowTokenAccount)
-        : null;
+        : new PublicKey('11111111111111111111111111111111');
 
       const [escrowPDA] = PublicKey.findProgramAddressSync(
         [

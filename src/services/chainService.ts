@@ -1,7 +1,8 @@
 import { blockchainService } from './blockchainService.js';
 import { BN } from '@coral-xyz/anchor';
 import { getAssociatedTokenAddress } from '@solana/spl-token';
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey, Connection } from '@solana/web3.js';
+import { config } from '../config/index.js';
 
 // Helper function to convert escrow state string to numeric value
 const escrowStateToNumber = (state: string | number): number => {
@@ -26,26 +27,39 @@ const escrowStateToNumber = (state: string | number): number => {
 };
 
 /**
- * Helper function to derive the associated token account for a wallet and USDC mint
+ * Helper function to derive the associated token account for a wallet and token mint
  * @param walletAddress The wallet's public key address
+ * @param token Token symbol ('USDT' or 'USDC'). Defaults to 'USDT'.
  * @returns The associated token account address as a string
  */
-const deriveUsdcTokenAccount = async (walletAddress: string): Promise<string> => {
+const deriveTokenAccount = async (walletAddress: string, token: string = 'USDT'): Promise<string> => {
   const walletPublicKey = new PublicKey(walletAddress);
 
-  // Get the current network configuration to determine the correct USDC mint
   const currentNetwork = blockchainService.getCurrentNetwork();
 
-  // Determine USDC mint address based on network (same logic as program.ts)
-  const usdcMintAddress = currentNetwork.rpcUrl.includes('devnet')
-    ? '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU' // Devnet USDC
-    : 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'; // Mainnet USDC
+  const mintAddress = token === 'USDT'
+    ? (currentNetwork.usdtMint || 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB')
+    : (currentNetwork.usdcMint || 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 
-  const usdcMint = new PublicKey(usdcMintAddress);
+  const mint = new PublicKey(mintAddress);
 
-  const tokenAccount = await getAssociatedTokenAddress(usdcMint, walletPublicKey);
+  const tokenAccount = await getAssociatedTokenAddress(mint, walletPublicKey);
 
   return tokenAccount.toString();
+};
+
+const shouldUseRelay = async (wallet: any): Promise<boolean> => {
+  if (!config.gasPayerPubkey) return false;
+
+  try {
+    const network = blockchainService.getCurrentNetwork();
+    const connection = new Connection(network.rpcUrl, 'confirmed');
+    const balance = await connection.getBalance(new PublicKey(wallet.address));
+    const thresholdLamports = config.relayThresholdSol * 1_000_000_000;
+    return balance < thresholdLamports;
+  } catch {
+    return false;
+  }
 };
 
 /**
@@ -67,15 +81,6 @@ export const createEscrowTransaction = async (
   }
 ) => {
   try {
-    console.log('[DEBUG] Creating Solana escrow with parameters:', {
-      tradeId: params.tradeId,
-      escrowId: params.escrowId,
-      buyer: params.buyer,
-      amount: params.amount,
-      sequential: params.sequential || false,
-      sequentialEscrowAddress: params.sequentialEscrowAddress,
-    });
-
     // Convert amount to BN (assuming 6 decimals for USDC)
     const amountBN = new BN(params.amount * 1_000_000); // Convert to smallest unit
 
@@ -91,9 +96,9 @@ export const createEscrowTransaction = async (
       fiatDeadline: Math.floor(Date.now() / 1000) + 14 * 24 * 60 * 60, // 14 days from now
       sequential: params.sequential || false,
       sequentialEscrowAddress: params.sequentialEscrowAddress,
+      useRelay: await shouldUseRelay(wallet),
     });
 
-    console.log('[DEBUG] Solana escrow created:', result);
 
     return {
       escrowId: params.escrowId.toString(), // Return the same escrow ID that was passed in
@@ -129,7 +134,6 @@ export const getTokenAllowance = async (
 ): Promise<bigint> => {
   // In Solana, token accounts don't have allowances like ERC20
   // The owner has full control over their token accounts
-  console.log('[DEBUG] Solana token allowance check - returning max allowance');
   return BigInt('18446744073709551615'); // Max uint64
 };
 
@@ -153,7 +157,6 @@ export const approveTokenSpending = async (
   _amount: bigint
 ): Promise<string> => {
   // In Solana, no approval is needed - the owner has full control
-  console.log('[DEBUG] Solana token approval - no approval needed');
   return ''; // Return empty string to indicate no transaction needed
 };
 
@@ -169,7 +172,6 @@ export const fundEscrowTransaction = async (
   tradeData?: { id: number; leg1_crypto_amount: number }
 ): Promise<{ txHash: string; blockNumber: bigint }> => {
   try {
-    console.log(`[DEBUG] Funding Solana escrow with ID: ${escrowId}`);
 
     // Use trade data if available, otherwise fall back to defaults
     const tradeId = tradeData?.id || 0;
@@ -177,9 +179,7 @@ export const fundEscrowTransaction = async (
       ? (tradeData.leg1_crypto_amount * 1000000).toString() // Convert to USDC units (6 decimals)
       : '1000000'; // Default 1 USDC
 
-    // Derive the seller's associated token account for USDC
-    const sellerTokenAccount = await deriveUsdcTokenAccount(wallet.address);
-    console.log(`[DEBUG] Derived seller token account: ${sellerTokenAccount}`);
+    const sellerTokenAccount = await deriveTokenAccount(wallet.address, 'USDT');
 
     const result = await blockchainService.fundEscrow({
       escrowId: Number(escrowId),
@@ -187,9 +187,9 @@ export const fundEscrowTransaction = async (
       amount: amount,
       sellerAddress: wallet.address,
       sellerTokenAccount: sellerTokenAccount,
+      useRelay: await shouldUseRelay(wallet),
     });
 
-    console.log('[DEBUG] Solana escrow funded:', result);
 
     return {
       txHash: result.transactionHash || result.signature || '',
@@ -215,7 +215,6 @@ export const checkAndFundEscrow = async (
   tradeData?: { id: number; leg1_crypto_amount: string | number }
 ): Promise<string> => {
   try {
-    console.log(`[DEBUG] Checking and funding Solana escrow ${escrowId}`);
 
     // In Solana, we don't need to check allowance, just fund directly
     const result = await fundEscrowTransaction(wallet, escrowId, tradeData);
@@ -237,22 +236,18 @@ export const markFiatPaidTransaction = async (
   escrowAddress: string
 ): Promise<string> => {
   try {
-    console.log(`[DEBUG] Marking fiat as paid for Solana escrow at address: ${escrowAddress}`);
 
-    // Get the escrow details to extract escrowId and tradeId
     const escrowState = await blockchainService.getEscrowStateByAddress(escrowAddress);
 
     const markFiatPaidParams = {
       escrowId: escrowState.id,
       tradeId: escrowState.tradeId,
       buyerAddress: wallet.address,
+      useRelay: await shouldUseRelay(wallet),
     };
-
-    console.log('[DEBUG] Calling blockchainService.markFiatPaid with params:', markFiatPaidParams);
 
     const result = await blockchainService.markFiatPaid(markFiatPaidParams);
 
-    console.log('[DEBUG] Solana fiat marked as paid:', result);
 
     return result.transactionHash || result.signature || '';
   } catch (error) {
@@ -272,25 +267,16 @@ export const releaseEscrowTransaction = async (
   escrowAddress: string
 ): Promise<{ txHash: string; blockNumber: bigint }> => {
   try {
-    console.log(`[DEBUG] Releasing Solana escrow at address: ${escrowAddress}`);
 
     // Get the escrow details to extract escrowId and tradeId
     const escrowState = await blockchainService.getEscrowStateByAddress(escrowAddress);
 
-    console.log('[DEBUG] Current escrow state:', escrowState);
-    console.log('[DEBUG] Escrow state:', escrowState.state);
-    console.log('[DEBUG] Fiat paid:', escrowState.fiatPaid);
-    console.log('[DEBUG] Seller:', escrowState.sellerAddress);
-    console.log('[DEBUG] Buyer:', escrowState.buyerAddress);
-    console.log('[DEBUG] Arbitrator:', escrowState.arbitratorAddress);
-    console.log('[DEBUG] Authority (wallet):', wallet.address);
 
     // Get USDC mint from network config
     const { getSolanaDevnetConfig } = await import('../config');
     const solanaConfig = getSolanaDevnetConfig();
     const usdcMint = new PublicKey(solanaConfig.usdcMint);
 
-    console.log('[DEBUG] Using USDC mint:', usdcMint.toString());
 
     // Derive token accounts for buyer and arbitrator
     const buyerTokenAccount = await getAssociatedTokenAddress(
@@ -303,8 +289,6 @@ export const releaseEscrowTransaction = async (
       new PublicKey(escrowState.arbitratorAddress)
     );
 
-    console.log('[DEBUG] Derived buyer token account:', buyerTokenAccount.toString());
-    console.log('[DEBUG] Derived arbitrator token account:', arbitratorTokenAccount.toString());
 
     // Note: Token accounts will be validated by the Solana program constraints
 
@@ -327,13 +311,6 @@ export const releaseEscrowTransaction = async (
       );
     }
 
-    console.log(
-      '[DEBUG] Authority validation passed. Is seller:',
-      isSeller,
-      'Is arbitrator:',
-      isArbitrator
-    );
-
     const releaseEscrowParams = {
       escrowId: escrowState.id,
       tradeId: escrowState.tradeId,
@@ -341,16 +318,11 @@ export const releaseEscrowTransaction = async (
       buyerTokenAccount: buyerTokenAccount.toString(),
       arbitratorTokenAccount: arbitratorTokenAccount.toString(),
       sequentialEscrowTokenAccount: undefined,
+      useRelay: await shouldUseRelay(wallet),
     };
-
-    console.log(
-      '[DEBUG] Calling blockchainService.releaseEscrow with params:',
-      releaseEscrowParams
-    );
 
     const result = await blockchainService.releaseEscrow(releaseEscrowParams);
 
-    console.log('[DEBUG] Solana escrow released:', result);
 
     return {
       txHash: result.transactionHash || result.signature || '',
@@ -375,7 +347,6 @@ export const disputeEscrowTransaction = async (
   evidenceHash: string
 ): Promise<{ txHash: string; blockNumber: bigint }> => {
   try {
-    console.log(`[DEBUG] Opening dispute for Solana escrow with ID: ${escrowId}`);
 
     const result = await blockchainService.openDispute({
       escrowId: Number(escrowId),
@@ -386,7 +357,6 @@ export const disputeEscrowTransaction = async (
       disputingPartyTokenAccount: '', // We'll need to derive this
     });
 
-    console.log('[DEBUG] Solana dispute opened:', result);
 
     return {
       txHash: result.transactionHash || result.signature || '',
@@ -410,12 +380,10 @@ export async function getUsdcBalance(
   _chainId?: number
 ): Promise<bigint> {
   try {
-    console.log(`[DEBUG] Getting USDC balance for Solana address: ${address}`);
 
     // Use the blockchain service to get balance
     const balance = await blockchainService.getWalletBalance();
 
-    console.log(`[DEBUG] Solana USDC balance: ${balance.toString()}`);
     return BigInt(balance);
   } catch (error) {
     console.error('[ERROR] Failed to get Solana USDC balance:', error);
@@ -434,7 +402,6 @@ export const checkEscrowState = async (
   escrowAddress: string
 ): Promise<{ state: number; amount: bigint; hasFunds: boolean; fiatPaid: boolean }> => {
   try {
-    console.log(`[DEBUG] Checking Solana escrow state for address: ${escrowAddress}`);
 
     const escrowState = await blockchainService.getEscrowStateByAddress(escrowAddress);
     const escrowBalance = await blockchainService.getEscrowBalanceByAddress(escrowAddress);
@@ -446,10 +413,6 @@ export const checkEscrowState = async (
     const amount = BigInt(escrowBalance);
     const hasFunds = amount > BigInt(0);
     const fiatPaid = escrowState.fiatPaid || false;
-
-    console.log(
-      `[DEBUG] Solana escrow ${escrowAddress} state: ${state}, amount: ${amount.toString()}, fiatPaid: ${fiatPaid}`
-    );
 
     return { state, amount, hasFunds, fiatPaid };
   } catch (error) {
@@ -478,10 +441,8 @@ export const cancelEscrowTransaction = async (
       );
     }
 
-    console.log(`[DEBUG] Cancelling Solana escrow with ID: ${escrowId}`);
 
-    // Derive the seller's associated token account for USDC
-    const sellerTokenAccount = await deriveUsdcTokenAccount(wallet.address);
+    const sellerTokenAccount = await deriveTokenAccount(wallet.address, 'USDT');
 
     const result = await blockchainService.cancelEscrow({
       escrowId: Number(escrowId),
@@ -489,9 +450,9 @@ export const cancelEscrowTransaction = async (
       sellerAddress: wallet.address,
       authorityAddress: wallet.address,
       sellerTokenAccount: sellerTokenAccount,
+      useRelay: await shouldUseRelay(wallet),
     });
 
-    console.log('[DEBUG] Solana escrow cancelled:', result);
 
     return {
       txHash: result.transactionHash || result.signature || '',

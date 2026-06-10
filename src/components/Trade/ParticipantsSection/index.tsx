@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import ParticipantCard from './ParticipantCard';
 import { Account, Trade } from '@/api';
 
@@ -15,60 +14,36 @@ function ParticipantsSection({
   buyerAccount,
   sellerAccount,
   currentAccount,
-  creator,
 }: ParticipantsSectionProps) {
   return (
-    <Card className="border border-neutral-200 shadow-sm p-4">
-      <CardHeader>
-        <CardTitle className="text-[#eaecef]">Participants</CardTitle>
-        <CardDescription>People involved in this trade</CardDescription>
-      </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {currentAccount?.id === sellerAccount?.id ? (
-          <>
-            <div className="p-3 border border-[#2b3139] rounded-sm hover:bg-[#2b3139]">
-              <ParticipantCard
-                user={sellerAccount}
-                role="Seller"
-                isCurrentUser={currentAccount?.id === sellerAccount?.id}
-                isOfferCreator={creator?.id === sellerAccount?.id}
-                isSeller={true}
-              />
-            </div>
-            <div className="p-3 border border-[#2b3139] rounded-sm hover:bg-[#2b3139]">
-              <ParticipantCard
-                user={buyerAccount}
-                role="Buyer"
-                isCurrentUser={currentAccount?.id === buyerAccount?.id}
-                isOfferCreator={creator?.id === buyerAccount?.id}
-                isBuyer={true}
-              />
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="p-3 border border-[#2b3139] rounded-sm hover:bg-[#2b3139]">
-              <ParticipantCard
-                user={buyerAccount}
-                role="Buyer"
-                isCurrentUser={currentAccount?.id === buyerAccount?.id}
-                isOfferCreator={creator?.id === buyerAccount?.id}
-                isBuyer={true}
-              />
-            </div>
-            <div className="p-3 border border-[#2b3139] rounded-sm hover:bg-[#2b3139]">
-              <ParticipantCard
-                user={sellerAccount}
-                role="Seller"
-                isCurrentUser={currentAccount?.id === sellerAccount?.id}
-                isOfferCreator={creator?.id === sellerAccount?.id}
-                isSeller={true}
-              />
-            </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
+    <div className="bg-[#111111] border border-[#1f1f1f] rounded-sm p-4">
+      <div className="flex items-center gap-3">
+        <div className="flex-1">
+          <ParticipantCard
+            user={buyerAccount}
+            isCurrentUser={currentAccount?.id === buyerAccount?.id}
+          />
+        </div>
+        <div className="flex flex-col items-center gap-1 shrink-0">
+          <span className="text-[10px] font-mono font-bold text-[#6b7280] tracking-wider">VS</span>
+          <div className="w-px h-8 bg-[#1f1f1f]" />
+        </div>
+        <div className="flex-1">
+          <ParticipantCard
+            user={sellerAccount}
+            isCurrentUser={currentAccount?.id === sellerAccount?.id}
+          />
+        </div>
+      </div>
+      <div className="flex justify-center gap-6 mt-2">
+        <span className="text-[9px] font-mono font-bold text-[#f97316] tracking-[0.2em] uppercase">
+          Buyer
+        </span>
+        <span className="text-[9px] font-mono font-bold text-[#6b7280] tracking-[0.2em] uppercase">
+          Seller
+        </span>
+      </div>
+    </div>
   );
 }
 

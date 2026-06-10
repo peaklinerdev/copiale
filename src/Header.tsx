@@ -17,6 +17,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import Container from '@/components/Shared/Container';
 import { useBlockchainService } from './hooks/useBlockchainService';
 import { loadFallbackPrices } from './lib/priceFallback';
@@ -32,6 +40,7 @@ function Header({ isLoggedIn, account }: HeaderProps) {
   const { service: blockchainService, isConnected } = useBlockchainService();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [prices, setPrices] = useState<Record<string, { price: string; timestamp: number }> | null>(
     null
   );
@@ -42,13 +51,12 @@ function Header({ isLoggedIn, account }: HeaderProps) {
   const fetchPrices = useCallback(async () => {
     try {
       const response = await getPrices();
-      setPrices(response.data.data.USDC);
+      setPrices(response.data.data.USDT || response.data.data.USDC);
       setPriceError(null);
     } catch (err) {
-      console.warn('[Header] Live prices unavailable, trying fallback…', err);
       try {
         const fallback = await loadFallbackPrices();
-        setPrices(fallback.data.USDC);
+        setPrices(fallback.data.USDT || fallback.data.USDC);
         setPriceError(null);
       } catch (fbErr) {
         setPriceError('Price data unavailable');
@@ -110,6 +118,7 @@ function Header({ isLoggedIn, account }: HeaderProps) {
   }, []);
 
   return (
+    <>
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#111318]/80 backdrop-blur-xl border-b border-white/[0.04] shadow-[0_1px_4px_rgba(0,0,0,0.5)] h-14 flex items-center">
       <Container>
         <div className="flex justify-between items-center h-full">
@@ -195,7 +204,7 @@ function Header({ isLoggedIn, account }: HeaderProps) {
                       </Link>
                     </DropdownMenuItem>
                     <div className="h-px bg-[#2b3139] my-1.5 mx-1" />
-                    <DropdownMenuItem onClick={handleLogOut} className="cursor-pointer hover:bg-[#f84960]/10 rounded-sm flex items-center gap-3 px-3 py-2 text-sm text-[#f84960]">
+                    <DropdownMenuItem onClick={() => { setIsDropdownOpen(false); setIsLogoutDialogOpen(true); }} className="cursor-pointer hover:bg-[#f84960]/10 rounded-sm flex items-center gap-3 px-3 py-2 text-sm text-[#f84960]">
                       <LogOut size={15} className="text-[#f84960] shrink-0" />
                       Logout
                     </DropdownMenuItem>
@@ -249,6 +258,38 @@ function Header({ isLoggedIn, account }: HeaderProps) {
         </div>
       )}
     </header>
+
+    {/* Logout Confirmation Dialog */}
+    <Dialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
+      <DialogContent className="bg-[#1e2329] border-[#2b3139] text-[#eaecef] rounded-sm max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-bold">Sign Out?</DialogTitle>
+          <DialogDescription className="text-[#848e9c]">
+            Are you sure you want to disconnect your wallet? You will need to reconnect to access your account and continue trading.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="mt-6 flex gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setIsLogoutDialogOpen(false)}
+            className="flex-1 border-[#2b3139] text-[#eaecef] hover:bg-[#2b3139] rounded-sm"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              setIsLogoutDialogOpen(false);
+              handleLogOut();
+            }}
+            className="flex-1 bg-[#f84960] hover:opacity-90 text-white font-bold rounded-sm"
+            aria-label="Confirm sign out"
+          >
+            Sign Out
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 

@@ -49,24 +49,20 @@ export function buildTransactionData(params: {
     transaction_type: params.transaction_type,
     from_address: params.from_address,
     to_address: params.to_address,
-    amount: params.amount,
-    token_type: params.token_type,
     status: params.status || 'SUCCESS',
-    network_family: networkFamily,
     metadata: params.metadata,
   };
 
   if (networkFamily === 'solana') {
     return {
       ...baseData,
-      signature: params.signature || params.transactionHash, // Fallback to transactionHash if signature not provided
-      slot: params.slot || params.blockNumber, // Fallback to blockNumber if slot not provided
+      signature: params.signature || params.transactionHash,
     };
   } else {
     return {
       ...baseData,
-      transaction_hash: params.transactionHash || params.signature, // Fallback to signature if transactionHash not provided
-      block_number: params.blockNumber || params.slot, // Fallback to slot if blockNumber not provided
+      transaction_hash: params.transactionHash || params.signature,
+      block_number: params.blockNumber || params.slot,
     };
   }
 }

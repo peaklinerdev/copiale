@@ -97,7 +97,6 @@ export const TransactionHistory = ({ tradeId, className = '' }: TransactionHisto
       setIsRefreshing(true);
       setError(null);
       const response = await getTradeTransactions(tradeId);
-      // console.log('Fetched transaction records:', response.data);
       setTransactions(response.data);
       setLastUpdated(new Date());
     } catch (error) {

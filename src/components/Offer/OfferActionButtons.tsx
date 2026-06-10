@@ -2,14 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import DeleteOfferDialog from '@/components/Shared/DeleteOfferDialog';
 
 interface OfferActionButtonsProps {
   offerId: number;
@@ -72,30 +65,12 @@ function OfferActionButtons({
         </Button>
       </div>
 
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="bg-[#1e2329] border-[#2b3139] text-[#eaecef] z-[999] rounded-sm max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Remove Advertisement?</DialogTitle>
-            <DialogDescription className="text-[#848e9c]">
-              This will permanently remove your liquidity offer from the P2P market.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="mt-6 flex gap-3">
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} className="flex-1 border-[#2b3139] text-[#eaecef] hover:bg-[#2b3139] rounded-sm">
-              Cancel
-            </Button>
-            <Button
-              onClick={handleDelete}
-              className={`flex-1 bg-[#f84960] hover:opacity-90 text-white font-bold rounded-sm ${
-                isDeleting ? 'opacity-50' : ''
-              }`}
-              disabled={isDeleting}
-            >
-              {isDeleting ? 'Removing...' : 'Confirm Remove'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteOfferDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDelete}
+        isDeleting={isDeleting}
+      />
     </>
   );
 }

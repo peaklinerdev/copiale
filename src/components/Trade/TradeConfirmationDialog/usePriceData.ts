@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getPrices, PricesResponse } from '@/api';
 import { loadFallbackPrices } from '@/lib/priceFallback';
 
@@ -20,13 +20,13 @@ export const usePriceData = (isOpen: boolean): UsePriceDataResult => {
   const [error, setError] = useState<string | null>(null);
   const [isFallback, setIsFallback] = useState(false);
 
-  const fetchPriceData = async () => {
+  const fetchPriceData = useCallback(async () => {
     setLoading(true);
     setError(null);
     setIsFallback(false);
     try {
       const response = await getPrices();
-      if (response?.data?.data?.USDC) {
+      if (response?.data?.data?.USDT || response?.data?.data?.USDC) {
         setPriceData(response.data);
         return;
       }
@@ -37,7 +37,7 @@ export const usePriceData = (isOpen: boolean): UsePriceDataResult => {
         const fallback = await loadFallbackPrices();
         setPriceData(fallback);
         setIsFallback(true);
-        setError(null); // clear error since we have data
+        setError(null);
       } catch (fbErr) {
         console.error('[usePriceData] Fallback also failed:', fbErr);
         setError('Failed to fetch current market prices. Please try again.');
@@ -45,11 +45,11 @@ export const usePriceData = (isOpen: boolean): UsePriceDataResult => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (isOpen) fetchPriceData();
-  }, [isOpen]);
+  }, [isOpen, fetchPriceData]);
 
   return { priceData, loading, error, fetchPriceData, isFallback };
 };

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getUserTransactions, TransactionRecord, Account } from '../api';
+import { formatDisplayId } from '@/utils/displayId';
 import { formatDistanceToNow } from 'date-fns';
 import { ExternalLink } from 'lucide-react';
 import { config } from '../config';
@@ -149,12 +150,6 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
           offset: (page - 1) * limit,
         });
 
-        // Log the complete API response data
-        console.log('MyTransactionsPage API Response:', response);
-        console.log('MyTransactionsPage Response Data:', response.data);
-        console.log('MyTransactionsPage Transactions Count:', response.data?.length);
-        console.log('MyTransactionsPage Network Field Sample:', response.data?.[0]?.network);
-
         // Handle the response data
         setTransactions(response.data);
 
@@ -303,7 +298,7 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
                       <div className="grid grid-cols-2 gap-3 text-sm mt-4">
                         <div>
                           <span className="text-neutral-500 block mb-1">ID:</span>
-                          <span className="font-medium">{tx.id}</span>
+                          <span className="font-medium">{formatDisplayId(tx.id)}</span>
                         </div>
                         <div>
                           <span className="text-neutral-500 block mb-1">Trade:</span>
@@ -311,7 +306,7 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
                             to={`/trade/${tx.trade_id}`}
                             className="text-blue-600 hover:text-blue-800 font-medium"
                           >
-                            {tx.trade_id}
+                            {formatDisplayId(tx.trade_id)}
                           </Link>
                         </div>
                         <div className="mt-2">
@@ -324,7 +319,7 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
                         </div>
                         <div className="col-span-2 mt-2">
                           <span className="text-neutral-500 block mb-1">Amount:</span>
-                          <span>{tx.amount ? `${tx.amount} ${tx.token_type || 'USDC'}` : '-'}</span>
+                          <span>{tx.amount ? `${tx.amount} ${tx.token_type || 'USDT'}` : '-'}</span>
                         </div>
                         <div className="col-span-2 mt-2">
                           <span className="text-neutral-500 block mb-1">Network:</span>
@@ -367,14 +362,14 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
                     <TableBody>
                       {transactions.map(tx => (
                         <TableRow key={tx.id} className="hover:bg-[#2b3139]">
-                          <TableCell className="font-medium">{tx.id}</TableCell>
+                          <TableCell className="font-medium">{formatDisplayId(tx.id)}</TableCell>
                           <TableCell>{getTransactionTypeLabel(tx.transaction_type)}</TableCell>
                           <TableCell>
                             <Link
                               to={`/trade/${tx.trade_id}`}
                               className="text-blue-600 hover:text-blue-800"
                             >
-                              {tx.trade_id}
+                              {formatDisplayId(tx.trade_id)}
                             </Link>
                           </TableCell>
                           <TableCell>{formatAddress(tx.from_address)}</TableCell>

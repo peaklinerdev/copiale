@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { getOffers, Offer, Account } from '@/api'; // Removed deleteOffer import
 import { formatNumber } from '@/lib/utils';
 import { formatRate, rateAdjustmentDirection } from '@/utils/stringUtils';
+import { formatDisplayId } from '@/utils/displayId';
 import { useOfferDeletion } from '@/hooks/useOfferDeletion'; // Import the hook
 import {
   Table,
@@ -232,7 +233,7 @@ function MyOffersPage({ account }: MyOffersPageProps) {
                       className="border border-[#2b3139] rounded-sm p-4 hover:bg-[#2b3139]"
                     >
                       <div className="flex justify-between items-start mb-3">
-                        <div className="font-medium">#{formatNumber(offer.id)}</div>
+                        <div className="font-medium">{formatDisplayId(offer.id)}</div>
                         <OfferTypeTooltip offerType={offer.offer_type} />
                       </div>
 
@@ -309,7 +310,7 @@ function MyOffersPage({ account }: MyOffersPageProps) {
                     <TableBody>
                       {myOffers.map(offer => (
                         <TableRow key={offer.id} className="hover:bg-[#2b3139]">
-                          <TableCell>{formatNumber(offer.id)}</TableCell>
+                          <TableCell>{formatDisplayId(offer.id)}</TableCell>
                           <TableCell>
                             <OfferTypeTooltip offerType={offer.offer_type} />
                           </TableCell>

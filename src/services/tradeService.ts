@@ -219,20 +219,19 @@ export const createTradeEscrow = async ({
     await recordSolanaEscrow(recordEscrowData, idempotencyKey);
 
     // Pass amount as canonical decimal string into the transaction record.
-    const leg1CryptoToken = trade.leg1_crypto_token || 'USDC';
+    const leg1CryptoToken = trade.leg1_crypto_token || 'USDT';
 
-    // Record the transaction using the utility function for correct field mapping
     const transactionData = buildTransactionData({
       trade_id: trade.id,
-      escrow_id: escrowId, // Use the pre-generated ID
-      signature: txResult.txHash, // Use txHash as signature for Solana
+      escrow_id: escrowId,
+      signature: txResult.txHash,
       transaction_type: 'CREATE_ESCROW',
       from_address: sellerAddress,
-      to_address: recordEscrowData.escrow_pda, // Use the escrow PDA as the destination
+      to_address: recordEscrowData.escrow_pda,
       amount: toEscrowUsdcString(trade.leg1_crypto_amount || '0'),
       token_type: leg1CryptoToken,
       status: 'SUCCESS',
-      slot: Number(txResult.blockNumber), // Use blockNumber as slot for Solana
+      slot: Number(txResult.blockNumber),
       metadata: {
         escrow_id: escrowId.toString(),
         seller: sellerAddress,
@@ -316,9 +315,9 @@ export const createAndFundTradeEscrow = async ({
           from_address: sellerAddress,
           to_address: solanaAddresses.escrow_pda, // Use the escrow PDA as the destination
           amount: toEscrowUsdcString(trade.leg1_crypto_amount || '0'),
-          token_type: trade.leg1_crypto_token || 'USDC',
+          token_type: trade.leg1_crypto_token || 'USDT',
           status: 'SUCCESS',
-          slot: Number(txResult.blockNumber), // Use blockNumber as slot for Solana
+          slot: Number(txResult.blockNumber),
           metadata: {
             escrow_id: escrowResult.escrowId || '0',
             seller: sellerAddress,
@@ -518,7 +517,7 @@ export const releaseTradeCrypto = async ({
         amount: trade.leg1_crypto_amount
           ? toUsdcString(trade.leg1_crypto_amount)
           : undefined,
-        token_type: trade.leg1_crypto_token,
+        token_type: trade.leg1_crypto_token || 'USDT',
         status: 'SUCCESS',
         slot: Number(txResult.blockNumber), // Use blockNumber as slot for Solana
       });

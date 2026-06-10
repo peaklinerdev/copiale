@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAccount, getAccountById } from '../api';
+import { formatDisplayId } from '../utils/displayId';
 
 interface UseUserAccountResult {
   hasUsername: boolean | null;
@@ -78,13 +79,13 @@ export const fetchCreatorNames = async (
           return { id, username: account.username || account.wallet_address };
         } catch (err) {
           console.error(`Failed to fetch account ${id}:`, err);
-          return { id, username: `User #${id}` };
+          return { id, username: formatDisplayId(id) };
         }
       });
       names = await Promise.all(namePromises);
     } else {
-      // If not authenticated, just use the default "User #id" format without API calls
-      names = uniqueCreatorIds.map(id => ({ id, username: `User #${id}` }));
+      // If not authenticated, just use the default display ID format without API calls
+      names = uniqueCreatorIds.map(id => ({ id, username: formatDisplayId(id) }));
     }
 
     setCreatorNames(Object.fromEntries(names.map(({ id, username }) => [id, username])));

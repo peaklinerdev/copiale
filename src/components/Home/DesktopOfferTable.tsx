@@ -12,7 +12,8 @@ import {
 } from '../../components/ui/table';
 import OfferActionButtons from '@/components/Offer/OfferActionButtons';
 import TradeConfirmationDialog from '@/components/Trade/TradeConfirmationDialog';
-import { abbreviateWallet, formatRate } from '../../utils/stringUtils';
+import { formatRate } from '../../utils/stringUtils';
+import { formatDisplayId } from '../../utils/displayId';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 
 interface DesktopOfferTableProps {
@@ -61,17 +62,18 @@ const DesktopOfferTable: React.FC<DesktopOfferTableProps> = ({
               <TableCell className="py-4">
                 <div className="flex flex-col">
                   <span className="text-[#eaecef] font-bold text-sm">
-                    {creatorNames[offer.creator_account_id] || abbreviateWallet(String(offer.creator_account_id))}
+                    {creatorNames[offer.creator_account_id] || formatDisplayId(offer.creator_account_id)}
                   </span>
-                  <span className="text-[10px] text-[#848e9c] font-medium uppercase mt-0.5">ID: {offer.id}</span>
+                  <span className="text-[10px] text-[#848e9c] font-medium uppercase mt-0.5">
+                    {offer.id ? formatDisplayId(offer.id) : ''}
+                  </span>
                 </div>
               </TableCell>
               <TableCell className="py-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-extrabold text-[#eaecef]">{formatNumber(offer.rate_adjustment)}</span>
+                  <span className="text-lg font-extrabold text-[#eaecef]">{formatRate(offer.rate_adjustment)}</span>
                   <span className="text-xs font-bold text-[#848e9c]">{offer.fiat_currency}</span>
                 </div>
-                <div className="text-[10px] text-[#848e9c] font-medium">Rate: {formatRate(offer.rate_adjustment)}</div>
               </TableCell>
               <TableCell className="py-4">
                 <div className="flex flex-col gap-1">

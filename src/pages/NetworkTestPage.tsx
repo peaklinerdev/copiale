@@ -53,11 +53,9 @@ export const NetworkTestPage: React.FC = () => {
     if (blockchainService && primaryWallet?.address) {
       blockchainService.setWalletAddress(primaryWallet.address);
       blockchainService.updateWallet(primaryWallet);
-      console.log('Updated blockchain service with wallet address:', primaryWallet.address);
     } else if (blockchainService && !primaryWallet?.address) {
       blockchainService.setWalletAddress(null);
       blockchainService.updateWallet(null);
-      console.log('Cleared wallet address from blockchain service');
     }
   }, [blockchainService, primaryWallet]);
 

@@ -3,7 +3,8 @@ import { useParams } from 'react-router-dom';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import ChatSection from '@/components/Trade/ChatSection';
 import ParticipantsSection from '@/components/Trade/ParticipantsSection';
-import TradeDetailsCard from '@/components/Trade/TradeDetailsCard';
+import { formatNumber } from '@/lib/utils';
+import { formatDisplayId } from '@/utils/displayId';
 import { useTradeParticipants } from './hooks/useTradeParticipants';
 import { useTradeUpdates } from './hooks/useTradeUpdates';
 import { useEscrowDetails } from './hooks/useEscrowDetails';
@@ -145,10 +146,8 @@ function TradePage() {
 
     // Listen for auth state change events (wallet connection/disconnection)
     const handleAuthStateChange = (e: CustomEvent) => {
-      console.log('[TradePage] Auth state changed:', e.detail);
       // Refresh trade data when wallet is connected
       if (e.detail?.authenticated) {
-        console.log('[TradePage] Wallet connected, refreshing trade data');
         handleRefreshTrade();
         refreshEscrow();
         loadPendingTransactions();
@@ -157,7 +156,6 @@ function TradePage() {
         toast.success('Wallet connected. Trade data refreshed.');
       } else {
         // Handle wallet disconnection
-        console.log('[TradePage] Wallet disconnected, redirecting to home page');
         // Redirect to home page
         window.location.href = '/';
         // Show notification
@@ -239,20 +237,12 @@ function TradePage() {
         trade.updated_at !== tradeUpdates.updated_at;
 
       if (isDataDifferent) {
-        console.log(
-          `[TradePage] Trade state updated: ${trade?.leg1_state} → ${tradeUpdates.leg1_state}`
-        );
         setTrade(tradeUpdates);
       }
     }
   }, [tradeUpdates, setTrade, tradeId, trade]);
 
-  // Track trade state changes (reduced logging)
-  useEffect(() => {
-    if (trade && trade.id) {
-      console.log(`[TradePage] Trade ${tradeId} state: ${trade.leg1_state}`);
-    }
-  }, [trade?.leg1_state, tradeId, trade]);
+
 
   // Reset trade state when trade ID changes
   useEffect(() => {
@@ -262,7 +252,6 @@ function TradePage() {
   // Listen for critical state changes (like fiat paid) that require immediate refresh
   useEffect(() => {
     const handleCriticalStateChange = () => {
-      console.log('[TradePage] Critical state change detected, refreshing trade data');
       if (tradeId) {
         // Force refresh trade data
         handleRefreshTrade();
@@ -288,59 +277,156 @@ function TradePage() {
     return <TradeNotFoundAlert />;
   }
 
+  const token = trade.leg1_crypto_token || offer?.token || 'USDT';
+  const action = userRole === 'buyer' ? 'buying' : 'selling';
+
+  const isActiveState =
+    trade.leg1_state !== 'COMPLETED' &&
+    trade.leg1_state !== 'RELEASED' &&
+    trade.leg1_state !== 'CANCELLED';
+
+  const showEscrowContext =
+    isActiveState &&
+    trade.leg1_state !== 'CREATED' &&
+    balance &&
+    (parseFloat(balance) === 0);
+
   return (
-    <div className="space-y-4">
-      <TradeHeader userRole={userRole} />
+    <div className="flex gap-4 min-h-[calc(100vh-80px)]" style={{ background: '#0a0a0a' }}>
+      {/* Left panel */}
+      <div className="w-[400px] shrink-0 space-y-3">
+        <div className="flex items-center justify-between">
+          <TradeHeader userRole={userRole} />
+          <span className="text-[11px] font-mono text-[#6b7280] tracking-wider">
+            #{formatDisplayId(trade.id)}
+          </span>
+        </div>
 
-      {trade && offer && (
-        <TradeDetailsCard
+        <ParticipantsSection
+          buyerAccount={buyerAccount}
+          sellerAccount={sellerAccount}
+          currentAccount={currentAccount}
+          creator={creator}
           trade={trade}
-          offer={offer}
           userRole={userRole}
-          counterparty={counterparty}
         />
-      )}
 
-      <TradeStatusCard
-        trade={trade}
-        userRole={userRole}
-        actions={{
-          createEscrow,
-          markFiatPaid,
-          releaseCrypto,
-          disputeTrade,
-          cancelTrade,
-        }}
-        actionLoading={actionLoading}
-        escrowDetails={
-          escrowDetails
-            ? {
-                escrow_id: BigInt(escrowDetails.escrowId),
-                amount: BigInt(escrowDetails.amount.toString()),
-                state: BigInt(escrowStateToNumber(escrowDetails.state)),
-              }
-            : undefined
-        }
-        escrowLoading={escrowLoading}
-        escrowError={escrowError}
-        balance={balance}
-        refreshEscrow={refreshEscrow}
-      />
+        {/* Trade details */}
+        <div className="bg-[#111111] border border-[#1f1f1f] rounded-sm p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-bold tracking-[0.15em] text-[#6b7280] uppercase">
+              Status
+            </span>
+            <span
+              className="px-2 py-0.5 text-[11px] font-mono font-bold rounded-[2px] uppercase tracking-wider"
+              style={{
+                color: '#f97316',
+                background: 'rgba(249, 115, 22, 0.1)',
+                border: '1px solid rgba(249, 115, 22, 0.3)',
+              }}
+            >
+              {trade.leg1_state.replace(/_/g, ' ')}
+            </span>
+          </div>
 
-      {renderPendingTransactions()}
+          <div className="space-y-1">
+            <p className="text-base font-mono font-bold text-[#ffffff]">
+              {formatNumber(trade.leg1_crypto_amount || 0)} {token}
+            </p>
+            {trade.leg1_fiat_amount && (
+              <p className="text-sm font-mono text-[#6b7280]">
+                = {formatNumber(parseFloat(trade.leg1_fiat_amount))} {trade.from_fiat_currency}
+              </p>
+            )}
+          </div>
 
-      <ChatSection counterparty={counterparty} />
+          <div className="border-t border-[#1f1f1f] pt-3">
+            <span className="text-[10px] font-mono font-bold tracking-[0.15em] text-[#6b7280] uppercase">
+              Rate
+            </span>
+            <p className="text-sm font-mono font-medium text-[#ffffff] mt-0.5">
+              {formatNumber(
+                trade.leg1_fiat_amount && trade.leg1_crypto_amount
+                  ? parseFloat(trade.leg1_fiat_amount) / parseFloat(trade.leg1_crypto_amount)
+                  : 0
+              )}{' '}
+              <span className="text-[#6b7280]">{trade.from_fiat_currency}/{token}</span>
+            </p>
+          </div>
 
-      <ParticipantsSection
-        buyerAccount={buyerAccount}
-        sellerAccount={sellerAccount}
-        currentAccount={currentAccount}
-        creator={creator}
-        trade={trade}
-        userRole={userRole}
-      />
+          {offer && (
+            <div className="border-t border-[#1f1f1f] pt-2">
+              <a
+                href={`/offer/${offer.id}`}
+                className="text-[11px] font-mono text-[#f97316] hover:opacity-80 tracking-wider"
+              >
+                View offer →
+              </a>
+            </div>
+          )}
+        </div>
 
-      <TradeNavigation />
+        {/* Separator */}
+        <div className="border-b border-[#1f1f1f]" />
+
+        {/* Escrow / Actions section */}
+        <TradeStatusCard
+          trade={trade}
+          userRole={userRole}
+          actions={{
+            createEscrow,
+            markFiatPaid,
+            releaseCrypto,
+            disputeTrade,
+            cancelTrade,
+          }}
+          actionLoading={actionLoading}
+          escrowDetails={
+            escrowDetails
+              ? {
+                  escrow_id: BigInt(escrowDetails.escrowId),
+                  amount: BigInt(escrowDetails.amount.toString()),
+                  state: BigInt(escrowStateToNumber(escrowDetails.state)),
+                }
+              : undefined
+          }
+          escrowLoading={escrowLoading}
+          escrowError={escrowError}
+          balance={balance}
+          refreshEscrow={refreshEscrow}
+        />
+
+        {showEscrowContext && (
+          <div className="bg-[#111111] border border-[#1f1f1f] rounded-sm px-4 py-2">
+            <p className="text-[11px] font-mono text-[#6b7280]">
+              Funds held in escrow
+            </p>
+          </div>
+        )}
+
+        {renderPendingTransactions()}
+
+        {/* Awaiting state */}
+        <div className="bg-[#111111] border border-[#1f1f1f] rounded-sm p-4">
+          <div className="text-center">
+            <p className="text-[11px] font-mono text-[#6b7280] tracking-wider">
+              {action === 'buying' ? 'Waiting for seller' : 'Waiting for buyer'}
+            </p>
+            <div className="mt-1.5 flex justify-center gap-1">
+              <span className="w-1.5 h-1.5 bg-[#f97316] rounded-[1px] animate-pulse" />
+              <span className="w-1.5 h-1.5 bg-[#f97316] rounded-[1px] animate-pulse" style={{ animationDelay: '0.2s' }} />
+              <span className="w-1.5 h-1.5 bg-[#f97316] rounded-[1px] animate-pulse" style={{ animationDelay: '0.4s' }} />
+            </div>
+          </div>
+        </div>
+
+        <TradeNavigation />
+      </div>
+
+      {/* Right panel - Chat */}
+      <div className="flex-1 flex flex-col">
+        <ChatSection counterparty={counterparty} className="flex-1" />
+      </div>
     </div>
   );
 }

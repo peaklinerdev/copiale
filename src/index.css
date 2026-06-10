@@ -57,6 +57,14 @@
   --radius-lg: 2px;
   --radius-md: 2px;
   --radius-sm: 1px;
+
+  /* Z-Index Scale — single source of truth */
+  --z-base: 0;
+  --z-dropdown: 40;
+  --z-header: 50;
+  --z-dialog: 50;
+  --z-toast: 100;
+  --z-tooltip: 110;
 }
 
 /* Base styles */
@@ -277,5 +285,19 @@ button a,
 .pennant:hover {
   animation-play-state: paused;
   background-color: #E05A00;
+}
+
+/* ===== Accessibility: prefers-reduced-motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .pennant { animation: none; }
 }
 

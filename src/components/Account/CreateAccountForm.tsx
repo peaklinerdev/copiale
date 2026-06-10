@@ -4,6 +4,7 @@ import { createAccount, Account } from '@/api';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ErrorBanner } from '@/components/Shared/ErrorBanner';
 
 interface CreateAccountFormProps {
   setAccount?: (account: Account | null) => void;
@@ -96,9 +97,7 @@ function CreateAccountForm({ setAccount }: CreateAccountFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <Alert className="bg-[#f84960]/10 border-[#f84960]/30 rounded-sm" variant="destructive">
-          <AlertDescription className="text-[#f84960]">{error}</AlertDescription>
-        </Alert>
+        <ErrorBanner error={error} showIssues={false} />
       )}
 
       {success && (

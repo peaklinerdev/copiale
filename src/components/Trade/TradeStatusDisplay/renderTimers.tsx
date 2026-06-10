@@ -1,101 +1,56 @@
 import { Trade } from '@/api';
 import TradeTimer from './TradeTimer';
-import { isDeadlineExpired } from '@/hooks/useTradeUpdates';
 
 interface RenderTimersProps {
   trade: Trade;
   userRole: 'buyer' | 'seller';
 }
 
-/**
- * Renders timers with deadline enforcement, info text, and decision logs
- */
-export const renderTimers = ({ trade, userRole }: RenderTimersProps) => {
-  // console.log(`[DEBUG] User-requested decision logic: Evaluating renderTimers for state: ${trade.leg1_state}`);
-
-  if (trade.leg1_state === 'CREATED' && trade.leg1_escrow_deposit_deadline) {
-    const isExpired = isDeadlineExpired(trade.leg1_escrow_deposit_deadline);
-    // console.log(`[DEBUG] User-requested decision logic: Rendering timer for CREATED state. Deadline: ${trade.leg1_escrow_deposit_deadline}, Expired: ${isExpired}`);
-    return (
-      <div className="mt-4 p-3 bg-[#FF6B00]/10 border border-[#FF6B00]/30 rounded-sm">
-        <TradeTimer
-          deadline={trade.leg1_escrow_deposit_deadline}
-          label={
-            userRole === 'seller'
-              ? 'Time remaining to fund escrow:'
-              : 'Waiting for seller to fund escrow:'
-          }
-        />
-        {isExpired ? (
-          <p className="text-red-600 text-sm mt-2">
-            Deadline expired: The deposit deadline has passed. Actions may be unavailable.
-          </p>
-        ) : (
-          <p className="text-amber-800 text-sm mt-2">
-            {userRole === 'seller' 
-              ? "Deadline warning: Fund the escrow before the deadline to avoid trade failure."
-              : "Deadline warning: The seller must fund the escrow before the deadline to avoid trade failure. At this step, you, the buyer, can only wait for the seller to do so."}
-          </p>
-        )}
-      </div>
-    );
+function getTimerLabel(trade: Trade, userRole: string): string {
+  if (trade.leg1_state === 'CREATED') {
+    return userRole === 'seller' ? 'Time to fund escrow' : 'Seller funds escrow';
   }
-
-  // Add timer for FUNDED state with fiat payment deadline
-  if (trade.leg1_state === 'FUNDED' && trade.leg1_fiat_payment_deadline) {
-    const isExpired = isDeadlineExpired(trade.leg1_fiat_payment_deadline);
-    // console.log(`[DEBUG] User-requested decision logic: Rendering timer for FUNDED state. Deadline: ${trade.leg1_fiat_payment_deadline}, Expired: ${isExpired}`);
-    return (
-      <div className="mt-4 p-3 bg-[#FF6B00]/10 border border-[#FF6B00]/30 rounded-sm">
-        <TradeTimer
-          deadline={trade.leg1_fiat_payment_deadline}
-          label={
-            userRole === 'buyer'
-              ? 'Time remaining to mark fiat as paid:'
-              : 'Waiting for buyer to mark fiat as paid:'
-          }
-        />
-        {isExpired ? (
-          <p className="text-red-600 text-sm mt-2">
-            Deadline expired: The fiat payment deadline has passed. The trade may be canceled.
-          </p>
-        ) : (
-          <p className="text-amber-800 text-sm mt-2">
-            {userRole === 'buyer' 
-              ? "Deadline warning: Mark fiat as paid before the deadline to proceed."
-              : "Deadline warning: The buyer must mark fiat as paid before the deadline to proceed. Do not release escrow until you have personally verified receipt of the fiat funds via your payment method. Do not trust receipt images, promises or even the buyer having marked fiat as paid on-chain."}
-          </p>
-        )}
-      </div>
-    );
+  if (trade.leg1_state === 'FUNDED' || trade.leg1_state === 'AWAITING_FIAT_PAYMENT') {
+    return userRole === 'buyer' ? 'Time to pay' : 'Buyer makes payment';
   }
+  return 'Time remaining';
+}
 
-  if (trade.leg1_state === 'AWAITING_FIAT_PAYMENT' && trade.leg1_fiat_payment_deadline) {
-    const isExpired = isDeadlineExpired(trade.leg1_fiat_payment_deadline);
-    // console.log(`[DEBUG] User-requested decision logic: Rendering timer for AWAITING_FIAT_PAYMENT state. Deadline: ${trade.leg1_fiat_payment_deadline}, Expired: ${isExpired}`);
-    return (
-      <div className="mt-4 p-3 bg-[#FF6B00]/10 border border-[#FF6B00]/30 rounded-sm">
-        <TradeTimer
-          deadline={trade.leg1_fiat_payment_deadline}
-          label={
-            userRole === 'buyer'
-              ? 'Time remaining to make payment:'
-              : 'Waiting for buyer to make payment:'
-          }
-        />
-        {isExpired ? (
-          <p className="text-red-600 text-sm mt-2">
-            Deadline expired: The payment deadline has passed. The trade may be canceled.
-          </p>
-        ) : (
-          <p className="text-amber-800 text-sm mt-2">
-            Deadline warning: Complete payment before the deadline to proceed.
-          </p>
-        )}
-      </div>
-    );
+function getTimerNote(trade: Trade, userRole: string): string | null {
+  if (trade.leg1_state === 'CREATED') {
+    return userRole === 'seller'
+      ? 'Fund the escrow to proceed with this trade.'
+      : 'Waiting for the seller to fund the on-chain escrow.';
   }
-
-  // console.log(`[DEBUG] User-requested decision logic: No timers to render for state: ${trade.leg1_state}`);
+  if (trade.leg1_state === 'FUNDED' || trade.leg1_state === 'AWAITING_FIAT_PAYMENT') {
+    return userRole === 'buyer'
+      ? 'Complete your fiat payment before the deadline.'
+      : 'Waiting for the buyer to send fiat payment. Do not release crypto until you have confirmed receipt.';
+  }
   return null;
+}
+
+function getDeadline(trade: Trade): string | null {
+  if (trade.leg1_state === 'CREATED') return trade.leg1_escrow_deposit_deadline;
+  if (trade.leg1_state === 'FUNDED' || trade.leg1_state === 'AWAITING_FIAT_PAYMENT') return trade.leg1_fiat_payment_deadline;
+  return null;
+}
+
+export const renderTimers = ({ trade, userRole }: RenderTimersProps) => {
+  const deadline = getDeadline(trade);
+  if (!deadline) return null;
+
+  return (
+    <div className="bg-[#111111] border border-[#1f1f1f] rounded-sm p-4">
+      <TradeTimer
+        deadline={deadline}
+        label={getTimerLabel(trade, userRole)}
+      />
+      {getTimerNote(trade, userRole) && (
+        <p className="mt-2 text-[11px] font-mono text-[#6b7280] leading-relaxed">
+          {getTimerNote(trade, userRole)}
+        </p>
+      )}
+    </div>
+  );
 };

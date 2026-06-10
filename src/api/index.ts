@@ -28,7 +28,6 @@ const api = axios.create({
 // Optional: Add interceptors for logging or error handling if needed
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // console.log("API Request:", config.method?.toUpperCase(), config.url);
     // Automatically add token from localStorage if available
     const token = localStorage.getItem('jwt_token');
     if (token && config.headers) {
@@ -52,7 +51,6 @@ api.interceptors.response.use(
       import.meta.env.VITE_DEBUG_IDEMPOTENCY === 'true' &&
       response.headers['idempotent-replayed'] === 'true'
     ) {
-      console.debug('[idempotency] replayed cached response for', response.config.url);
     }
     return response;
   },

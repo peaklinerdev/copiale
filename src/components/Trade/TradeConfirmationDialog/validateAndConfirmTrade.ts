@@ -80,9 +80,8 @@ export const confirmTrade = (
     return false;
   }
 
-  // Guard: fiat amount must be calculated before confirming
   if (!fiatAmount || fiatAmount <= 0) {
-    setError('Price data is still loading — please wait a moment and try again.');
+    setError('Calculating trade amounts — please wait a moment and try again.');
     return false;
   }
 

@@ -5,7 +5,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { Button } from '../../components/ui/button';
 import OfferActionButtons from '@/components/Offer/OfferActionButtons';
 import TradeConfirmationDialog from '@/components/Trade/TradeConfirmationDialog';
-import { abbreviateWallet } from '../../utils/stringUtils';
+import { formatRate } from '../../utils/stringUtils';
+import { formatDisplayId } from '../../utils/displayId';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 
 interface MobileOfferListProps {
@@ -43,12 +44,12 @@ const MobileOfferList: React.FC<MobileOfferListProps> = ({
           <div className="flex justify-between items-start mb-4">
             <div className="flex flex-col">
               <span className="text-[#eaecef] font-bold">
-                {creatorNames[offer.creator_account_id] || abbreviateWallet(String(offer.creator_account_id))}
+                {creatorNames[offer.creator_account_id] || formatDisplayId(offer.creator_account_id)}
               </span>
-              <span className="text-[10px] text-[#848e9c] uppercase font-bold">ID: {offer.id}</span>
+              <span className="text-[10px] text-[#848e9c] uppercase font-bold">{offer.id ? formatDisplayId(offer.id) : ''}</span>
             </div>
             <div className="flex flex-col items-end">
-              <span className="text-lg font-extrabold text-[#eaecef] leading-none">{formatNumber(offer.rate_adjustment)}</span>
+              <span className="text-lg font-extrabold text-[#eaecef] leading-none">{formatRate(offer.rate_adjustment)}</span>
               <span className="text-[10px] font-bold text-[#848e9c]">{offer.fiat_currency}</span>
             </div>
           </div>

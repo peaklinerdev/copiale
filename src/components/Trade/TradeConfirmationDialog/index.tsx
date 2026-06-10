@@ -18,6 +18,7 @@ import { useTradeConfirmation } from './useTradeConfirmation';
 import { TradeCalculatedValues } from './TradeCalculatedValues';
 import { QUICK_PRESETS } from './useAmountInput';
 import { useDynamicContext, getNetwork } from '@dynamic-labs/sdk-react-core';
+import { getUsdcBalance } from '@/services/chainService';
 
 interface TradeConfirmationDialogProps {
   isOpen: boolean;
@@ -80,7 +81,7 @@ const TradeConfirmationDialog = ({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       {triggerButton && <DialogTrigger asChild>{triggerButton}</DialogTrigger>}
-      <DialogContent className="bg-[#1e2329] border border-[#2b3139] text-[#eaecef] z-50 max-w-md w-full rounded-sm p-0 gap-0">
+      <DialogContent className="bg-[#1e2329] border border-[#2b3139] text-[#eaecef] max-w-md w-full rounded-sm p-0 gap-0">
         {/* Header */}
         <DialogHeader className="px-6 pt-6 pb-4">
           <div className="flex items-center gap-3">
@@ -223,6 +224,7 @@ function useSellerUsdcBalance(address: string | undefined, open: boolean, amount
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const { primaryWallet } = useDynamicContext();
+  const connector = primaryWallet?.connector;
 
   React.useEffect(() => {
     if (!address || !open) { setBalance(null); setError(null); return; }
@@ -232,8 +234,8 @@ function useSellerUsdcBalance(address: string | undefined, open: boolean, amount
     (async () => {
       try {
         let chainId: number | undefined;
-        if (primaryWallet?.connector) {
-          const networkId = await getNetwork(primaryWallet.connector);
+        if (connector) {
+          const networkId = await getNetwork(connector);
           chainId = typeof networkId === 'number' ? networkId : undefined;
         }
         const bal = await getUsdcBalance(address, chainId);
@@ -245,11 +247,9 @@ function useSellerUsdcBalance(address: string | undefined, open: boolean, amount
       }
     })();
     return () => { cancelled = true; };
-  }, [address, open, amount, primaryWallet]);
+  }, [address, open, amount, connector]);
 
   return { balance, loading, error };
 }
-
-import { getUsdcBalance } from '@/services/chainService';
 
 export default TradeConfirmationDialog;

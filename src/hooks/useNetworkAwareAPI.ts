@@ -17,8 +17,6 @@ import {
 export const useNetworkAwareOffers = (networkName: string = 'solana-devnet') => {
   const createOffer = useCallback(
     (data: CreateOfferRequest) => {
-      console.log('[useNetworkAwareOffers] createOffer called with network:', networkName);
-      console.log('[useNetworkAwareOffers] createOffer data:', data);
       return createOfferWithNetwork(networkName, data);
     },
     [networkName]

@@ -32,20 +32,11 @@ export const getAvailableActions = ({
 
   const currentTime = Date.now();
   if (currentTime - lastLogTime >= 30000) {
-    console.log('Evaluating available actions for:', {
-      tradeId: trade.id,
-      state: trade.leg1_state,
-      userRole,
-      escrowDeadlineExpired: isDeadlineExpired(trade.leg1_escrow_deposit_deadline ?? ''),
-      fiatPaymentDeadlineExpired: isDeadlineExpired(trade.leg1_fiat_payment_deadline ?? ''),
-      updatedAt: trade.updated_at,
-    });
     setLastLogTime(currentTime);
   }
 
   // Log only when state changes (reduced noise)
   if (currentTime - lastLogTime >= 30000) {
-    console.log(`[getAvailableActions] Trade ${trade.id} state: ${trade.leg1_state}`);
   }
 
   // Determine if deadlines have expired
@@ -54,7 +45,6 @@ export const getAvailableActions = ({
 
   switch (trade.leg1_state) {
     case 'CREATED':
-      // console.log('Trade is in CREATED state');
       if (userRole === 'seller') {
         // Removed log: console.log('User is seller, escrow deadline expired:', escrowDeadlineExpired);
         return escrowDeadlineExpired ? ['cancel'] : ['create_escrow'];
@@ -63,7 +53,6 @@ export const getAvailableActions = ({
       return [];
 
     case 'FUNDED':
-      // console.log('Trade is in FUNDED state');
       if (userRole === 'buyer') {
         // Removed log: console.log('User is buyer, showing mark_paid button');
         return ['mark_paid'];

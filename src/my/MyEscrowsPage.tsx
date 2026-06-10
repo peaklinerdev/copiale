@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { Link } from 'react-router-dom';
 import { getMyEscrows, Escrow, Account } from '@/api';
+import { formatDisplayId } from '@/utils/displayId';
 import {
   Table,
   TableBody,
@@ -72,10 +73,6 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
         const response = await getMyEscrows();
 
         // Log the complete API response data
-        console.log('MyEscrowsPage API Response:', response);
-        console.log('MyEscrowsPage Response Data:', response.data);
-        console.log('MyEscrowsPage Escrows Count:', response.data?.length);
-        console.log('MyEscrowsPage Network Field Sample:', response.data?.[0]?.network);
 
         let escrows = response.data.map(escrow => ({
           ...escrow,
@@ -276,7 +273,7 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
                     <div className="space-y-2">
                       <div className="mobile-card-view-row">
                         <span className="mobile-card-view-label">Trade ID</span>
-                        <span>#{escrow.trade_id}</span>
+                        <span>{formatDisplayId(escrow.trade_id)}</span>
                       </div>
 
                       <div className="mobile-card-view-row">
@@ -353,7 +350,7 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
                         <TableCell className="font-medium">
                           {escrow.onchain_escrow_id || '-'}
                         </TableCell>
-                        <TableCell className="font-medium">#{escrow.trade_id}</TableCell>
+                        <TableCell className="font-medium">{formatDisplayId(escrow.trade_id)}</TableCell>
                         <TableCell>
                           {isUserSeller(escrow) ? (
                             <Badge className="bg-secondary-200 text-secondary-900 hover:bg-secondary-300">

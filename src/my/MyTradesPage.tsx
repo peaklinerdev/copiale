@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { Link } from 'react-router-dom';
 import { getMyTrades, Trade, Account } from '@/api';
+import { formatDisplayId } from '@/utils/displayId';
 import {
   Table,
   TableBody,
@@ -224,7 +225,7 @@ function MyTradesPage({ account }: MyTradesPageProps) {
                     className="border border-neutral-200 rounded-lg p-4 hover:bg-[#2b3139]"
                   >
                     <div className="flex justify-between items-start mb-3">
-                      <div className="font-medium">#{trade.id}</div>
+                      <div className="font-medium">{formatDisplayId(trade.id)}</div>
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
                           trade.leg1_state || 'UNKNOWN'
@@ -283,7 +284,7 @@ function MyTradesPage({ account }: MyTradesPageProps) {
                   <TableBody>
                     {myTrades.map(trade => (
                       <TableRow key={trade.id} className="hover:bg-[#2b3139]">
-                        <TableCell className="font-medium">#{trade.id}</TableCell>
+                        <TableCell className="font-medium">{formatDisplayId(trade.id)}</TableCell>
                         <TableCell>{trade.leg1_crypto_token}</TableCell>
                         <TableCell>{trade.leg1_crypto_amount}</TableCell>
                         <TableCell>

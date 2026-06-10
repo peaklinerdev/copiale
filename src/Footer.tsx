@@ -36,31 +36,31 @@ export const Footer: React.FC = () => {
             </p>
           </div>
 
-          {/* Links */}
+          {/* Service */}
           <div className="space-y-4">
             <h3 className="text-xs font-bold uppercase text-[#eaecef] tracking-wider">Service</h3>
             <nav className="flex flex-col gap-2 text-xs">
               <Link to="/" className="text-[#848e9c] hover:text-[#FF6B00]">P2P Trading</Link>
               <Link to="/status" className="text-[#848e9c] hover:text-[#FF6B00]">System Status</Link>
-              <a href="#" className="text-[#848e9c] hover:text-[#FF6B00]">Fees & Limits</a>
+              <Link to="/fees" className="text-[#848e9c] hover:text-[#FF6B00]">Fees & Limits</Link>
             </nav>
           </div>
 
+          {/* Support */}
           <div className="space-y-4">
             <h3 className="text-xs font-bold uppercase text-[#eaecef] tracking-wider">Support</h3>
             <nav className="flex flex-col gap-2 text-xs">
-              <a href="mailto:support@copiale-p2p.com" className="text-[#848e9c] hover:text-[#FF6B00]">Help Center</a>
-              <a href="#" className="text-[#848e9c] hover:text-[#FF6B00]">API Documentation</a>
-              <a href="#" className="text-[#848e9c] hover:text-[#FF6B00]">Contact Us</a>
+              <a href="https://t.me/copialep2p" target="_blank" rel="noopener noreferrer" className="text-[#848e9c] hover:text-[#FF6B00]">Telegram Community</a>
+              <Link to="/manifesto" className="text-[#848e9c] hover:text-[#FF6B00]">About</Link>
             </nav>
           </div>
 
+          {/* Legal */}
           <div className="space-y-4">
             <h3 className="text-xs font-bold uppercase text-[#eaecef] tracking-wider">Legal</h3>
             <nav className="flex flex-col gap-2 text-xs">
-              <a href="#" className="text-[#848e9c] hover:text-[#FF6B00]">Terms of Use</a>
-              <a href="#" className="text-[#848e9c] hover:text-[#FF6B00]">Privacy Policy</a>
-              <Link to="/manifesto" className="text-[#848e9c] hover:text-[#FF6B00]">Manifesto</Link>
+              <Link to="/terms" className="text-[#848e9c] hover:text-[#FF6B00]">Terms of Use</Link>
+              <Link to="/privacy" className="text-[#848e9c] hover:text-[#FF6B00]">Privacy Policy</Link>
             </nav>
           </div>
         </div>

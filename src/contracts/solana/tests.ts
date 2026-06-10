@@ -41,7 +41,6 @@ class TransactionLogger {
   }
 
   private logToConsole(message: string, color: string) {
-    console.log(color, message, "\x1b[0m"); // Reset color
   }
 
   logUsdcTransfer(
@@ -99,7 +98,6 @@ class TransactionLogger {
     const logMessage = `📋 Escrow Operation: ${operation} - ${details}`;
 
     // Log to console
-    console.log("\x1b[36m", logMessage, "\x1b[0m");
 
     // Log to file
     const fileMessage = `📋 Escrow Operation: ${operation} - ${details}${txSignature ? ` | Transaction: ${txSignature}` : ""}`;
@@ -119,22 +117,16 @@ function loadKeypair(filePath: string): Keypair {
   return Keypair.fromSecretKey(secretKey);
 }
 
-console.log("RPC URL:", process.env.ANCHOR_PROVIDER_URL);
 
 // Environment detection
 const isLocalnet = process.env.ANCHOR_PROVIDER_URL?.includes('127.0.0.1') ||
                    process.env.ANCHOR_PROVIDER_URL?.includes('localhost');
 
-    console.log("Environment:", isLocalnet ? "LOCALNET" : "DEVNET");
 
 const seller = loadKeypair(process.env.SELLER_KEYPAIR || "");
 const buyer = loadKeypair(process.env.BUYER_KEYPAIR || "");
 const arbitrator = loadKeypair(process.env.ARBITRATOR_KEYPAIR || "");
 
-console.log("=== Keypair Checking ===");
-console.log("Seller pubkey:", seller.publicKey.toBase58());
-console.log("Buyer pubkey:", buyer.publicKey.toBase58());
-console.log("Arbitrator pubkey:", arbitrator.publicKey.toBase58());
 
 // let escrowIdCounter = 1;
 // let tradeIdCounter = 1; // Global counter
@@ -194,9 +186,7 @@ describe("Localsolana Contracts Tests", () => {
       const escrowAccount = await program.account.escrow.fetchNullable(escrowPDA);
       if (!escrowAccount) return; // Already closed
 
-      console.log("=== Cleanup ===");
       const sellerBalanceBefore = (await provider.connection.getTokenAccountBalance(sellerTokenAccount)).value.uiAmount;
-      console.log(`Seller USDC before cleanup: ${sellerBalanceBefore}`);
 
       if (!escrowAccount.fiatPaid && escrowAccount.state.funded) {
         // Cancel if funded but not fiat_paid
@@ -213,7 +203,6 @@ describe("Localsolana Contracts Tests", () => {
           .signers([seller])
           .rpc();
         await provider.connection.confirmTransaction(cancelTx, "confirmed");
-        console.log("Canceled escrow, USDC returned to seller");
       } else if (!escrowAccount.fiatPaid) {
         // Cancel if created but not funded
         const cancelTx = await program.methods
@@ -229,7 +218,6 @@ describe("Localsolana Contracts Tests", () => {
           .signers([seller])
           .rpc();
         await provider.connection.confirmTransaction(cancelTx, "confirmed");
-        console.log("Canceled unfunded escrow");
       } else {
         // Release if fiat_paid (normal or sequential)
         const releaseTx = await program.methods
@@ -246,19 +234,15 @@ describe("Localsolana Contracts Tests", () => {
           .signers([seller])
           .rpc();
         await provider.connection.confirmTransaction(releaseTx, "confirmed");
-        console.log("Released escrow, USDC sent to buyer/sequential");
       }
       await sleep(1000);
 
       const sellerBalanceAfter = (await provider.connection.getTokenAccountBalance(sellerTokenAccount)).value.uiAmount;
-      console.log(`Seller USDC after cleanup: ${sellerBalanceAfter}`);
     }
 
   async function ensureFunds(publicKey: PublicKey, minLamports: number = 5 * LAMPORTS_PER_SOL): Promise<void> {
-    console.log(`Balance for ${publicKey.toBase58()}: ${await provider.connection.getBalance(publicKey)} lamports`);
     const balance = await provider.connection.getBalance(publicKey);
     if (balance < minLamports) {
-      console.log(`Requesting airdrop for ${publicKey.toBase58()} (${minLamports} lamports)...`);
 
       // Try airdrop with retries for localnet
       let retries = 3;
@@ -269,17 +253,14 @@ describe("Localsolana Contracts Tests", () => {
           const sig = await provider.connection.requestAirdrop(publicKey, minLamports);
           await provider.connection.confirmTransaction(sig, "confirmed");
           const newBalance = await provider.connection.getBalance(publicKey);
-          console.log(`Airdrop complete. New balance: ${newBalance} lamports`);
 
           if (newBalance >= minLamports) {
             success = true;
           } else {
-            console.log(`Airdrop insufficient, retrying... (${retries} attempts left)`);
             retries--;
             await sleep(2000); // Wait 2 seconds before retry
           }
         } catch (error) {
-          console.log(`Airdrop failed, retrying... (${retries} attempts left):`, error);
           retries--;
           await sleep(2000); // Wait 2 seconds before retry
         }
@@ -361,7 +342,6 @@ describe("Localsolana Contracts Tests", () => {
     const minBalance = 20000000; // 20 USDC minimum (increased from 10)
 
     if (parseInt(sellerBalance.value.amount) < minBalance) {
-      console.log("Replenishing seller USDC balance...");
       const replenishTx = await token.mintTo(
         provider.connection,
         seller,
@@ -371,11 +351,9 @@ describe("Localsolana Contracts Tests", () => {
         minBalance - parseInt(sellerBalance.value.amount)
       );
       await provider.connection.confirmTransaction(replenishTx, "confirmed");
-      console.log("Seller USDC balance replenished");
     }
 
     if (parseInt(buyerBalance.value.amount) < minBalance) {
-      console.log("Replenishing buyer USDC balance...");
       const replenishTx = await token.mintTo(
         provider.connection,
         buyer,
@@ -385,7 +363,6 @@ describe("Localsolana Contracts Tests", () => {
         minBalance - parseInt(buyerBalance.value.amount)
       );
       await provider.connection.confirmTransaction(replenishTx, "confirmed");
-      console.log("Buyer USDC balance replenished");
     }
   }
 
@@ -395,25 +372,17 @@ describe("Localsolana Contracts Tests", () => {
       `Program ID mismatch: ${program.programId.toBase58()} != ${expectedProgramId.toBase58()}`
     );
 
-        console.log("=== Environment Setup ===");
 
     // Ensure SOL balances FIRST for localnet (before creating any accounts)
     if (isLocalnet) {
-      console.log("Setting up LOCALNET environment...");
-      console.log("Ensuring SOL balances first...");
 
-      console.log("Airdropping SOL to seller...");
       await ensureFunds(seller.publicKey);
-      console.log("Airdropping SOL to buyer...");
       await ensureFunds(buyer.publicKey);
-      console.log("Airdropping SOL to arbitrator...");
       await ensureFunds(arbitrator.publicKey);
 
-      console.log("SOL balances ensured. Proceeding with token setup...");
 
       try {
         // Create USDC mint for localnet
-        console.log("Creating USDC mint...");
         try {
           tokenMint = await token.createMint(
             provider.connection,
@@ -422,49 +391,36 @@ describe("Localsolana Contracts Tests", () => {
             seller.publicKey, // freeze authority
             6 // decimals (USDC standard)
           );
-          console.log("USDC mint created:", tokenMint.toBase58());
         } catch (error) {
           console.error("Failed to create USDC mint:", error);
           throw error;
         }
 
         // Create token accounts for localnet
-        console.log("Creating token accounts...");
 
-        console.log("Creating seller token account...");
         sellerTokenAccount = await token.createAccount(
           provider.connection,
           seller,
           tokenMint,
           seller.publicKey
         );
-        console.log("Seller token account created:", sellerTokenAccount.toBase58());
 
-        console.log("Creating buyer token account...");
         buyerTokenAccount = await token.createAccount(
           provider.connection,
           buyer,
           tokenMint,
           buyer.publicKey
         );
-        console.log("Buyer token account created:", buyerTokenAccount.toBase58());
 
-        console.log("Creating arbitrator token account...");
         arbitratorTokenAccount = await token.createAccount(
           provider.connection,
           arbitrator,
           tokenMint,
           arbitrator.publicKey
         );
-        console.log("Arbitrator token account created:", arbitratorTokenAccount.toBase58());
 
-        console.log("Token accounts created:");
-        console.log("  Seller:", sellerTokenAccount.toBase58());
-        console.log("  Buyer:", buyerTokenAccount.toBase58());
-        console.log("  Arbitrator:", arbitratorTokenAccount.toBase58());
 
                 // Mint initial USDC to seller for testing (increased for multiple test runs)
-        console.log("Minting initial USDC to seller...");
         const sellerMintTx = await token.mintTo(
           provider.connection,
           seller,
@@ -474,10 +430,8 @@ describe("Localsolana Contracts Tests", () => {
           100000000 // 100 USDC (with 6 decimals) - increased from 50
         );
         await provider.connection.confirmTransaction(sellerMintTx, "confirmed");
-        console.log("Seller USDC minted successfully");
 
         // Mint some USDC to buyer and arbitrator
-        console.log("Minting USDC to buyer...");
         const buyerMintTx = await token.mintTo(
           provider.connection,
           buyer,
@@ -487,9 +441,7 @@ describe("Localsolana Contracts Tests", () => {
           50000000 // 50 USDC - increased from 25
         );
         await provider.connection.confirmTransaction(buyerMintTx, "confirmed");
-        console.log("Buyer USDC minted successfully");
 
-        console.log("Minting USDC to arbitrator...");
         const arbitratorMintTx = await token.mintTo(
           provider.connection,
           arbitrator,
@@ -499,9 +451,7 @@ describe("Localsolana Contracts Tests", () => {
           10000000 // 10 USDC - increased from 5
         );
         await provider.connection.confirmTransaction(arbitratorMintTx, "confirmed");
-        console.log("Arbitrator USDC minted successfully");
 
-        console.log("Initial USDC distribution complete");
 
       } catch (error) {
         console.error("Error setting up localnet environment:", error);
@@ -509,7 +459,6 @@ describe("Localsolana Contracts Tests", () => {
       }
 
     } else {
-      console.log("Using DEVNET environment...");
 
       // Use existing devnet addresses
       sellerTokenAccount = new PublicKey("2ozy4RSqXbVvrE1kptN3UG4cseGcUEdKLjUQNtTULim8");
@@ -519,27 +468,17 @@ describe("Localsolana Contracts Tests", () => {
     }
 
     // Log final configuration
-    console.log("Final configuration:");
-    console.log("  Token Mint:", tokenMint.toBase58());
-    console.log("  Seller Token Account:", sellerTokenAccount.toBase58());
-    console.log("  Buyer Token Account:", buyerTokenAccount.toBase58());
-    console.log("  Arbitrator Token Account:", arbitratorTokenAccount.toBase58());
 
-    console.log("=== Balance Checking ===");
 
-    console.log("=== Token Account Setup ===");
 
     // Ensure minimum USDC balances for testing
     await ensureMinimumUsdcBalances();
 
     const sellerBalance = await provider.connection.getTokenAccountBalance(sellerTokenAccount);
-    console.log("Seller token balance:", sellerBalance.value.uiAmount);
     await sleep(1000); // Pace RPC calls
     const buyerBalance = await provider.connection.getTokenAccountBalance(buyerTokenAccount);
-    console.log("Buyer token balance:", buyerBalance.value.uiAmount);
     await sleep(1000);
     const arbitratorBalance = await provider.connection.getTokenAccountBalance(arbitratorTokenAccount);
-    console.log("Arbitrator USDC balance:", arbitratorBalance.value.uiAmount);
   });
 
   describe("Basic Escrow Operations", () => {
@@ -555,10 +494,7 @@ describe("Localsolana Contracts Tests", () => {
       const amount = new BN(1000000);
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
 
-      console.log("=== Escrow Creation ===");
-      console.log("Creating escrow with PDA:", escrowPDA.toBase58());
       const sellerBalanceBefore = await provider.connection.getBalance(seller.publicKey);
-      console.log(`Seller balance before: ${sellerBalanceBefore} lamports`);
 
       const tx = await program.methods
         .createEscrow(escrowId, tradeId, amount, false, null)
@@ -581,16 +517,14 @@ describe("Localsolana Contracts Tests", () => {
 
       await sleep(1000); // Slow down
 
-      console.log("Transaction signature:", tx);
       const sellerBalanceAfter = await provider.connection.getBalance(seller.publicKey);
-      console.log(`Seller balance after: ${sellerBalanceAfter} lamports`);
 
       const escrowAccount = await program.account.escrow.fetch(escrowPDA);
       assert.equal(escrowAccount.escrowId.toString(), escrowId.toString(), "Escrow ID mismatch");
       assert.equal(escrowAccount.tradeId.toString(), tradeId.toString(), "Trade ID mismatch");
       assert.equal(escrowAccount.seller.toBase58(), seller.publicKey.toBase58(), "Seller mismatch");
       assert.equal(escrowAccount.buyer.toBase58(), buyer.publicKey.toBase58(), "Buyer mismatch");
-      assert.equal(escrowAccount.arbitrator.toBase58(), "GGrXhNVxUZXaA2uMopsa5q23aPmoNvQF14uxqo8qENUr", "Arbitrator mismatch");
+      assert.equal(escrowAccount.arbitrator.toBase58(), "FBrtBfyNR5QKs3va5usoSV5eVJV59gDGfJ3BcfufUanP", "Arbitrator mismatch");
       assert.equal(escrowAccount.amount.toString(), amount.toString(), "Amount mismatch");
       assert.equal(escrowAccount.fee.toString(), amount.div(new BN(100)).toString(), "Fee mismatch");
       assert(escrowAccount.depositDeadline.gtn(0), "Deposit deadline not set");
@@ -633,7 +567,6 @@ describe("Localsolana Contracts Tests", () => {
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
       const [escrowTokenPDA] = deriveEscrowTokenPDA(escrowPDA);
 
-      console.log("=== Escrow Funding ===");
       const tx1 = await program.methods
         .createEscrow(escrowId, tradeId, amount, false, null)
         .accounts({
@@ -656,7 +589,6 @@ describe("Localsolana Contracts Tests", () => {
       await sleep(1000);
 
       const sellerBalanceBefore = (await provider.connection.getTokenAccountBalance(sellerTokenAccount)).value.amount;
-      console.log(`Seller token balance before: ${sellerBalanceBefore}`);
 
       const tx2 = await program.methods
         .fundEscrow(escrowId, tradeId)
@@ -688,8 +620,6 @@ describe("Localsolana Contracts Tests", () => {
       const escrowBalance = (await provider.connection.getTokenAccountBalance(escrowTokenPDA)).value.amount;
       const escrowAccount = await program.account.escrow.fetch(escrowPDA);
 
-      console.log(`Seller token balance after: ${sellerBalanceAfter}`);
-      console.log(`Escrow token balance: ${escrowBalance}`);
 
       assert.equal(
         new BN(sellerBalanceBefore).sub(new BN(sellerBalanceAfter)).toString(),
@@ -742,7 +672,6 @@ describe("Localsolana Contracts Tests", () => {
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
       const [escrowTokenPDA] = deriveEscrowTokenPDA(escrowPDA);
 
-      console.log("=== Escrow Funding and Marking Paid ===");
       const tx1 = await program.methods
         .createEscrow(escrowId, tradeId, amount, false, null)
         .accounts({
@@ -822,7 +751,6 @@ describe("Localsolana Contracts Tests", () => {
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
       const [escrowTokenPDA] = deriveEscrowTokenPDA(escrowPDA);
 
-      console.log("=== Escrow Full Flow ===");
       const tx1 = await program.methods
         .createEscrow(escrowId, tradeId, amount, false, null)
         .accounts({
@@ -920,9 +848,6 @@ describe("Localsolana Contracts Tests", () => {
       const arbitratorBalanceAfter = (await provider.connection.getTokenAccountBalance(arbitratorTokenAccount)).value.amount;
       const sellerLamportsAfter = await provider.connection.getBalance(seller.publicKey);
 
-      console.log(`Buyer balance before: ${buyerBalanceBefore}, after: ${buyerBalanceAfter}`);
-      console.log(`Arbitrator balance before: ${arbitratorBalanceBefore}, after: ${arbitratorBalanceAfter}`);
-      console.log(`Seller lamports before: ${sellerLamportsBefore}, after: ${sellerLamportsAfter}`);
 
       assert.equal(
         new BN(buyerBalanceAfter).sub(new BN(buyerBalanceBefore)).toString(),
@@ -957,7 +882,6 @@ describe("Localsolana Contracts Tests", () => {
       const sequentialAddress = Keypair.generate().publicKey;
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
 
-      console.log("=== Escrow Creation ===");
       const tx = await program.methods
         .createEscrow(escrowId, tradeId, amount, true, sequentialAddress)
         .accounts({
@@ -979,7 +903,6 @@ describe("Localsolana Contracts Tests", () => {
 
       await sleep(1000);
 
-      console.log("Sequential escrow transaction signature:", tx);
 
       const escrowAccount = await program.account.escrow.fetch(escrowPDA);
       assert.equal(escrowAccount.sequential, true, "Sequential should be true");
@@ -998,7 +921,6 @@ describe("Localsolana Contracts Tests", () => {
       const tradeId = generateRandomId();
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
 
-      console.log("=== Escrow Creation ===");
       try {
         await program.methods
           .createEscrow(escrowId, tradeId, new BN(0), false, null)
@@ -1024,7 +946,6 @@ describe("Localsolana Contracts Tests", () => {
       const newSequentialAddress = Keypair.generate().publicKey;
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
 
-      console.log("=== Sequential Escrow Update ===");
       const tx1 = await program.methods
         .createEscrow(escrowId, tradeId, amount, true, initialSequentialAddress)
         .accounts({
@@ -1066,7 +987,6 @@ describe("Localsolana Contracts Tests", () => {
 
       // For localnet testing, we'll verify the state change instead of the event
       // Events in localnet can be tricky to capture, so we'll validate the escrow state
-      console.log("Transaction completed, verifying escrow state update...");
 
       // Alternative: Check if we can get the event from the transaction
       // Note: Events in Solana are not automatically included in logMessages
@@ -1090,9 +1010,7 @@ describe("Localsolana Contracts Tests", () => {
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
       const [escrowTokenPDA] = deriveEscrowTokenPDA(escrowPDA);
 
-      console.log("=== Sequential Escrow Release ===");
       const sequentialTokenAccount = await createSequentialTokenAccount(sequentialAddress);
-      console.log("Sequential token account:", sequentialTokenAccount.toBase58());
       await sleep(1000);
 
       const tx1 = await program.methods
@@ -1182,8 +1100,6 @@ describe("Localsolana Contracts Tests", () => {
       const sequentialBalanceAfter = (await provider.connection.getTokenAccountBalance(sequentialTokenAccount)).value.amount;
       const arbitratorBalanceAfter = (await provider.connection.getTokenAccountBalance(arbitratorTokenAccount)).value.amount;
 
-      console.log(`Sequential balance before: ${sequentialBalanceBefore}, after: ${sequentialBalanceAfter}`);
-      console.log(`Arbitrator balance before: ${arbitratorBalanceBefore}, after: ${arbitratorBalanceAfter}`);
 
       assert.equal(
         new BN(sequentialBalanceAfter).sub(new BN(sequentialBalanceBefore)).toString(),
@@ -1215,7 +1131,6 @@ describe("Localsolana Contracts Tests", () => {
       const amount = new BN(1000000);
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
 
-      console.log("=== Escrow Cancellation Before Funding ===");
       const tx1 = await program.methods
         .createEscrow(escrowId, tradeId, amount, false, null)
         .accounts({
@@ -1256,7 +1171,6 @@ describe("Localsolana Contracts Tests", () => {
 
       const sellerLamportsAfter = await provider.connection.getBalance(seller.publicKey);
 
-      console.log(`Seller lamports before: ${sellerLamportsBefore}, after: ${sellerLamportsAfter}`);
 
       assert.isTrue(sellerLamportsAfter > sellerLamportsBefore, "Seller should receive rent refund for escrow state account");
       assert.isNull(await provider.connection.getAccountInfo(escrowPDA), "Escrow state account should be closed");
@@ -1273,7 +1187,6 @@ describe("Localsolana Contracts Tests", () => {
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
       const [escrowTokenPDA] = deriveEscrowTokenPDA(escrowPDA);
 
-      console.log("=== Escrow Cancellation After Funding ===");
       const tx1 = await program.methods
         .createEscrow(escrowId, tradeId, amount, false, null)
         .accounts({
@@ -1351,8 +1264,6 @@ describe("Localsolana Contracts Tests", () => {
       const sellerBalanceAfter = (await provider.connection.getTokenAccountBalance(sellerTokenAccount)).value.amount;
       const sellerLamportsAfter = await provider.connection.getBalance(seller.publicKey);
 
-      console.log(`Seller token balance before: ${sellerBalanceBefore}, after: ${sellerBalanceAfter}`);
-      console.log(`Seller lamports before: ${sellerLamportsBefore}, after: ${sellerLamportsAfter}`);
 
       assert.equal(
         new BN(sellerBalanceAfter).sub(new BN(sellerBalanceBefore)).toString(),
@@ -1375,7 +1286,6 @@ describe("Localsolana Contracts Tests", () => {
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
       const [escrowTokenPDA] = deriveEscrowTokenPDA(escrowPDA);
 
-      console.log("=== Escrow Cancellation After Fiat Paid ===");
       const tx1 = await program.methods
         .createEscrow(escrowId, tradeId, amount, false, null)
         .accounts({
@@ -1473,7 +1383,6 @@ describe("Localsolana Contracts Tests", () => {
       const [buyerBondPDA] = deriveBuyerBondPDA(escrowPDA);
       const [sellerBondPDA] = deriveSellerBondPDA(escrowPDA);
 
-      console.log("=== Bond Account Initialization ===");
       const tx1 = await program.methods
         .createEscrow(escrowId, tradeId, amount, false, null)
         .accounts({
@@ -1568,7 +1477,6 @@ describe("Localsolana Contracts Tests", () => {
       // const evidenceHash = Buffer.alloc(32, "buyer_evidence").toJSON().data;
       const evidenceHash = Buffer.alloc(32, 0x42); // 32 bytes of 0x42
 
-      console.log("=== Dispute Opening ===");
       const tx1 = await program.methods
         .createEscrow(escrowId, tradeId, amount, false, null)
         .accounts({
@@ -1662,8 +1570,6 @@ describe("Localsolana Contracts Tests", () => {
       const buyerBondBalance = (await provider.connection.getTokenAccountBalance(buyerBondPDA)).value.amount;
       const escrowAccount = await program.account.escrow.fetch(escrowPDA);
 
-      console.log(`Buyer balance before: ${buyerBalanceBefore}, after: ${buyerBalanceAfter}`);
-      console.log(`Buyer bond balance: ${buyerBondBalance}`);
 
       assert.equal(
         new BN(buyerBalanceBefore).sub(new BN(buyerBalanceAfter)).toString(),
@@ -1680,7 +1586,6 @@ describe("Localsolana Contracts Tests", () => {
       assert.equal(escrowAccount.trackedBalance.toString(), expectedTrackedBalance.toString(), "Tracked balance should remain unchanged during dispute opening");
 
       // After assertions
-      console.log("=== Cleanup ===");
       const resolutionHash = Buffer.alloc(32, 0x42);
       const resolveTx = await program.methods
         .resolveDisputeWithExplanation(true, resolutionHash)
@@ -1716,7 +1621,6 @@ describe("Localsolana Contracts Tests", () => {
       const buyerEvidenceHash = Buffer.alloc(32, 0x42); // 32 bytes of 0x42
       const sellerEvidenceHash = Buffer.alloc(32, 0x42); // 32 bytes of 0x42
 
-      console.log("=== Dispute Response ===");
       const tx1 = await program.methods
         .createEscrow(escrowId, tradeId, amount, false, null)
         .accounts({
@@ -1825,8 +1729,6 @@ describe("Localsolana Contracts Tests", () => {
       const sellerBondBalance = (await provider.connection.getTokenAccountBalance(sellerBondPDA)).value.amount;
       const escrowAccount = await program.account.escrow.fetch(escrowPDA);
 
-      console.log(`Seller balance before: ${sellerBalanceBefore}, after: ${sellerBalanceAfter}`);
-      console.log(`Seller bond balance: ${sellerBondBalance}`);
 
       assert.equal(
         new BN(sellerBalanceBefore).sub(new BN(sellerBalanceAfter)).toString(),
@@ -1842,7 +1744,6 @@ describe("Localsolana Contracts Tests", () => {
       );
 
       // After assertions
-      console.log("=== Cleanup ===");
       const resolutionHash = Buffer.alloc(32, 0x42);
       const resolveTx = await program.methods
         .resolveDisputeWithExplanation(false, resolutionHash)
@@ -1879,7 +1780,6 @@ describe("Localsolana Contracts Tests", () => {
       const sellerEvidenceHash = Buffer.alloc(32, 0x42); // 32 bytes of 0x42
       const resolutionHash = Buffer.alloc(32, 0x42); // 32 bytes of 0x42
 
-      console.log("=== Dispute Resolution (Buyer Wins) ===");
       const tx1 = await program.methods
         .createEscrow(escrowId, tradeId, amount, false, null)
         .accounts({
@@ -2056,8 +1956,6 @@ describe("Localsolana Contracts Tests", () => {
       const buyerBalanceAfter = (await provider.connection.getTokenAccountBalance(buyerTokenAccount)).value.amount;
       const arbitratorBalanceAfter = (await provider.connection.getTokenAccountBalance(arbitratorTokenAccount)).value.amount;
 
-      console.log(`Buyer balance before: ${buyerBalanceBefore}, after: ${buyerBalanceAfter}`);
-      console.log(`Arbitrator balance before: ${arbitratorBalanceBefore}, after: ${arbitratorBalanceAfter}`);
 
       assert.equal(
         new BN(buyerBalanceAfter).sub(new BN(buyerBalanceBefore)).toString(),
@@ -2093,7 +1991,6 @@ describe("Localsolana Contracts Tests", () => {
       const sellerEvidenceHash = Buffer.alloc(32, 0x42); // 32 bytes of 0x42
       const resolutionHash = Buffer.alloc(32, 0x42); // 32 bytes of 0x42
 
-      console.log("=== Dispute Resolution (Seller Wins) ===");
       const tx1 = await program.methods
         .createEscrow(escrowId, tradeId, amount, false, null)
         .accounts({
@@ -2241,8 +2138,6 @@ describe("Localsolana Contracts Tests", () => {
       const sellerBalanceAfter = (await provider.connection.getTokenAccountBalance(sellerTokenAccount)).value.amount;
       const arbitratorBalanceAfter = (await provider.connection.getTokenAccountBalance(arbitratorTokenAccount)).value.amount;
 
-      console.log(`Seller balance before: ${sellerBalanceBefore}, after: ${sellerBalanceAfter}`);
-      console.log(`Arbitrator balance before: ${arbitratorBalanceBefore}, after: ${arbitratorBalanceAfter}`);
 
       assert.equal(
         new BN(sellerBalanceAfter).sub(new BN(sellerBalanceBefore)).toString(),
@@ -2277,7 +2172,6 @@ describe("Localsolana Contracts Tests", () => {
 
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
 
-      console.log("=== Exceeds Maximum Amount ===");
       try {
         await program.methods
           .createEscrow(escrowId, tradeId, excessiveAmount, false, null)
@@ -2302,7 +2196,6 @@ describe("Localsolana Contracts Tests", () => {
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
       const [escrowTokenPDA] = deriveEscrowTokenPDA(escrowPDA);
 
-      console.log("=== Unauthorized Actions ===");
       const tx1 = await program.methods
         .createEscrow(escrowId, tradeId, amount, false, null)
         .accounts({
@@ -2341,7 +2234,6 @@ describe("Localsolana Contracts Tests", () => {
           .rpc();
         assert.fail("Should have thrown an error for unauthorized signer");
       } catch (error: any) {
-        console.log(`Error message: ${error.message}`);
         assert.include(error.message, "A raw constraint was violated", "Expected raw constraint violation");
       }
 
@@ -2357,7 +2249,6 @@ describe("Localsolana Contracts Tests", () => {
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
       const [escrowTokenPDA] = deriveEscrowTokenPDA(escrowPDA);
 
-      console.log("=== Insufficient Funds ===");
       const tx1 = await program.methods
         .createEscrow(escrowId, tradeId, amount, false, null)
         .accounts({
@@ -2387,7 +2278,6 @@ describe("Localsolana Contracts Tests", () => {
       const destinationAccount = new PublicKey(process.env.BUYER_TOKEN_ADDRESS || "FN7L7W7eiGMveGSiaxHoZ6ySBFV6akY3JtnTPsTNgWrt");
 
       // Transfer USDC to buyer token account instead of burning
-      console.log(`Transferring ${(transferAmount.toNumber() / 1_000_000).toFixed(2)} USDC to BUYER_TOKEN_ADDRESS: ${destinationAccount.toBase58()}`);
       const transferTx = await token.transfer(
         provider.connection,
         seller,
@@ -2397,8 +2287,6 @@ describe("Localsolana Contracts Tests", () => {
         transferAmount.toNumber()
       );
       await provider.connection.confirmTransaction(transferTx, "confirmed");
-      console.log(`Transfer completed. Seller now has ${(500000 / 1_000_000).toFixed(2)} USDC remaining`);
-      console.log(`Buyer received ${(transferAmount.toNumber() / 1_000_000).toFixed(2)} USDC (can be returned later if needed)`);
       await sleep(1000);
 
       try {
@@ -2432,7 +2320,6 @@ describe("Localsolana Contracts Tests", () => {
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
       const [escrowTokenPDA] = deriveEscrowTokenPDA(escrowPDA);
 
-      console.log("=== Reinitialization Prevention ===");
       const tx1 = await program.methods
         .createEscrow(escrowId, tradeId, amount, false, null)
         .accounts({
@@ -2455,7 +2342,6 @@ describe("Localsolana Contracts Tests", () => {
       await sleep(1000);
 
       const sellerBalanceBeforeFirst = (await provider.connection.getTokenAccountBalance(sellerTokenAccount)).value.uiAmount;
-      console.log(`Seller USDC before first funding: ${sellerBalanceBeforeFirst}`);
 
       const tx2 = await program.methods
         .fundEscrow(escrowId, tradeId)
@@ -2484,7 +2370,6 @@ describe("Localsolana Contracts Tests", () => {
       await sleep(1000);
 
       const sellerBalanceAfterFirst = (await provider.connection.getTokenAccountBalance(sellerTokenAccount)).value.uiAmount;
-      console.log(`Seller USDC after first funding: ${sellerBalanceAfterFirst}`);
 
       // Transfer 2 USDC from buyer to seller to ensure enough funds
       const transferTx = await token.transfer(
@@ -2499,7 +2384,6 @@ describe("Localsolana Contracts Tests", () => {
        await sleep(1000);
 
       const sellerBalanceBeforeSecond = (await provider.connection.getTokenAccountBalance(sellerTokenAccount)).value.uiAmount;
-      console.log(`Seller USDC after transfer, before second funding: ${sellerBalanceBeforeSecond}`);
 
       try {
         await program.methods
@@ -2518,7 +2402,6 @@ describe("Localsolana Contracts Tests", () => {
           .rpc();
         assert.fail("Should have thrown an error for reinitializing escrow_token_account");
       } catch (error: any) {
-        console.log(`Error message: ${error.message}`);
         assert.include(
           error.message,
           "custom program error: 0x0",
@@ -2552,7 +2435,6 @@ describe("Localsolana Contracts Tests", () => {
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
       const [escrowTokenPDA] = deriveEscrowTokenPDA(escrowPDA);
 
-      console.log("=== Tracked Balance Lifecycle Validation ===");
 
       // Step 1: Create escrow - tracked_balance should be 0
       const tx1 = await program.methods
@@ -2679,7 +2561,6 @@ describe("Localsolana Contracts Tests", () => {
       const newSequentialAddress = Keypair.generate().publicKey;
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
 
-      console.log("=== Sequential Address Event Validation ===");
 
       // Step 1: Create sequential escrow
       const tx1 = await program.methods
@@ -2731,7 +2612,6 @@ describe("Localsolana Contracts Tests", () => {
 
       // For localnet testing, we'll verify the state change instead of the event
       // Events in localnet can be tricky to capture, so we'll validate the escrow state
-      console.log("Transaction completed, verifying escrow state update...");
 
       // Note: Events in Solana are not automatically included in logMessages
       // They need to be explicitly requested or parsed from the transaction
@@ -2756,7 +2636,6 @@ describe("Localsolana Contracts Tests", () => {
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
       const [escrowTokenPDA] = deriveEscrowTokenPDA(escrowPDA);
 
-      console.log("=== Escrow Balance Changed Event Validation ===");
 
       // Step 1: Create escrow - should emit EscrowCreated event
       const tx1 = await program.methods
@@ -2862,7 +2741,6 @@ describe("Localsolana Contracts Tests", () => {
 
       // Verify all state changes occurred (which means events were emitted)
       // Note: In localnet, we validate state changes rather than parsing events directly
-      console.log("All escrow lifecycle events validated through state changes");
 
       // Verify accounts were closed (which means final events were emitted)
       assert.isNull(await provider.connection.getAccountInfo(escrowPDA), "Escrow state account should be closed after release");
@@ -2876,7 +2754,6 @@ describe("Localsolana Contracts Tests", () => {
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
       const [escrowTokenPDA] = deriveEscrowTokenPDA(escrowPDA);
 
-      console.log("=== Funds Deposited Event Validation ===");
 
       // Step 1: Create escrow
       const tx1 = await program.methods
@@ -2963,7 +2840,6 @@ describe("Localsolana Contracts Tests", () => {
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
       const [escrowTokenPDA] = deriveEscrowTokenPDA(escrowPDA);
 
-      console.log("=== Fiat Marked Paid Event Validation ===");
 
       // Step 1: Create escrow
       const tx1 = await program.methods
@@ -3051,9 +2927,6 @@ describe("Localsolana Contracts Tests", () => {
     });
 
     it("Validates dispute-related events (when dispute system is working)", async () => {
-      console.log("=== Dispute Event Validation ===");
-      console.log("Note: This test validates dispute event structure but skips execution");
-      console.log("until dispute opening/response issues are resolved");
 
       // This test documents the expected dispute events for when the system is fixed
       // DisputeOpened, DisputeResponseSubmitted, DisputeResolved events
@@ -3071,7 +2944,6 @@ describe("Localsolana Contracts Tests", () => {
       const [escrowPDA] = deriveEscrowPDA(escrowId, tradeId);
       const [escrowTokenPDA] = deriveEscrowTokenPDA(escrowPDA);
 
-      console.log("=== Insufficient Funds Test (Running Last) ===");
       const tx1 = await program.methods
         .createEscrow(escrowId, tradeId, amount, false, null)
         .accounts({
@@ -3101,7 +2973,6 @@ describe("Localsolana Contracts Tests", () => {
       const destinationAccount = new PublicKey(process.env.BUYER_TOKEN_ADDRESS || "FN7L7W7eiGMveGSiaxHoZ6ySBFV6akY3JtnTPsTNgWrt");
 
       // Transfer USDC to buyer token account instead of burning
-      console.log(`Transferring ${(transferAmount.toNumber() / 1_000_000).toFixed(2)} USDC to BUYER_TOKEN_ADDRESS: ${destinationAccount.toBase58()}`);
       const transferTx = await token.transfer(
         provider.connection,
         seller,
@@ -3111,8 +2982,6 @@ describe("Localsolana Contracts Tests", () => {
         transferAmount.toNumber()
       );
       await provider.connection.confirmTransaction(transferTx, "confirmed");
-      console.log(`Transfer completed. Seller now has ${(500000 / 1_000_000).toFixed(2)} USDC remaining`);
-      console.log(`Buyer received ${(transferAmount.toNumber() / 1_000_000).toFixed(2)} USDC (can be returned later if needed)`);
       await sleep(1000);
 
       try {

@@ -35,29 +35,14 @@ export function useSmartPolling<T>(
   // Function to check if the trade state has changed
   const hasTradeStateChanged = (prevTrade: Trade | null, newTrade: Trade | null): boolean => {
     if (!prevTrade || !newTrade) {
-      console.log('[useSmartPolling] hasTradeStateChanged: missing trade data', {
-        prevTrade: !!prevTrade,
-        newTrade: !!newTrade,
-      });
       return false;
     }
 
     if (!prevTrade.leg1_state || !newTrade.leg1_state) {
-      console.log('[useSmartPolling] hasTradeStateChanged: missing leg1_state', {
-        prevState: prevTrade.leg1_state,
-        newState: newTrade.leg1_state,
-      });
       return false;
     }
 
     const stateChanged = prevTrade.leg1_state !== newTrade.leg1_state;
-    if (stateChanged) {
-      console.log('[useSmartPolling] Trade state changed:', {
-        from: prevTrade.leg1_state,
-        to: newTrade.leg1_state,
-      });
-    }
-
     return stateChanged;
   };
 
@@ -84,7 +69,6 @@ export function useSmartPolling<T>(
           tradeStateChangeCallback &&
           hasTradeStateChanged(previousDataRef.current as any, result as any)
         ) {
-          console.log('[useSmartPolling] Trade state change detected, calling callback');
           tradeStateChangeCallback(result as any);
           // Reset to fast polling when trade state changes
           setCurrentInterval(minInterval);
@@ -108,18 +92,6 @@ export function useSmartPolling<T>(
             // Data changed but not the trade state - reset to initial interval
             setCurrentInterval(initialInterval);
           }
-        }
-
-        // Log only when trade state changes
-        if (
-          tradeStateChangeCallback &&
-          hasTradeStateChanged(previousDataRef.current as any, result as any)
-        ) {
-          console.log(
-            `[useSmartPolling] Trade state change detected: ${
-              (previousDataRef.current as any)?.leg1_state
-            } → ${(result as any)?.leg1_state}`
-          );
         }
 
         setData(result);

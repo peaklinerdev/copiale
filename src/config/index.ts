@@ -3,6 +3,8 @@ export const config = {
   apiUrl: import.meta.env.VITE_API_URL,
   dynamicSdkId: import.meta.env.VITE_DYNAMIC_ENVIRONMENT_ID || import.meta.env.VITE_DYNAMIC_ENV_ID,
   arbitratorAddress: import.meta.env.VITE_ARBITRATOR_ADDRESS,
+  gasPayerPubkey: import.meta.env.VITE_SOLANA_GAS_PAYER_PUBKEY || '',
+  relayThresholdSol: Number(import.meta.env.VITE_SOLANA_RELAY_THRESHOLD_SOL || 0.01),
 
   // Network configurations
   networks: {
@@ -25,6 +27,7 @@ export const config = {
       rpcUrl: import.meta.env.VITE_SOLANA_RPC_URL_DEVNET || 'https://api.devnet.solana.com',
       programId: import.meta.env.VITE_SOLANA_PROGRAM_ID_DEVNET,
       usdcMint: import.meta.env.VITE_SOLANA_USDC_MINT_DEVNET,
+      usdtMint: import.meta.env.VITE_SOLANA_USDT_MINT_DEVNET || 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
       blockExplorerUrl: 'https://explorer.solana.com/?cluster=devnet',
     },
   },

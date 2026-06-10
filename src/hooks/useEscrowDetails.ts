@@ -53,7 +53,6 @@ export function useEscrowDetails(escrowAddress: string | null) {
       try {
         setIsRefreshing(true);
 
-        console.log(`[DEBUG] Fetching Solana escrow details for address: ${escrowAddress}`);
 
         // Fetch escrow state from Solana program using the address directly
         const escrowState = await blockchainService.getEscrowStateByAddress(escrowAddress);
@@ -61,7 +60,6 @@ export function useEscrowDetails(escrowAddress: string | null) {
         // Get the actual balance from the escrow using the address directly
         const escrowBalance = await blockchainService.getEscrowBalanceByAddress(escrowAddress);
 
-        console.log(`[DEBUG] Solana escrow ${escrowAddress} balance: ${escrowBalance.toString()}`);
 
         // Invariant 4: smallest-unit calculations use BigInt. 
         // Convert smallest-unit number to canonical 6dp decimal string.

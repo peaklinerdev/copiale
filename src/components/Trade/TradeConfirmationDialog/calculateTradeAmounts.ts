@@ -8,7 +8,7 @@ interface CalculateTradeAmountsResult {
 }
 
 /**
- * Calculate fiat amount and platform fee based on USDC amount and offer details
+ * Calculate fiat amount and platform fee based on token amount and offer details
  */
 export const calculateTradeAmounts = (
   amount: string,
@@ -29,18 +29,22 @@ export const calculateTradeAmounts = (
       return result;
     }
 
-    // Get base price for the token in the offer's currency
+    // Use the offer's token to look up the price (USDT or USDC)
+    const tokenKey = (offer.token === 'USDT' || offer.token === 'USDC') ? offer.token : 'USDT';
+    const tokenPrices = priceData.data[tokenKey as keyof typeof priceData.data];
+    if (!tokenPrices) {
+      result.error = `Price data not available for ${offer.token}`;
+      return result;
+    }
+
     const basePrice =
-      priceData.data.USDC[offer.fiat_currency as keyof typeof priceData.data.USDC]?.price;
+      tokenPrices[offer.fiat_currency as keyof typeof tokenPrices]?.price;
     if (!basePrice) {
       result.error = `Price data not available for ${offer.fiat_currency}`;
       return result;
     }
 
     // Apply rate adjustment from the offer.
-    // Display-side calculation: rate_adjustment ships as a string, coerce
-    // via the documented numericValue() helper. Bail with a clear error
-    // rather than letting NaN propagate to the dialog as "NaN USD".
     const baseNum = numericValue(basePrice);
     const rateNum = numericValue(offer.rate_adjustment);
     if (!Number.isFinite(baseNum) || !Number.isFinite(rateNum)) {
@@ -52,9 +56,8 @@ export const calculateTradeAmounts = (
     // Calculate fiat amount
     result.fiatAmount = numAmount * adjustedPrice;
 
-    // Calculate platform fee - always 1% of USDC amount
-    // The seller always pays the fee in USDC, regardless of offer type
-    result.platformFee = numAmount * 0.01; // 1% of USDC amount
+    // Calculate platform fee - always 1% of token amount
+    result.platformFee = numAmount * 0.01;
 
     return result;
   } catch (error) {

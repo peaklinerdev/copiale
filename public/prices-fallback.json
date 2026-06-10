@@ -1,6 +1,40 @@
 {
   "status": "success",
   "data": {
+    "USDT": {
+      "USD": {
+        "price": "1.0000",
+        "timestamp": 1746450000
+      },
+      "EUR": {
+        "price": "0.8556",
+        "timestamp": 1746450000
+      },
+      "COP": {
+        "price": "3660.00",
+        "timestamp": 1746450000
+      },
+      "NGN": {
+        "price": "1371.00",
+        "timestamp": 1746450000
+      },
+      "VES": {
+        "price": "10.46",
+        "timestamp": 1746450000
+      },
+      "KES": {
+        "price": "130.00",
+        "timestamp": 1746450000
+      },
+      "ZAR": {
+        "price": "16.80",
+        "timestamp": 1746450000
+      },
+      "ETB": {
+        "price": "181.59",
+        "timestamp": 1746450000
+      }
+    },
     "USDC": {
       "USD": {
         "price": "1.0000",

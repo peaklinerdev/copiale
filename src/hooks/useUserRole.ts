@@ -35,16 +35,11 @@ export function useUserRole(trade: Trade | null) {
       setIsLoading(true);
       try {
         // Log relevant information for debugging
-        // console.log("[userRole] Current user account ID:", currentAccount.id);
-        // console.log("[userRole] Trade seller account ID:", trade.leg1_seller_account_id);
-        // console.log("[userRole] Trade buyer account ID:", trade.leg1_buyer_account_id);
 
         // Determine user role based on account IDs
         const isSeller = currentAccount.id === trade.leg1_seller_account_id;
         const role = isSeller ? 'seller' : 'buyer';
 
-        // console.log("[userRole] currentAccount:", currentAccount);
-        // console.log(`[userRole] User role determined: ${role}`);
 
         setUserRole(role);
       } catch (error) {

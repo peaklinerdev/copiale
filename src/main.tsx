@@ -16,6 +16,11 @@ if (!dynamicEnvId) {
   console.error('Dynamic Environment ID is missing! Please set VITE_DYNAMIC_ENVIRONMENT_ID in your .env file.');
 }
 
+import { blockchainService } from './services/blockchainService';
+
+// Expose for dev debugging
+(window as any).blockchainService = blockchainService;
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     {dynamicEnvId ? (

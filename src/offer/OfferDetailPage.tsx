@@ -4,13 +4,12 @@ import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import {
   getOfferById,
   getAccountById,
-  createTrade,
-  // deleteOffer import is already removed, no change needed here.
   Offer,
   Account,
   getAccount,
 } from '@/api';
 import { formatNumber } from '@/lib/utils';
+import { formatDisplayId } from '@/utils/displayId';
 import {
   Card,
   CardContent,
@@ -22,22 +21,17 @@ import {
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { formatDistanceToNow } from 'date-fns';
 import Container from '@/components/Shared/Container';
 import OfferTypeTooltip from '@/components/Offer/OfferTypeTooltip';
 import OfferDescription from '@/components/Offer/OfferDescription';
 import { formatRate, rateAdjustmentDirection } from '@/utils/stringUtils';
 import { getMinutesFromTimeLimit } from '@/utils/timeUtils';
-import { toast } from 'sonner'; // Keep for success toast
-import { useOfferDeletion } from '@/hooks/useOfferDeletion'; // Import the hook
+import { toast } from 'sonner';
+import { useOfferDeletion } from '@/hooks/useOfferDeletion';
+import DeleteOfferDialog from '@/components/Shared/DeleteOfferDialog';
+import TradeConfirmationDialog from '@/components/Trade/TradeConfirmationDialog';
+import { startTrade } from '@/services/tradeService';
 
 function OfferDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -49,39 +43,38 @@ function OfferDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [userAccount, setUserAccount] = useState<Account | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isTradeDialogOpen, setIsTradeDialogOpen] = useState(false);
 
-  // Setup offer deletion hook
   const { handleDeleteOffer: performDelete, isDeleting: isDeletingOffer } = useOfferDeletion({
-    // No setOffersState needed here
     onSuccess: message => {
       setIsDeleteDialogOpen(false);
-      toast.success(message); // Show success toast
-      navigate('/offers'); // Navigate after success
+      toast.success(message);
+      navigate('/offers');
     },
     onError: message => {
-      // Hook handles the specific "active trades" toast.
-      // For other errors, set the local error state.
       setError(message);
-      setIsDeleteDialogOpen(false); // Close dialog on error
+      setIsDeleteDialogOpen(false);
     },
   });
 
   useEffect(() => {
-    const fetchOfferAndCreator = async () => {
+    const fetchOffer = async () => {
       if (!id) return;
 
       setLoading(true);
       try {
-        // Fetch offer details
         const offerResponse = await getOfferById(parseInt(id));
         const offerData = offerResponse.data.offer;
         setOffer(offerData);
-
-        // Fetch creator details
-        const creatorResponse = await getAccountById(offerData.creator_account_id);
-        setCreator(creatorResponse.data);
-
         setError(null);
+
+        // Fetch creator details — public endpoint, non-blocking
+        try {
+          const creatorResponse = await getAccountById(offerData.creator_account_id);
+          setCreator(creatorResponse.data);
+        } catch (err) {
+          console.warn('[OfferDetailPage] Creator fetch failed:', err);
+        }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
         console.error('[OfferDetailPage] Fetch failed:', err);
@@ -91,7 +84,7 @@ function OfferDetailPage() {
       }
     };
 
-    fetchOfferAndCreator();
+    fetchOffer();
   }, [id]);
 
   // Fetch current user account
@@ -123,26 +116,24 @@ function OfferDetailPage() {
     performDelete(offer.id); // Call the hook's delete function
   };
 
-  const handleStartTrade = async () => {
+  const handleConfirmTrade = (offerId: number, amount: string, fiatAmount: number) => {
     if (!offer || !primaryWallet) return;
 
-    try {
-      const tradeData = {
-        leg1_offer_id: offer.id,
-        leg1_crypto_amount: '1000000', // String as expected by API
-        from_fiat_currency: offer.fiat_currency,
-        destination_fiat_currency: offer.fiat_currency,
-      };
-
-      await createTrade(tradeData);
-      navigate('/my-trades', { state: { message: 'Trade started successfully' } });
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      setError(`Failed to start trade: ${errorMessage}`);
-    }
+    startTrade({
+      offerId,
+      amount,
+      fiatAmount,
+      offer,
+      primaryWallet,
+      onSuccess: tradeId => {
+        setIsTradeDialogOpen(false);
+        navigate(`/trade/${tradeId}`);
+      },
+      onError: error => {
+        setError(error.message);
+      },
+    });
   };
-
-  // Removed local formatRate function
 
   if (loading) {
     return (
@@ -179,7 +170,7 @@ function OfferDetailPage() {
     );
   }
 
-  if (!offer || !creator) {
+  if (!offer) {
     return (
       <TooltipProvider>
         <Container>
@@ -205,11 +196,11 @@ function OfferDetailPage() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <CardTitle className="text-[#eaecef] font-semibold">
-                  Offer #{formatNumber(offer.id)}
+                  Offer {formatDisplayId(offer.id)}
                 </CardTitle>
                 <CardDescription>
                   Created {formatDistanceToNow(new Date(offer.created_at))} ago by{' '}
-                  {creator.username || creator.wallet_address} | Last updated{' '}
+                  {creator?.username || creator?.wallet_address || 'Unknown'} | Last updated{' '}
                   {formatDistanceToNow(new Date(offer.updated_at))} ago
                 </CardDescription>
                 <div className="mt-4">
@@ -324,12 +315,17 @@ function OfferDetailPage() {
                 </Button>
               </>
             ) : primaryWallet ? (
-              <Button
-                onClick={handleStartTrade}
-                className="bg-[#02c076] hover:bg-[#02c076]/90 text-white rounded-sm w-full sm:w-auto"
-              >
-                Start Trade
-              </Button>
+              <TradeConfirmationDialog
+                isOpen={isTradeDialogOpen}
+                onOpenChange={setIsTradeDialogOpen}
+                offer={offer}
+                onConfirm={handleConfirmTrade}
+                triggerButton={
+                  <Button className="bg-[#02c076] hover:bg-[#02c076]/90 text-white rounded-sm w-full sm:w-auto">
+                    Start Trade
+                  </Button>
+                }
+              />
             ) : (
               <Button
                 onClick={() => setShowAuthFlow(true)}
@@ -343,29 +339,12 @@ function OfferDetailPage() {
       </Container>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="bg-[#1e2329] border border-[#2b3139] rounded-sm z-999">
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this offer? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              className="bg-[#f84960] hover:bg-[#f84960]/90 text-white"
-              disabled={isDeletingOffer} // Ensure this uses the hook's state
-            >
-              {isDeletingOffer ? 'Deleting...' : 'Delete Offer'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteOfferDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDelete}
+        isDeleting={isDeletingOffer}
+      />
     </TooltipProvider>
   );
 }

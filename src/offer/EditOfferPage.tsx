@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getOfferById, updateOffer, Offer, UpdateOfferRequest } from '@/api';
 import { toUsdcString } from '@/utils/amounts';
+import { formatDisplayId } from '@/utils/displayId';
 import {
   Card,
   CardContent,
@@ -194,7 +195,7 @@ function EditOfferPage() {
         <CardHeader className="border-b border-[#2b3139]">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <CardTitle className="text-[#eaecef] font-bold">Edit Advertisement #{id}</CardTitle>
+              <CardTitle className="text-[#eaecef] font-bold">Edit Advertisement {formatDisplayId(Number(id))}</CardTitle>
               {!loading && formData && (
                 <div className="mt-4">
                   <OfferDescription

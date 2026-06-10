@@ -19,8 +19,8 @@ interface FilterBarProps {
 }
 
 const ASSETS = [
-  { value: "USDC", label: "USDC", network: "Solana" },
   { value: "USDT", label: "USDT", network: "Solana" },
+  { value: "USDC", label: "USDC", network: "Solana" },
   { value: "XMR", label: "XMR", network: "Monero" },
 ];
 

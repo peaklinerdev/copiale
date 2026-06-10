@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Trade, Offer, Account } from '@/api';
 import { formatNumber } from '@/lib/utils';
 import { formatRate } from '@/utils/stringUtils';
+import { formatDisplayId } from '@/utils/displayId';
 import { numericValue } from '@/utils/money-display';
 import { useState } from 'react'; // Added import
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'; // Added import
@@ -39,7 +40,7 @@ function TradeDetailsCard({ trade, offer, userRole, counterparty }: TradeDetails
   // Display-side branching: coerce the canonical decimal-string to number
   // for comparison against the 1.0 baseline.
   const rateAdjustment = numericValue(offer?.rate_adjustment ?? 1);
-  const token = trade.leg1_crypto_token || offer?.token || 'USDC';
+  const token = trade.leg1_crypto_token || offer?.token || 'USDT';
   const action = userRole === 'buyer' ? 'buying' : 'selling';
   const marketPosition = rateAdjustment > 1 ? 'above' : rateAdjustment < 1 ? 'below' : 'at';
 
@@ -50,7 +51,7 @@ function TradeDetailsCard({ trade, offer, userRole, counterparty }: TradeDetails
           action === 'buying' ? 'Buying' : 'Selling'
         } ${formatNumber(trade.leg1_crypto_amount || 0)} ${token} for ${
           trade.leg1_fiat_amount ? formatNumber(parseFloat(trade.leg1_fiat_amount)) : 'N/A'
-        } ${trade.from_fiat_currency} (Trade #${formatNumber(trade.id)})`}</h1>
+        } ${trade.from_fiat_currency} (Trade ${formatDisplayId(trade.id)})`}</h1>
         <p className="text-[#848e9c]">
           Created{' '}
           {new Date(trade.created_at).toLocaleString('en-US', {
@@ -148,7 +149,7 @@ function TradeDetailsCard({ trade, offer, userRole, counterparty }: TradeDetails
                         ({abbreviateWallet(otherParty.wallet_address)})
                       </span>
                     )}
-                    <span className="text-xs text-[#848e9c] mr-2">ID: {otherParty.id}</span>
+                    <span className="text-xs text-[#848e9c] mr-2">{formatDisplayId(otherParty.id)}</span>
                     {otherParty.telegram_username && (
                       <a
                         href={`https://t.me/${otherParty.telegram_username}`}

@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useDynamicContext, getAuthToken } from '@dynamic-labs/sdk-react-core';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
 import { getAccount, setAuthToken, exchangeDynamicToken } from './api';
@@ -32,6 +32,18 @@ const ManifestoPage = lazy(() => import('@/pages/ManifestoPage'));
 const NetworkTestPage = lazy(() => 
   import('./pages/NetworkTestPage').then(module => ({ default: module.NetworkTestPage }))
 );
+const RegisterPage = lazy(() => import('@/pages/RegisterPage'));
+const LoginPage = lazy(() => import('@/pages/LoginPage'));
+const FeesPage = lazy(() => import('@/pages/FeesPage'));
+const TermsPage = lazy(() => import('@/pages/TermsPage'));
+const PrivacyPage = lazy(() => import('@/pages/PrivacyPage'));
+const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage'));
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
+const AdminOverviewPage = lazy(() => import('./pages/admin/AdminOverviewPage'));
+const AdminTradesPage = lazy(() => import('./pages/admin/AdminTradesPage'));
+const AdminAccountsPage = lazy(() => import('./pages/admin/AdminAccountsPage'));
+const AdminDisputesPage = lazy(() => import('./pages/admin/AdminDisputesPage'));
+const AdminConfigPage = lazy(() => import('./pages/admin/AdminConfigPage'));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -46,53 +58,49 @@ const PageLoader = () => (
 function App() {
   const { primaryWallet } = useDynamicContext();
   const [account, setAccount] = useState<Account | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
     if (primaryWallet) {
       const token = getAuthToken();
-      if (token) {
-        // Exchange the Dynamic RS256 JWT for a Copiale HS256 JWT.
-        // The backend verifies the Dynamic token against Dynamic's JWKS
-        // and returns a token signed with the server's JWT_SECRET.
-        // If exchange fails (e.g. JWKS unreachable), fall back to the
-        // raw Dynamic token — the requireJWT middleware handles both.
-        exchangeDynamicToken(token)
-          .then(copialeToken => {
-            setAuthToken(copialeToken);
-          })
-          .catch(err => {
-            console.warn('[App] Token exchange failed, using raw Dynamic token:', err.message);
-            setAuthToken(token);
-          });
-      } else {
+      if (!token) {
         console.error('No JWT token found after wallet connect!');
+        setAuthLoading(false);
+        return;
       }
-      const getUserData = async () => {
+
+      // Exchange the Dynamic RS256 JWT for a Copiale HS256 JWT.
+      // Must await before calling getAccount() so the axios instance
+      // carries the correct auth header — otherwise getAccount() gets
+      // a 401 and account stays null → AuthGate redirects to /register.
+      const initAuth = async () => {
+        try {
+          const copialeToken = await exchangeDynamicToken(token);
+          setAuthToken(copialeToken);
+        } catch (err) {
+          console.warn('[App] Token exchange failed, using raw Dynamic token:', (err as Error).message);
+          setAuthToken(token);
+        }
+
         try {
           const response = await getAccount();
           setAccount(response.data);
-
-          // Dispatch global auth state change event after successful login
           dispatchAuthStateChange(primaryWallet.address);
         } catch (err) {
-          // Check if this is a 404 error for account not found
           const axiosError = err as { response?: { status?: number } };
           if (axiosError.response?.status === 404) {
-            // Account doesn't exist yet - this is expected for new users
-            // The API interceptor already logged a user-friendly warning
             setAccount(null);
           } else {
-            // Log other errors normally
             console.error('Failed to fetch account:', err);
           }
+        } finally {
+          setAuthLoading(false);
         }
       };
-      getUserData();
+      initAuth();
     } else {
-      // User has disconnected their wallet
       setAccount(null);
-
-      // Dispatch event for logout as well
+      setAuthLoading(false);
       dispatchAuthStateChange(undefined);
     }
   }, [primaryWallet, primaryWallet?.address]);
@@ -100,11 +108,17 @@ function App() {
   return (
     <Router>
       <div className="app">
+        <AuthGate primaryWallet={primaryWallet} account={account} authLoading={authLoading} />
         <Header isLoggedIn={!!primaryWallet} account={account} />
         <main className="main-content">
           <Container>
             <Suspense fallback={<PageLoader />}>
               <Routes>
+                <Route path="/login" element={<LoginPage account={account} />} />
+                <Route
+                  path="/register"
+                  element={<RegisterPage account={account} setAccount={setAccount} />}
+                />
                 <Route
                   path="/account"
                   element={<AccountPage account={account} setAccount={setAccount} />}
@@ -120,7 +134,18 @@ function App() {
                 <Route path="/trade/:id" element={<TradePage />} />
                 <Route path="/status" element={<Status />} />
                 <Route path="/manifesto" element={<ManifestoPage />} />
+                <Route path="/fees" element={<FeesPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/network-test" element={<NetworkTestPage />} />
+                <Route path="/admin/login" element={<AdminLoginPage />} />
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminOverviewPage />} />
+                  <Route path="trades" element={<AdminTradesPage />} />
+                  <Route path="accounts" element={<AdminAccountsPage />} />
+                  <Route path="disputes" element={<AdminDisputesPage />} />
+                  <Route path="config" element={<AdminConfigPage />} />
+                </Route>
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </Suspense>
@@ -131,6 +156,23 @@ function App() {
       </div>
     </Router>
   );
+}
+
+function AuthGate({ primaryWallet, account, authLoading }: { primaryWallet: any; account: Account | null; authLoading: boolean }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (authLoading || !primaryWallet) return;
+    if (account !== null) return;
+
+    const publicPaths = ['/login', '/register', '/account', '/manifesto', '/status', '/fees', '/terms', '/privacy', '/network-test', '/admin/login'];
+    if (publicPaths.some(p => location.pathname.startsWith(p))) return;
+
+    navigate('/register', { replace: true });
+  }, [primaryWallet, account, authLoading, navigate, location.pathname]);
+
+  return null;
 }
 
 export default App;

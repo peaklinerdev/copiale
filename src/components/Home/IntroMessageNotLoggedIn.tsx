@@ -15,7 +15,7 @@ export const IntroMessageNotLoggedIn: React.FC = () => {
         </h2>
 
         <p className="text-base text-[#848e9c] mb-8 max-w-xl leading-relaxed">
-          Direct on-chain settlement with escrow protection. Trade USDC and USDT
+          Direct on-chain settlement with escrow protection. Trade USDT and USDC
           with anyone, anywhere — no middlemen, no borders.
         </p>
 

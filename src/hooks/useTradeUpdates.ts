@@ -10,20 +10,12 @@ export function useTradeUpdates(tradeId: number) {
   // Memoize fetch function to avoid recreating it on each render
   const fetchTrade = useCallback(async (): Promise<Trade | null> => {
     if (tradeId === null || tradeId === undefined) {
-      console.log(`[useTradeUpdates] Skipping fetch - tradeId is ${tradeId}`);
       return null;
     }
 
-    console.log(`[useTradeUpdates] Starting fetch for tradeId: ${tradeId}`);
 
     try {
-      // Use the same API function that useTradeDetails uses
       const response = await getTradeById(tradeId);
-
-      console.log(`[useTradeUpdates] API response for trade ${tradeId}:`, {
-        status: response.status,
-        statusText: response.statusText,
-      });
 
       // Extract trade object from response - handle both old and new API response formats
       const tradeData = (response.data as any).trade || response.data;
@@ -39,19 +31,9 @@ export function useTradeUpdates(tradeId: number) {
         throw new Error('Trade data missing required ID field');
       }
 
-      console.log(
-        `[useTradeUpdates] Successfully fetched trade ${tradeData.id} with state: ${tradeData.leg1_state} at ${tradeData.updated_at}`
-      );
-
       // Compare with previous data to detect changes
       const previousData = previousDataRef.current;
       const hasStateChanged = previousData && previousData.leg1_state !== tradeData.leg1_state;
-
-      if (hasStateChanged) {
-        console.log(
-          `[useTradeUpdates] Trade ${tradeData.id} state changed: ${previousData.leg1_state} → ${tradeData.leg1_state}`
-        );
-      }
 
       // Store the trade data for future conditional requests
       previousDataRef.current = tradeData;
@@ -64,23 +46,17 @@ export function useTradeUpdates(tradeId: number) {
 
   // Handle trade state changes
   const handleTradeStateChange = (newTrade: Trade) => {
-    console.log(
-      `[useTradeUpdates] Trade state changed to: ${newTrade.leg1_state} for trade ${tradeId}`
-    );
-
     // Dispatch a custom event to notify other components
     const event = new CustomEvent('copiale-p2p:trade-state-changed', {
       detail: { tradeId, newState: newTrade.leg1_state },
     });
     window.dispatchEvent(event);
-    console.log(`[useTradeUpdates] Dispatched trade-state-changed event for trade ${tradeId}`);
 
     // Also dispatch the existing refresh event for backward compatibility
     const refreshEvent = new CustomEvent('copiale-p2p:refresh-trade', {
       detail: { tradeId },
     });
     window.dispatchEvent(refreshEvent);
-    console.log(`[useTradeUpdates] Dispatched refresh-trade event for trade ${tradeId}`);
   };
 
   // Use smart polling
@@ -94,7 +70,6 @@ export function useTradeUpdates(tradeId: number) {
 
   // Function to force a fresh fetch by clearing cache
   const forceRefresh = useCallback(() => {
-    console.log(`[useTradeUpdates] Force refreshing trade ${tradeId} - clearing cache`);
     previousDataRef.current = null;
     etagRef.current = null;
     polling.forcePoll();

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { updateAccount, Account } from '@/api';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ErrorBanner } from '@/components/Shared/ErrorBanner';
 import {
   Select,
   SelectContent,
@@ -94,9 +94,7 @@ function EditAccountForm({ account, onSaveSuccess, onCancel }: EditAccountFormPr
         timezone: formData.timezone || undefined,
       };
 
-      console.log('PUT data being sent:', updateData);
       const response = await updateAccount(account.id, updateData);
-      console.log('PUT response:', response);
 
       // Combine updated data with existing account data
       const updatedAccount: Account = {
@@ -126,9 +124,7 @@ function EditAccountForm({ account, onSaveSuccess, onCancel }: EditAccountFormPr
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <Alert className="bg-[#f84960]/10 border-[#f84960]/30 rounded-sm" variant="destructive">
-          <AlertDescription className="text-[#f84960]">{error}</AlertDescription>
-        </Alert>
+        <ErrorBanner error={error} showIssues={false} />
       )}
 
       <div className="space-y-1">

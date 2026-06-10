@@ -5,7 +5,7 @@
 
 import { Program, AnchorProvider, BN } from '@coral-xyz/anchor';
 import { PublicKey, Connection, Transaction } from '@solana/web3.js';
-import { getAssociatedTokenAddress } from '@solana/spl-token';
+import { getAssociatedTokenAddress, getAccount, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
 import idl from '../../../contracts/solana/idl.json';
 import type { LocalsolanaContracts } from '../../../contracts/solana/types.js';
 import { PDADerivation } from '../../utils/pda.js';
@@ -316,19 +316,17 @@ export class SolanaProgram implements SolanaProgramInterface {
         this.programId
       );
 
-      const escrowTokenAccount = await this.connection.getTokenAccountBalance(escrowTokenPDA).catch(() => null);
-      const escrowMint = escrowTokenAccount ? (await this.connection.getParsedAccountInfo(escrowTokenPDA)).value?.data : null;
-      const escrowMintPubkey = (escrowMint as { parsed?: { info?: { mint?: string } } })?.parsed?.info?.mint;
-
-      if (!escrowMintPubkey) {
-        throw new Error('Could not determine escrow token mint');
+      let escrowMintKey: PublicKey;
+      try {
+        const tokenAccount = await getAccount(this.connection, escrowTokenPDA);
+        escrowMintKey = tokenAccount.mint;
+      } catch {
+        escrowMintKey = new PublicKey('8yonSxMEjBvP2Be4Qr6Ene5tcZEodEKWyoucLWcSadGV');
       }
-      const escrowMintKey = new PublicKey(escrowMintPubkey);
 
       const buyerTokenAccount = await getAssociatedTokenAddress(escrowMintKey, buyer);
       const arbitratorTokenAccount = await getAssociatedTokenAddress(escrowMintKey, arbitrator);
 
-      const { createAssociatedTokenAccountInstruction } = await import('@solana/spl-token');
       const { blockhash } = await this.connection.getLatestBlockhash();
       const ataIxs: import('@solana/web3.js').TransactionInstruction[] = [];
 
@@ -347,7 +345,8 @@ export class SolanaProgram implements SolanaProgramInterface {
         for (const ix of ataIxs) ataTx.add(ix);
         ataTx.feePayer = this.gasPayerPubkey || authority;
         ataTx.recentBlockhash = blockhash;
-        await this.sendTransaction(ataTx, params.useRelay);
+        const ataSig = await this.sendTransaction(ataTx, params.useRelay);
+        await this.connection.confirmTransaction(ataSig, 'confirmed');
       }
 
       const tx = await program.methods

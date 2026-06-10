@@ -5,7 +5,7 @@
 
 import { Program, AnchorProvider, BN } from '@coral-xyz/anchor';
 import { PublicKey, Connection, Transaction } from '@solana/web3.js';
-import { getAssociatedTokenAddress, getAccount, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
+import { getAssociatedTokenAddress, getAccount } from '@solana/spl-token';
 import idl from '../../../contracts/solana/idl.json';
 import type { LocalsolanaContracts } from '../../../contracts/solana/types.js';
 import { PDADerivation } from '../../utils/pda.js';
@@ -327,26 +327,14 @@ export class SolanaProgram implements SolanaProgramInterface {
       const buyerTokenAccount = await getAssociatedTokenAddress(escrowMintKey, buyer);
       const arbitratorTokenAccount = await getAssociatedTokenAddress(escrowMintKey, arbitrator);
 
-      const { blockhash } = await this.connection.getLatestBlockhash();
-      const ataIxs: import('@solana/web3.js').TransactionInstruction[] = [];
-
       const buyerAccountInfo = await this.connection.getAccountInfo(buyerTokenAccount);
       if (!buyerAccountInfo) {
-        ataIxs.push(createAssociatedTokenAccountInstruction(authority, buyerTokenAccount, buyer, escrowMintKey));
+        return { success: false, error: `Buyer needs a USDT token account: create one at https://spl-token-accounts.vercel.app or by sending USDT to ${buyer.toBase58()}` };
       }
 
       const arbitratorAccountInfo = await this.connection.getAccountInfo(arbitratorTokenAccount);
       if (!arbitratorAccountInfo) {
-        ataIxs.push(createAssociatedTokenAccountInstruction(authority, arbitratorTokenAccount, arbitrator, escrowMintKey));
-      }
-
-      if (ataIxs.length > 0) {
-        const ataTx = new Transaction();
-        for (const ix of ataIxs) ataTx.add(ix);
-        ataTx.feePayer = this.gasPayerPubkey || authority;
-        ataTx.recentBlockhash = blockhash;
-        const ataSig = await this.sendTransaction(ataTx, params.useRelay);
-        await this.connection.confirmTransaction(ataSig, 'confirmed');
+        return { success: false, error: `Arbitrator needs a USDT token account: send USDT to ${arbitrator.toBase58()} first` };
       }
 
       const tx = await program.methods

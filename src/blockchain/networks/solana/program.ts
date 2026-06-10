@@ -4,8 +4,8 @@
  */
 
 import { Program, AnchorProvider, BN } from '@coral-xyz/anchor';
-import { PublicKey, Connection, Transaction } from '@solana/web3.js';
-import { getAssociatedTokenAddress, getAccount } from '@solana/spl-token';
+import { PublicKey, Connection, Transaction, TransactionInstruction } from '@solana/web3.js';
+import { getAssociatedTokenAddress, getAccount, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
 import idl from '../../../contracts/solana/idl.json';
 import type { LocalsolanaContracts } from '../../../contracts/solana/types.js';
 import { PDADerivation } from '../../utils/pda.js';
@@ -327,17 +327,19 @@ export class SolanaProgram implements SolanaProgramInterface {
       const buyerTokenAccount = await getAssociatedTokenAddress(escrowMintKey, buyer);
       const arbitratorTokenAccount = await getAssociatedTokenAddress(escrowMintKey, arbitrator);
 
+      const ataInstructions: TransactionInstruction[] = [];
+
       const buyerAccountInfo = await this.connection.getAccountInfo(buyerTokenAccount);
       if (!buyerAccountInfo) {
-        return { success: false, error: `Buyer needs a USDT token account: create one at https://spl-token-accounts.vercel.app or by sending USDT to ${buyer.toBase58()}` };
+        ataInstructions.push(createAssociatedTokenAccountInstruction(authority, buyerTokenAccount, buyer, escrowMintKey));
       }
 
       const arbitratorAccountInfo = await this.connection.getAccountInfo(arbitratorTokenAccount);
       if (!arbitratorAccountInfo) {
-        return { success: false, error: `Arbitrator needs a USDT token account: send USDT to ${arbitrator.toBase58()} first` };
+        ataInstructions.push(createAssociatedTokenAccountInstruction(authority, arbitratorTokenAccount, arbitrator, escrowMintKey));
       }
 
-      const tx = await program.methods
+      const releaseTx = await program.methods
         .releaseEscrow()
         .accounts({
           authority: authority,
@@ -350,6 +352,10 @@ export class SolanaProgram implements SolanaProgramInterface {
           tokenProgram: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
         } as any)
         .transaction();
+
+      const tx = new Transaction();
+      for (const ix of ataInstructions) tx.add(ix);
+      for (const ix of releaseTx.instructions) tx.add(ix);
 
       const signature = await this.sendTransaction(tx, params.useRelay);
 

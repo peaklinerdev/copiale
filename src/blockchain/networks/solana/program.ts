@@ -369,6 +369,15 @@ export class SolanaProgram implements SolanaProgramInterface {
 
       for (const ix of ataIxs) tx.add(ix);
 
+      // Debug: dump actual instruction account keys
+      for (let i = 0; i < tx.instructions.length; i++) {
+        const ix = tx.instructions[i];
+        console.log('TX instruction', i, 'program:', ix.programId.toBase58().substring(0,12)+'...', 'keys:', ix.keys.length);
+        for (let j = 0; j < Math.min(ix.keys.length, 10); j++) {
+          console.log('  key['+j+']:', ix.keys[j].pubkey.toBase58(), 'signer:', ix.keys[j].isSigner, 'writable:', ix.keys[j].isWritable);
+        }
+      }
+
       const signature = await this.sendTransaction(tx, params.useRelay);
 
       return {

@@ -53,26 +53,36 @@ export interface SolanaProgramInterface {
 
   // Wallet balance queries
   getUsdcBalance(): Promise<number>;
+  getUsdtBalance(): Promise<number>;
 }
 
 export class SolanaProgram implements SolanaProgramInterface {
   private connection: Connection;
   private programId: PublicKey;
   private usdcMint: PublicKey;
+  private usdtMint: PublicKey;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private dynamicWallet: any; // Dynamic.xyz wallet
+  private dynamicWallet: any;
+  private gasPayerPubkey: PublicKey | null;
+  private apiUrl: string;
 
   constructor(
     connection: Connection,
     programId: PublicKey,
     usdcMint: PublicKey,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    dynamicWallet?: any
+    dynamicWallet?: any,
+    usdtMint?: PublicKey,
+    gasPayerPubkey?: PublicKey,
+    apiUrl?: string,
   ) {
     this.connection = connection;
     this.programId = programId;
     this.usdcMint = usdcMint;
+    this.usdtMint = usdtMint || usdcMint;
     this.dynamicWallet = dynamicWallet;
+    this.gasPayerPubkey = gasPayerPubkey || null;
+    this.apiUrl = apiUrl || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || 'http://localhost:3011';
   }
 
   // Update wallet when Dynamic.xyz wallet changes
@@ -115,6 +125,46 @@ export class SolanaProgram implements SolanaProgramInterface {
     return { provider, program };
   }
 
+  private async sendTransaction(
+    tx: Transaction,
+    useRelay?: boolean,
+  ): Promise<string> {
+    if (useRelay && this.gasPayerPubkey) {
+      const signer = await this.dynamicWallet.getSigner();
+
+      const { blockhash } = await this.connection.getLatestBlockhash();
+      tx.feePayer = this.gasPayerPubkey;
+      tx.recentBlockhash = blockhash;
+
+      const signed = await signer.signTransaction(tx);
+
+      const raw = signed.serialize({ requireAllSignatures: false });
+      const bytes = raw instanceof Uint8Array ? raw : new Uint8Array(raw);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
+
+      const response = await fetch(`${this.apiUrl}/relay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ serializedTransaction: base64 }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || `Relay failed: ${response.statusText}`);
+      }
+
+      const { signature } = await response.json();
+      return signature;
+    }
+
+    const { provider } = await this.getProviderAndProgram();
+    return provider.sendAndConfirm(tx);
+  }
+
   // Core Escrow Operations
   async createEscrow(params: CreateEscrowParams): Promise<TransactionResult> {
     try {
@@ -140,8 +190,8 @@ export class SolanaProgram implements SolanaProgramInterface {
         })
         .transaction();
 
-      // Send transaction using Dynamic.xyz wallet
-      const signature = await provider.sendAndConfirm(tx);
+      // Send transaction using Dynamic.xyz wallet (or relay if configured)
+      const signature = await this.sendTransaction(tx, params.useRelay);
 
       return {
         success: true,
@@ -149,10 +199,7 @@ export class SolanaProgram implements SolanaProgramInterface {
         slot: await this.connection.getSlot(),
       };
     } catch (error) {
-      return {
-        success: false,
-        error: this.handleError(error),
-      };
+      throw new Error(this.handleError(error));
     }
   }
 
@@ -165,10 +212,8 @@ export class SolanaProgram implements SolanaProgramInterface {
       const seller = new PublicKey(params.sellerAddress);
       const sellerTokenAccount = new PublicKey(params.sellerTokenAccount);
 
-      // Get USDC mint from network config
-      const { getSolanaDevnetConfig } = await import('../../../config');
-      const solanaConfig = getSolanaDevnetConfig();
-      const usdcMint = new PublicKey(solanaConfig.usdcMint);
+      // Get USDT mint from network config
+      const usdtMint = this.usdtMint;
 
       // Build transaction - pass escrowId and tradeId as arguments
       const tx = await program.methods
@@ -176,15 +221,15 @@ export class SolanaProgram implements SolanaProgramInterface {
         .accounts({
           seller: seller,
           sellerTokenAccount: sellerTokenAccount,
-          tokenMint: usdcMint,
+          tokenMint: usdtMint,
           // tokenProgram: TOKEN_PROGRAM_ID,
           // systemProgram: SystemProgram.programId,
           // rent: SYSVAR_RENT_PUBKEY,
         })
         .transaction();
 
-      // Send transaction using Dynamic.xyz wallet
-      const signature = await provider.sendAndConfirm(tx);
+      // Send transaction using Dynamic.xyz wallet (or relay if configured)
+      const signature = await this.sendTransaction(tx, params.useRelay);
 
       return {
         success: true,
@@ -194,16 +239,12 @@ export class SolanaProgram implements SolanaProgramInterface {
     } catch (error) {
       console.error('❌ [ERROR] fundEscrow error:', error);
 
-      return {
-        success: false,
-        error: this.handleError(error),
-      };
+      throw new Error(this.handleError(error));
     }
   }
 
   async markFiatPaid(params: MarkFiatPaidParams): Promise<TransactionResult> {
     try {
-      console.log('[DEBUG] markFiatPaid called with params:', params);
 
       // Get provider and program with Dynamic.xyz wallet
       const { provider, program } = await this.getProviderAndProgram();
@@ -211,8 +252,6 @@ export class SolanaProgram implements SolanaProgramInterface {
       // Convert addresses to PublicKeys
       const buyer = new PublicKey(params.buyerAddress);
 
-      console.log('[DEBUG] Using buyer address:', buyer.toString());
-      console.log('[DEBUG] EscrowId:', params.escrowId, 'TradeId:', params.tradeId);
 
       // Derive the escrow PDA using the same seeds as the contract
       const [escrowPDA] = PublicKey.findProgramAddressSync(
@@ -224,7 +263,6 @@ export class SolanaProgram implements SolanaProgramInterface {
         this.programId
       );
 
-      console.log('[DEBUG] Derived escrow PDA:', escrowPDA.toString());
 
       // Build transaction - markFiatPaid takes no parameters, but needs escrow account
       const tx = await program.methods
@@ -235,12 +273,9 @@ export class SolanaProgram implements SolanaProgramInterface {
         } as any)
         .transaction();
 
-      console.log('[DEBUG] Transaction built, sending...');
 
-      // Send transaction using Dynamic.xyz wallet
-      const signature = await provider.sendAndConfirm(tx);
-
-      console.log('[DEBUG] Transaction confirmed with signature:', signature);
+      // Send transaction using Dynamic.xyz wallet (or relay if configured)
+      const signature = await this.sendTransaction(tx, params.useRelay);
 
       return {
         success: true,
@@ -258,7 +293,6 @@ export class SolanaProgram implements SolanaProgramInterface {
 
   async releaseEscrow(params: ReleaseEscrowParams): Promise<TransactionResult> {
     try {
-      console.log('[DEBUG] releaseEscrow called with params:', params);
 
       // Get provider and program with Dynamic.xyz wallet
       const { provider, program } = await this.getProviderAndProgram();
@@ -271,8 +305,6 @@ export class SolanaProgram implements SolanaProgramInterface {
         ? new PublicKey(params.sequentialEscrowTokenAccount)
         : null;
 
-      console.log('[DEBUG] Using authority address:', authority.toString());
-      console.log('[DEBUG] EscrowId:', params.escrowId, 'TradeId:', params.tradeId);
 
       // Derive the escrow PDA using the same seeds as the contract
       const [escrowPDA] = PublicKey.findProgramAddressSync(
@@ -284,7 +316,6 @@ export class SolanaProgram implements SolanaProgramInterface {
         this.programId
       );
 
-      console.log('[DEBUG] Derived escrow PDA:', escrowPDA.toString());
 
       // Derive the escrow token account PDA
       const [escrowTokenPDA] = PublicKey.findProgramAddressSync(
@@ -292,7 +323,6 @@ export class SolanaProgram implements SolanaProgramInterface {
         this.programId
       );
 
-      console.log('[DEBUG] Derived escrow token PDA:', escrowTokenPDA.toString());
 
       // Build transaction - releaseEscrow takes no parameters, but we need to provide the PDAs explicitly
       const tx = await program.methods
@@ -308,12 +338,9 @@ export class SolanaProgram implements SolanaProgramInterface {
         } as any)
         .transaction();
 
-      console.log('[DEBUG] Transaction built, sending...');
 
-      // Send transaction using Dynamic.xyz wallet
-      const signature = await provider.sendAndConfirm(tx);
-
-      console.log('[DEBUG] Transaction confirmed with signature:', signature);
+      // Send transaction using Dynamic.xyz wallet (or relay if configured)
+      const signature = await this.sendTransaction(tx, params.useRelay);
 
       return {
         success: true,
@@ -350,8 +377,8 @@ export class SolanaProgram implements SolanaProgramInterface {
         })
         .transaction();
 
-      // Send transaction using Dynamic.xyz wallet
-      const signature = await provider.sendAndConfirm(tx);
+      // Send transaction using Dynamic.xyz wallet (or relay if configured)
+      const signature = await this.sendTransaction(tx, params.useRelay);
 
       return {
         success: true,
@@ -798,13 +825,12 @@ export class SolanaProgram implements SolanaProgramInterface {
 
       const walletPublicKey = new PublicKey(this.dynamicWallet.address);
 
-      // Get the associated token account for USDC
+      // Get the associated token account for USDT (escrow uses USDT)
       const associatedTokenAddress = await getAssociatedTokenAddress(
-        this.usdcMint,
+        this.usdtMint,
         walletPublicKey
       );
 
-      // Get the token account info
       const tokenAccountInfo = await this.connection.getTokenAccountBalance(associatedTokenAddress);
 
       if (!tokenAccountInfo.value) {
@@ -813,17 +839,9 @@ export class SolanaProgram implements SolanaProgramInterface {
 
       const balance = tokenAccountInfo.value.amount;
 
-      // Return balance as number (in smallest unit - 6 decimals for USDC)
       return parseInt(balance);
-    } catch (error) {
-      console.error(`❌ [ERROR] Failed to get USDC balance:`, error);
-
-      // If the token account doesn't exist, return 0 instead of throwing
-      if (error instanceof Error && error.message.includes('could not find account')) {
-        return 0;
-      }
-
-      throw new Error(this.handleError(error));
+    } catch {
+      return 0;
     }
   }
 

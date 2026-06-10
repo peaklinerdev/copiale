@@ -358,6 +358,7 @@ export class SolanaProgram implements SolanaProgramInterface {
         .releaseEscrow()
         .accounts({
           authority: authority,
+          seller: authority,
           escrow: escrowPDA,
           escrowTokenAccount: escrowTokenPDA,
           buyerTokenAccount: buyerTokenAccount,

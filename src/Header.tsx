@@ -134,6 +134,7 @@ function Header({ isLoggedIn, account }: HeaderProps) {
             
             <nav className="hidden md:flex items-center gap-6">
               <Link to="/" className="text-sm font-medium text-[#FF6B00] hover:text-[#FF6B00]">Market</Link>
+              <Link to="/bible" className="text-sm font-medium text-[#848e9c] hover:text-[#eaecef] transition-colors">Bible</Link>
             </nav>
           </div>
 
@@ -268,6 +269,7 @@ function Header({ isLoggedIn, account }: HeaderProps) {
         <div className="md:hidden fixed inset-0 top-14 z-40 bg-[#0b0e11] p-4 flex flex-col gap-4">
           <nav className="flex flex-col gap-2">
             <Link to="/" onClick={() => setMobileMenuOpen(false)} className="p-3 text-[#eaecef] bg-[#1e2329] rounded-sm">Market</Link>
+            <Link to="/bible" onClick={() => setMobileMenuOpen(false)} className="p-3 text-[#eaecef] bg-[#1e2329] rounded-sm">Bible</Link>
             {isLoggedIn && (
               <>
                 <Link to="/account" onClick={() => setMobileMenuOpen(false)} className="p-3 text-[#eaecef] bg-[#1e2329] rounded-sm">Dashboard</Link>

@@ -29,6 +29,7 @@ const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 const Status = lazy(() => import('./pages/Status'));
 // NetworkTestPage is a named export, so we need to map it to default
 const ManifestoPage = lazy(() => import('@/pages/ManifestoPage'));
+const BiblePage = lazy(() => import('@/pages/BiblePage'));
 const NetworkTestPage = lazy(() => 
   import('./pages/NetworkTestPage').then(module => ({ default: module.NetworkTestPage }))
 );
@@ -134,6 +135,7 @@ function App() {
                 <Route path="/trade/:id" element={<TradePage />} />
                 <Route path="/status" element={<Status />} />
                 <Route path="/manifesto" element={<ManifestoPage />} />
+                <Route path="/bible" element={<BiblePage />} />
                 <Route path="/fees" element={<FeesPage />} />
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />

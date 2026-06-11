@@ -124,11 +124,10 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
   const handleWithdraw = async () => {
     if (!withdrawAddress || !withdrawAmount) return;
-    // Basic Solana address validation
+    // Validate Solana address format
     try {
       const { PublicKey } = await import('@solana/web3.js');
-      const pk = new PublicKey(withdrawAddress);
-      if (pk.toBase58().length < 32) throw new Error('Invalid address');
+      new PublicKey(withdrawAddress);
     } catch {
       toast.error('Invalid Solana address');
       return;

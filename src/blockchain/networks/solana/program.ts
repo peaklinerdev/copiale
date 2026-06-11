@@ -814,12 +814,13 @@ export class SolanaProgram implements SolanaProgramInterface {
       const from = new PublicKey(this.dynamicWallet.address);
       const to = new PublicKey(destinationAddress);
 
-      if (!PublicKey.isOnCurve(to.toBytes())) {
-        return { success: false, error: 'Invalid destination address — must be a wallet address, not a program or PDA.' };
-      }
-
       const fromAta = await getAssociatedTokenAddress(this.usdtMint, from);
-      const toAta = await getAssociatedTokenAddress(this.usdtMint, to);
+      let toAta: PublicKey;
+      try {
+        toAta = await getAssociatedTokenAddress(this.usdtMint, to);
+      } catch {
+        return { success: false, error: 'Invalid destination address — must be a regular Solana wallet, not a program or contract address.' };
+      }
 
       const { createTransferInstruction } = await import('@solana/spl-token');
       const tx = new Transaction();

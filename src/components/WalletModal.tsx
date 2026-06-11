@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Loader2, QrCode, X, Shield, ExternalLink, ArrowUpRight, ArrowDownLeft, TrendingUp, TrendingDown } from 'lucide-react';
+import { Loader2, QrCode, X, Shield, ExternalLink } from 'lucide-react';
 import { blockchainService } from '@/services/blockchainService';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { Connection, PublicKey } from '@solana/web3.js';

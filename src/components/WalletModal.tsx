@@ -122,20 +122,14 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="bg-[#1e2329] border border-[#2b3139] text-[#eaecef] max-w-[380px] w-full rounded-sm p-0 gap-0">
+      <DialogContent className="bg-[#1e2329] border border-[#2b3139] text-[#eaecef] max-w-[320px] w-full rounded-sm p-0 gap-0">
         {view === 'main' && (
           <>
             {/* Header */}
             <DialogHeader className="px-5 pt-5 pb-0">
               <div className="flex items-center justify-between">
                 <DialogTitle className="text-[#eaecef] text-base font-bold">Wallet</DialogTitle>
-                <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1 bg-[#02c076]/10 border border-[#02c076]/20 rounded-sm px-2 py-0.5 text-[10px] font-bold text-[#02c076]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#02c076]" /> Solana devnet
-                  </span>
-                  <button onClick={loadData} className="text-[#848e9c] hover:text-[#eaecef]"><RefreshIcon /></button>
-                  <button onClick={onClose} className="text-[#848e9c] hover:text-[#eaecef]"><X size={15} /></button>
-                </div>
+                <button onClick={loadData} className="text-[#848e9c] hover:text-[#eaecef]"><RefreshIcon /></button>
               </div>
             </DialogHeader>
 
@@ -143,14 +137,8 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
               {/* Total balance */}
               <div className="text-center pt-2">
                 <div className="text-[10px] text-[#848e9c] uppercase font-bold tracking-wider mb-1">Total Balance</div>
-                <div className="text-[32px] font-bold text-[#eaecef] leading-tight">
+                <div className="text-[28px] font-bold text-[#eaecef] leading-tight">
                   ${loading ? '...' : totalUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </div>
-                <div className="mt-2">
-                  <span className="inline-flex items-center gap-1 bg-[#02c076]/10 text-[10px] font-bold text-[#02c076] px-2 py-0.5 rounded-sm">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 8 12 2 6 8" /><line x1="12" y1="2" x2="12" y2="22" /></svg>
-                    +{solPct > 0 ? '0.0' : '0.0'}% today
-                  </span>
                 </div>
               </div>
 

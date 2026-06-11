@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { Account } from '@/api';
+import api from '@/api';
 import CreateAccountForm from '@/components/Account/CreateAccountForm';
 import EditAccountForm from '@/components/Account/EditAccountForm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -34,6 +35,12 @@ function AccountPage({ account, setAccount }: AccountPageProps) {
   const { primaryWallet } = useDynamicContext();
   const [isEditing, setIsEditing] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState('');
+  const [stats, setStats] = useState<{ total_trades: number; completed_trades: number; cancelled_trades: number; disputed_trades: number; completion_rate: number } | null>(null);
+
+  useEffect(() => {
+    if (!account?.id) return;
+    api.get(`/accounts/${account.id}/stats`).then(r => setStats(r.data)).catch(() => {});
+  }, [account?.id]);
 
   if (!primaryWallet) {
     return (
@@ -183,27 +190,20 @@ function ProfileDisplay({ account }: { account: Account }) {
                 })}
               </span>
             </div>
-            {/* Reputation Score & Trade Completion Rate placeholders */}
-            <div className="flex flex-col items-center mt-4 space-y-2">
-              <span className="text-sm text-[#eaecef] font-medium">
-                Trusted Accounts: <span className="text-[#848e9c]">(soon)</span>
-              </span>
-              <span className="text-sm text-[#eaecef] font-medium">
-                Trusted By Accounts: <span className="text-[#848e9c]">(soon)</span>
-              </span>
-              <span className="text-sm text-[#eaecef] font-medium">
-                Blocked Accounts: <span className="text-[#848e9c]">(soon)</span>
-              </span>
-              <span className="text-sm text-[#eaecef] font-medium">
-                Blocked By Accounts: <span className="text-[#848e9c]">(soon)</span>
-              </span>
-              <span className="text-sm text-[#eaecef] font-medium">
-                Reputation Score: <span className="text-[#848e9c]">(soon)</span>
-              </span>
-              <span className="text-sm text-[#eaecef] font-medium">
-                Trade Completion Rate: <span className="text-[#848e9c]">(soon)</span>
-              </span>
-            </div>
+            {/* Stats */}
+            {stats && (
+              <div className="flex flex-col items-center mt-4 space-y-1.5">
+                <span className="text-sm text-[#eaecef] font-medium">
+                  Total Trades: <span className="text-[#FF6B00] font-bold">{stats.total_trades}</span>
+                </span>
+                <span className="text-sm text-[#eaecef] font-medium">
+                  Completed: <span className="text-[#02c076] font-bold">{stats.completed_trades}</span>
+                </span>
+                <span className="text-sm text-[#eaecef] font-medium">
+                  Completion Rate: <span className="text-[#eaecef] font-bold">{stats.completion_rate}%</span>
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

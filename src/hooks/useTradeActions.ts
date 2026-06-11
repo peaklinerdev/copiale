@@ -71,6 +71,20 @@ export function useTradeActions({
         throw new Error(`Missing seller wallet address`);
       }
 
+      // Check seller has enough USDT to cover principal + 1% fee
+      const amount = Number(trade.leg1_crypto_amount || '0');
+      const fee = amount * 0.01; // 1% platform fee
+      const required = amount + fee;
+      const balance = await blockchainService.getWalletBalance();
+      const balanceDisplay = balance / 1_000_000; // USDT has 6 decimals
+
+      if (balanceDisplay < required) {
+        const shortfall = (required - balanceDisplay).toFixed(2);
+        throw new Error(
+          `Insufficient USDT balance. You need ${required.toFixed(2)} USDT (${amount.toFixed(2)} trade + ${fee.toFixed(2)} fee) but only have ${balanceDisplay.toFixed(2)} USDT. Shortfall: ${shortfall} USDT.`
+        );
+      }
+
       // Use the combined create and fund function with the Solana-compatible wallet
       await createAndFundTradeEscrow({
         trade,

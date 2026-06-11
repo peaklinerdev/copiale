@@ -168,14 +168,12 @@ function Header({ isLoggedIn, account }: HeaderProps) {
               <div className="flex items-center gap-2.5">
                 {/* Wallet button with hover balance tooltip */}
                 <div className="relative group">
-                  <button
-                    onClick={() => setWalletModalOpen(true)}
-                    className="bg-[#FF6B00]/10 border border-[#FF6B00]/20 hover:border-[#FF6B00]/30 text-[#FF6B00] font-bold px-2.5 py-1.5 text-xs rounded-sm flex items-center gap-1.5 transition-all"
-                  >
-                    <Wallet size={13} />
-                    Wallet
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
-                  </button>
+                <button
+                  onClick={() => setWalletModalOpen(true)}
+                  className="text-sm font-medium text-[#848e9c] hover:text-[#eaecef] transition-colors"
+                >
+                  Wallet
+                </button>
                   {/* Hover tooltip */}
                   <div className="absolute top-full right-0 mt-2 hidden group-hover:block z-50">
                     {/* Arrow */}

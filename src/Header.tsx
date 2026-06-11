@@ -170,7 +170,7 @@ function Header({ isLoggedIn, account }: HeaderProps) {
                 <div className="relative group">
                 <button
                   onClick={() => setWalletModalOpen(true)}
-                  className="text-sm font-medium text-[#848e9c] hover:text-[#eaecef] transition-colors"
+                  className="text-sm font-medium text-[#FF6B00] hover:text-[#FF6B00]/80 transition-colors"
                 >
                   Wallet
                 </button>
@@ -214,6 +214,10 @@ function Header({ isLoggedIn, account }: HeaderProps) {
                         Dashboard
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setIsDropdownOpen(false); setWalletModalOpen(true); }} className="cursor-pointer hover:bg-[#2b3139] rounded-sm flex items-center gap-3 px-3 py-2 text-sm">
+                      <ArrowUpRight size={15} className="text-[#848e9c] shrink-0" />
+                      Wallet
+                    </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/offers" className="cursor-pointer hover:bg-[#2b3139] rounded-sm flex items-center gap-3 px-3 py-2 text-sm">
                         <ScrollText size={15} className="text-[#848e9c] shrink-0" />
@@ -233,10 +237,6 @@ function Header({ isLoggedIn, account }: HeaderProps) {
                       </Link>
                     </DropdownMenuItem>
                     <div className="h-px bg-[#2b3139] my-1.5 mx-1" />
-                    <DropdownMenuItem onClick={() => { setIsDropdownOpen(false); setWalletModalOpen(true); }} className="cursor-pointer hover:bg-[#2b3139] rounded-sm flex items-center gap-3 px-3 py-2 text-sm">
-                      <ArrowUpRight size={15} className="text-[#848e9c] shrink-0" />
-                      Wallet
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => { setIsDropdownOpen(false); setIsLogoutDialogOpen(true); }} className="cursor-pointer hover:bg-[#f84960]/10 rounded-sm flex items-center gap-3 px-3 py-2 text-sm text-[#f84960]">
                       <LogOut size={15} className="text-[#f84960] shrink-0" />
                       Logout

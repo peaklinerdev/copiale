@@ -13,7 +13,6 @@ type View = 'overview' | 'detail' | 'deposit' | 'withdraw';
 
 /* ── Inline SVGs ── */
 const BackSvg = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>);
-const CloseSvg = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>);
 const RefreshSvg = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>);
 const DepositSvg = () => (<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="2" x2="12" y2="16" /><polyline points="8 12 12 16 16 12" /><line x1="4" y1="20" x2="20" y2="20" /></svg>);
 const WithdrawSvg = () => (<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="22" x2="12" y2="8" /><polyline points="8 12 12 8 16 12" /><line x1="4" y1="4" x2="20" y2="4" /></svg>);
@@ -76,8 +75,8 @@ export function WalletModal({ isOpen, onClose }: Props) {
   /* ── Modal shell ── */
   return (
     <div style={isOpen ? {} : { display: 'none' }}>
-      {isOpen && <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
-        <div className="relative bg-[#0b0e11] border border-[#2b3139] rounded-sm w-[380px] max-h-[90vh] overflow-y-auto shadow-[0_8px_32px_rgba(0,0,0,0.6)]" onClick={e => e.stopPropagation()}>
+      {isOpen && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
+        <div className="relative bg-[#0b0e11]/95 backdrop-blur-md border border-white/[0.06] rounded-sm w-[380px] max-h-[90vh] overflow-y-auto shadow-[0_8px_32px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)]" onClick={e => e.stopPropagation()}>
           {/* ── OVERVIEW ── */}
           {view === 'overview' && (
             <>
@@ -88,7 +87,6 @@ export function WalletModal({ isOpen, onClose }: Props) {
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={load} className="text-[#848e9c] hover:text-[#eaecef]"><RefreshSvg /></button>
-                  <button onClick={onClose} className="text-[#848e9c] hover:text-[#eaecef]"><CloseSvg /></button>
                 </div>
               </div>
               <div className="px-5 pb-5">
@@ -143,10 +141,9 @@ export function WalletModal({ isOpen, onClose }: Props) {
           {/* ── TOKEN DETAIL ── */}
           {view === 'detail' && (
             <>
-              <div className="flex items-center justify-between px-5 pt-5 pb-2">
+              <div className="flex items-center gap-3 px-5 pt-5 pb-2">
                 <button onClick={() => setView('overview')} className="text-[#848e9c] hover:text-[#eaecef]"><BackSvg /></button>
                 <h2 className="text-base font-bold text-[#eaecef]">{token}</h2>
-                <button onClick={onClose} className="text-[#848e9c] hover:text-[#eaecef]"><CloseSvg /></button>
               </div>
               <div className="px-5 pb-5">
                 <div className="text-center py-3">
@@ -183,10 +180,9 @@ export function WalletModal({ isOpen, onClose }: Props) {
           {/* ── DEPOSIT ── */}
           {view === 'deposit' && (
             <>
-              <div className="flex items-center justify-between px-5 pt-5 pb-2">
+              <div className="flex items-center gap-3 px-5 pt-5 pb-2">
                 <button onClick={() => setView('overview')} className="text-[#848e9c] hover:text-[#eaecef]"><BackSvg /></button>
                 <h2 className="text-base font-bold text-[#eaecef]">Deposit {token}</h2>
-                <button onClick={onClose} className="text-[#848e9c] hover:text-[#eaecef]"><CloseSvg /></button>
               </div>
               <div className="px-5 pb-5 space-y-4 text-center">
                 {token === 'USDT' && creating ? (
@@ -215,10 +211,9 @@ export function WalletModal({ isOpen, onClose }: Props) {
           {/* ── WITHDRAW ── */}
           {view === 'withdraw' && (
             <>
-              <div className="flex items-center justify-between px-5 pt-5 pb-2">
+              <div className="flex items-center gap-3 px-5 pt-5 pb-2">
                 <button onClick={() => { setView('overview'); setTo(''); setAmt(''); }} className="text-[#848e9c] hover:text-[#eaecef]"><BackSvg /></button>
                 <h2 className="text-base font-bold text-[#eaecef]">Withdraw {token}</h2>
-                <button onClick={onClose} className="text-[#848e9c] hover:text-[#eaecef]"><CloseSvg /></button>
               </div>
               <div className="px-5 pb-5 space-y-4">
                 <div className="border border-[#2b3139] rounded-sm p-3 bg-white/[0.02]">

@@ -62,6 +62,7 @@ export interface SolanaProgramInterface {
   withdrawUsdt(destinationAddress: string, amount: number): Promise<TransactionResult>;
 
   getUsdtAta(): Promise<string>;
+  createUsdtAta(): Promise<string>;
 }
 
 export class SolanaProgram implements SolanaProgramInterface {
@@ -847,6 +848,22 @@ export class SolanaProgram implements SolanaProgramInterface {
   async getUsdtAta(): Promise<string> {
     const wallet = new PublicKey(this.dynamicWallet.address);
     const ata = await getAssociatedTokenAddress(this.usdtMint, wallet);
+    return ata.toBase58();
+  }
+
+  async createUsdtAta(): Promise<string> {
+    const wallet = new PublicKey(this.dynamicWallet.address);
+    const ata = await getAssociatedTokenAddress(this.usdtMint, wallet);
+
+    const exists = await this.connection.getAccountInfo(ata);
+    if (exists) return ata.toBase58();
+
+    const tx = new Transaction().add(
+      createAssociatedTokenAccountInstruction(wallet, ata, wallet, this.usdtMint)
+    );
+    const useRelay = this.gasPayerPubkey !== null;
+    await this.sendTransaction(tx, useRelay);
+
     return ata.toBase58();
   }
 

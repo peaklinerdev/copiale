@@ -5,7 +5,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Check, Loader2, QrCode, X, Shield } from 'lucide-react';
+import { Loader2, QrCode, X, Shield } from 'lucide-react';
 import { blockchainService } from '@/services/blockchainService';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { formatNumber } from '@/lib/utils';
@@ -62,6 +62,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
   const [solBalance, setSolBalance] = useState(0);
   const [usdtAta, setUsdtAta] = useState('');
   const [loading, setLoading] = useState(true);
+  const [depositToken, setDepositToken] = useState<'USDT' | 'SOL'>('USDT');
   const [toAddress, setToAddress] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawing, setWithdrawing] = useState(false);
@@ -96,14 +97,21 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
     toast.success('Address copied');
   };
 
-  const handleDeposit = async () => {
-    setCreatingAta(true); setView('deposit');
-    try {
-      const ata = await blockchainService.createUsdtAta(); setUsdtAta(ata);
+  const handleDeposit = async (token: 'USDT' | 'SOL' = 'USDT') => {
+    setDepositToken(token); setView('deposit');
+    if (token === 'SOL') {
+      setCreatingAta(false);
       const QRCode = (await import('qrcode')).default;
-      setQrDataUrl(await QRCode.toDataURL(ata, { width: 200, margin: 1 }));
-    } catch { toast.error('Failed to create USDT account'); }
-    setCreatingAta(false);
+      setQrDataUrl(await QRCode.toDataURL(address, { width: 200, margin: 1 }));
+    } else {
+      setCreatingAta(true);
+      try {
+        const ata = await blockchainService.createUsdtAta(); setUsdtAta(ata);
+        const QRCode = (await import('qrcode')).default;
+        setQrDataUrl(await QRCode.toDataURL(ata, { width: 200, margin: 1 }));
+      } catch { toast.error('Failed to create USDT account'); }
+      setCreatingAta(false);
+    }
   };
 
   const handleWithdraw = async () => {
@@ -128,7 +136,10 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
             {/* Header */}
             <DialogHeader className="px-5 pt-5 pb-0">
               <div className="flex items-center justify-between">
-                <DialogTitle className="text-[#eaecef] text-base font-bold">Wallet</DialogTitle>
+                <div>
+                  <DialogTitle className="text-[#eaecef] text-base font-bold">Copiale Wallet</DialogTitle>
+                  <p className="text-[10px] text-[#848e9c] mt-0.5">Deposit & withdraw across Solana</p>
+                </div>
                 <button onClick={loadData} className="text-[#848e9c] hover:text-[#eaecef]"><RefreshIcon /></button>
               </div>
             </DialogHeader>
@@ -158,9 +169,14 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
                       <div className="text-[10px] text-[#5e6673]">Tether USD</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-[#eaecef]">${loading ? '...' : usdtDisplay.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                    <div className="text-[10px] text-[#5e6673]">{loading ? '...' : usdtDisplay.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT</div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <div className="text-xs font-bold text-[#eaecef]">{loading ? '...' : usdtDisplay.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                      <div className="text-[10px] text-[#5e6673]">${loading ? '...' : usdtDisplay.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    </div>
+                    <button onClick={() => handleDeposit('USDT')} className="bg-[#02c076]/10 hover:bg-[#02c076]/20 border border-[#02c076]/20 text-[#02c076] rounded-sm px-2 py-1 text-[10px] font-bold flex items-center gap-1">
+                      <DepositIcon /> Deposit
+                    </button>
                   </div>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-sm hover:bg-white/[0.03] transition-colors">
@@ -168,19 +184,24 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
                     <SolIcon />
                     <div>
                       <div className="text-sm font-bold text-[#eaecef]">SOL</div>
-                      <div className="text-[10px] text-[#5e6673]">Solana · {totalUsd > 0 ? `~$${(solDisplay > 0 ? (usdtDisplay / solDisplay).toFixed(2) : '0')} ea.` : '...'}</div>
+                      <div className="text-[10px] text-[#5e6673]">Solana</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-[#eaecef]">${loading ? '...' : (solDisplay * 140).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                    <div className="text-[10px] text-[#5e6673]">{loading ? '...' : solDisplay.toFixed(4)} SOL</div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <div className="text-xs font-bold text-[#eaecef]">{loading ? '...' : solDisplay.toFixed(4)}</div>
+                      <div className="text-[10px] text-[#5e6673]">${loading ? '...' : (solDisplay * 140).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    </div>
+                    <button onClick={() => handleDeposit('SOL')} className="bg-[#9945FF]/10 hover:bg-[#9945FF]/20 border border-[#9945FF]/20 text-[#9945FF] rounded-sm px-2 py-1 text-[10px] font-bold flex items-center gap-1">
+                      <DepositIcon /> Deposit
+                    </button>
                   </div>
                 </div>
               </div>
 
               {/* Actions */}
               <div className="flex gap-3">
-                <button onClick={handleDeposit} className="flex-1 bg-[#FF6B00] hover:opacity-90 !text-[#0b0e11] rounded-sm font-bold h-10 text-sm flex items-center justify-center gap-2">
+                <button onClick={() => handleDeposit('USDT')} className="flex-1 bg-[#FF6B00] hover:opacity-90 !text-[#0b0e11] rounded-sm font-bold h-10 text-sm flex items-center justify-center gap-2">
                   <DepositIcon /> Deposit
                 </button>
                 <button onClick={() => setView('withdraw')} disabled={usdtBalance <= 0} className="flex-1 border border-[#2b3139] text-[#eaecef] hover:bg-[#2b3139] disabled:opacity-30 rounded-sm font-bold h-10 text-sm flex items-center justify-center gap-2">
@@ -209,12 +230,12 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
             <DialogHeader className="px-5 pt-5 pb-2">
               <div className="flex items-center justify-between">
                 <button onClick={() => { setView('main'); setQrDataUrl(''); }} className="text-[#848e9c] hover:text-[#eaecef]"><X size={16} /></button>
-                <DialogTitle className="text-[#eaecef] text-base font-bold">Deposit USDT</DialogTitle>
+                <DialogTitle className="text-[#eaecef] text-base font-bold">Deposit {depositToken}</DialogTitle>
                 <div className="w-5" />
               </div>
             </DialogHeader>
             <div className="px-5 pb-5 space-y-4 text-center">
-              {creatingAta ? (
+              {depositToken === 'USDT' && creatingAta ? (
                 <div className="py-12">
                   <Loader2 size={28} className="animate-spin mx-auto text-[#02c076] mb-3" />
                   <p className="text-sm text-[#eaecef]">Creating your USDT account...</p>
@@ -222,15 +243,18 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
               ) : (
                 <>
                   <div className="flex items-center justify-center gap-2 text-[10px] text-[#f84960] bg-[#f84960]/10 border border-[#f84960]/20 rounded-sm py-2 px-3">
-                    <Shield size={12} /> Send only USDT (Solana) to this address
+                    <Shield size={12} /> Send only {depositToken} (Solana) to this address
                   </div>
                   <div className="bg-white p-3 rounded-sm inline-block">
                     {qrDataUrl ? <img src={qrDataUrl} alt="QR" className="w-48 h-48" /> : <QrCode size={192} className="text-[#0b0e11]" />}
                   </div>
-                  <div className="bg-[#0b0e11] border border-[#2b3139] rounded-sm p-3 font-mono text-xs text-[#eaecef] break-all">
-                    {usdtAta || address}
+                  <div className="bg-[#1e2329] border border-[#2b3139] rounded-sm p-3 font-mono text-xs text-[#eaecef] break-all">
+                    {depositToken === 'SOL' ? address : (usdtAta || address)}
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(usdtAta || address); toast.success('Address copied'); }} className="w-full border-[#2b3139] text-[#eaecef] hover:bg-[#2b3139] rounded-sm h-9 text-xs">
+                  <Button variant="outline" size="sm" onClick={() => {
+                    navigator.clipboard.writeText(depositToken === 'SOL' ? address : (usdtAta || address));
+                    toast.success('Address copied');
+                  }} className="w-full border-[#2b3139] text-[#eaecef] hover:bg-[#2b3139] rounded-sm h-9 text-xs">
                     <CopyIcon /> <span className="ml-1.5">Copy Address</span>
                   </Button>
                 </>

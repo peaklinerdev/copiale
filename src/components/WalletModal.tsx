@@ -181,12 +181,9 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
               </div>
 
               {/* SOL balance */}
-              <SolBalanceCard onClose={onClose} />
-
-              {/* SOL balance */}
               <SolCard />
 
-              {/* Wallet list*/}
+              {/* Wallet list */}
               {loading ? (
                 <div className="text-center text-[#848e9c] text-sm py-4">
                   <Loader2 size={16} className="animate-spin inline mr-2" />

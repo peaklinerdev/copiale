@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Loader2, QrCode, ExternalLink, ChevronRight, AlertTriangle, Clock } from 'lucide-react';
+import { Loader2, QrCode, ExternalLink, ChevronRight, AlertTriangle } from 'lucide-react';
 import { blockchainService } from '@/services/blockchainService';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { Connection, PublicKey } from '@solana/web3.js';

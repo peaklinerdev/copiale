@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Loader2, QrCode, ExternalLink, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Loader2, QrCode, ExternalLink, ChevronRight, AlertTriangle, Clock } from 'lucide-react';
 import { blockchainService } from '@/services/blockchainService';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { Connection, PublicKey } from '@solana/web3.js';
@@ -10,6 +10,8 @@ import usdtLogo from '@/assets/usdt.svg';
 interface Props { isOpen: boolean; onClose: () => void; }
 type Token = 'USDT' | 'SOL';
 type View = 'overview' | 'detail' | 'deposit' | 'withdraw';
+type TxFilter = 'all' | 'deposit' | 'withdraw';
+type TokenFilter = 'all' | Token;
 
 /* ── Inline SVGs ── */
 const BackSvg = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>);
@@ -36,6 +38,8 @@ export function WalletModal({ isOpen, onClose }: Props) {
   const [qr, setQr] = useState('');
   const [txs, setTxs] = useState<any[]>([]);
   const [txLoad, setTxLoad] = useState(false);
+  const [txFilter, setTxFilter] = useState<TxFilter>('all');
+  const [tokenFilter, setTokenFilter] = useState<TokenFilter>('all');
 
   const usdt = usdtBal / 1_000_000;
   const sol = solBal;
@@ -55,22 +59,27 @@ export function WalletModal({ isOpen, onClose }: Props) {
   const fmt = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtSol = (n: number) => n.toFixed(4);
   const copy = (t: string) => { navigator.clipboard.writeText(t); toast.success('Copied'); };
-
   const genQr = async (a: string) => { const Q = (await import('qrcode')).default; setQr(await Q.toDataURL(a, { width: 160, margin: 1 })); };
 
   const goDeposit = async (t: Token) => { setToken(t); setView('deposit'); setQr(''); if (t === 'SOL') { genQr(addr); return; } setCreating(true); try { const a = await blockchainService.createUsdtAta(); setUsdtAta(a); genQr(a); } catch { toast.error('Failed'); } setCreating(false); };
-
   const goWithdraw = (t: Token) => { setToken(t); setView('withdraw'); setTo(''); setAmt(''); };
   const doWithdraw = async () => { if (!to || !amt) return; setWd(true); try { const r = await blockchainService.withdrawUsdt(to, Number(amt)); if (r.success) { toast.success(`Sent ${amt} USDT`); setTo(''); setAmt(''); setView('overview'); load(); } else toast.error(r.error || 'Failed'); } catch (e: any) { toast.error(e?.message || 'Failed'); } setWd(false); };
 
-  const goDetail = async (t: Token) => { setToken(t); setView('detail'); setTxs([]); setTxLoad(true);
+  const goDetail = async (t: Token) => { setToken(t); setView('detail'); setTxFilter('all'); setTokenFilter('all'); setTxs([]); setTxLoad(true);
     try { const c = new Connection('https://api.devnet.solana.com', 'confirmed'); const target = t === 'SOL' ? addr : usdtAta; if (!target) { setTxLoad(false); return; }
-      const sigs = await c.getSignaturesForAddress(new PublicKey(target), { limit: 10 }); const p: any[] = [];
-      for (const s of sigs) { try { const tx = await c.getTransaction(s.signature, { maxSupportedTransactionVersion: 0 }); if (!tx) continue; const meta = tx.meta; const pre = meta?.preTokenBalances?.find(b => b.mint === (t === 'SOL' ? undefined : '8yonSxM...')); const post = meta?.postTokenBalances?.find(b => b.mint === (t === 'SOL' ? undefined : '8yonSxM...')); const diff = pre && post ? (post.uiTokenAmount?.uiAmount || 0) - (pre.uiTokenAmount?.uiAmount || 0) : t === 'SOL' ? (meta?.preBalances?.[0] && meta?.postBalances?.[0] ? (meta.postBalances[0] - meta.preBalances[0]) / 1e9 : 0) : 0; p.push({ sig: s.signature, time: tx.blockTime || 0, err: !!meta?.err, amount: diff }); } catch { /* */ } }
+      const sigs = await c.getSignaturesForAddress(new PublicKey(target), { limit: 20 }); const p: any[] = [];
+      for (const s of sigs) { try { const tx = await c.getTransaction(s.signature, { maxSupportedTransactionVersion: 0 }); if (!tx) continue; const meta = tx.meta; const pre = meta?.preTokenBalances?.find(b => b.mint === (t === 'SOL' ? undefined : '8yonSxM...')); const post = meta?.postTokenBalances?.find(b => b.mint === (t === 'SOL' ? undefined : '8yonSxM...')); const diff = pre && post ? (post.uiTokenAmount?.uiAmount || 0) - (pre.uiTokenAmount?.uiAmount || 0) : t === 'SOL' ? (meta?.preBalances?.[0] && meta?.postBalances?.[0] ? (meta.postBalances[0] - meta.preBalances[0]) / 1e9 : 0) : 0; p.push({ sig: s.signature, time: tx.blockTime || 0, err: !!meta?.err, amount: diff, token: t }); } catch { /* */ } }
       setTxs(p); } catch { /* */ } setTxLoad(false);
   };
   const explorer = (s: string) => `https://solscan.io/tx/${s}?cluster=devnet`;
   const explorerAcct = (t: Token) => `https://solscan.io/account/${t === 'SOL' ? addr : usdtAta}?cluster=devnet`;
+
+  const filteredTxs = txs.filter(tx => {
+    if (txFilter === 'deposit' && tx.amount <= 0) return false;
+    if (txFilter === 'withdraw' && tx.amount >= 0) return false;
+    if (tokenFilter !== 'all' && tx.token !== tokenFilter) return false;
+    return true;
+  });
 
   /* ── Modal shell ── */
   return (
@@ -85,17 +94,13 @@ export function WalletModal({ isOpen, onClose }: Props) {
                   <h2 className="text-base font-bold text-[#eaecef]">Copiale wallet</h2>
                   <p className="text-[10px] text-[#848e9c] mt-0.5">Deposit &amp; withdraw across Solana</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={load} className="text-[#848e9c] hover:text-[#eaecef]"><RefreshSvg /></button>
-                </div>
+                <button onClick={load} className="text-[#848e9c] hover:text-[#eaecef]"><RefreshSvg /></button>
               </div>
               <div className="px-5 pb-5">
-                {/* Total */}
                 <div className="text-center pt-2 pb-3">
                   <p className="text-[10px] text-[#848e9c] uppercase font-bold tracking-wider">Total balance</p>
                   <p className="text-[28px] font-bold text-[#eaecef] leading-tight mt-0.5">${loading ? '...' : fmt(total)}</p>
                 </div>
-                {/* Allocation */}
                 <div className="flex h-[3px] rounded-full overflow-hidden">
                   <div style={{ width: `${Math.max(usdtPct, 2)}%`, background: '#FF6B00' }} />
                   <div style={{ width: `${Math.max(solPct, 2)}%`, background: '#9945FF' }} />
@@ -104,20 +109,12 @@ export function WalletModal({ isOpen, onClose }: Props) {
                   <span className="text-[#FF6B00]">{usdtPct.toFixed(0)}% USDT</span>
                   <span className="text-[#9945FF]">{solPct.toFixed(0)}% SOL</span>
                 </div>
-
-                {/* Token rows */}
                 <div className="mt-3 space-y-0.5">
-                  {[
-                    { t: 'USDT' as Token, bal: fmt(usdt), usd: fmt(usdtUsd), color: '#FF6B00' },
-                    { t: 'SOL' as Token, bal: fmtSol(sol), usd: fmt(solUsd), color: '#9945FF' },
-                  ].map(({ t, bal, usd, color }) => (
+                  {[{ t: 'USDT' as Token, bal: fmt(usdt), usd: fmt(usdtUsd) }, { t: 'SOL' as Token, bal: fmtSol(sol), usd: fmt(solUsd) }].map(({ t, bal, usd }) => (
                     <button key={t} onClick={() => goDetail(t)} className="w-full flex items-center justify-between p-3 rounded-sm hover:bg-white/[0.03] text-left">
                       <div className="flex items-center gap-3">
                         <img src={t === 'USDT' ? usdtLogo : solLogo} alt={t} className="w-9 h-9 rounded-full" />
-                        <div>
-                          <p className="text-sm font-bold text-[#eaecef]">{t === 'USDT' ? 'Tether USD' : 'Solana'}</p>
-                          <p className="text-[10px] text-[#5e6673]">{t}{t === 'SOL' ? '' : ' · SPL'}</p>
-                        </div>
+                        <div><p className="text-sm font-bold text-[#eaecef]">{t === 'USDT' ? 'Tether USD' : 'Solana'}</p><p className="text-[10px] text-[#5e6673]">{t}{t === 'SOL' ? '' : ' · SPL'}</p></div>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="text-right"><p className="text-xs font-bold text-[#eaecef]">{bal}</p><p className="text-[10px] text-[#5e6673]">${usd}</p></div>
@@ -126,8 +123,6 @@ export function WalletModal({ isOpen, onClose }: Props) {
                     </button>
                   ))}
                 </div>
-
-                {/* Quick actions */}
                 <p className="text-[9px] text-[#5e6673] uppercase font-bold tracking-wider mt-3 mb-2">Quick actions</p>
                 <div className="flex gap-2">
                   <button onClick={() => goDeposit('USDT')} className="flex-1 bg-[#FF6B00] hover:opacity-90 !text-[#0b0e11] rounded-sm font-bold h-9 text-xs flex items-center justify-center gap-1.5"><DepositSvg /> Deposit USDT</button>
@@ -145,7 +140,7 @@ export function WalletModal({ isOpen, onClose }: Props) {
                 <button onClick={() => setView('overview')} className="text-[#848e9c] hover:text-[#eaecef]"><BackSvg /></button>
                 <h2 className="text-base font-bold text-[#eaecef]">{token}</h2>
               </div>
-              <div className="px-5 pb-5">
+              <div className="px-5 pb-2">
                 <div className="text-center py-3">
                   <p className="text-[10px] text-[#848e9c] uppercase font-bold tracking-wider">{token} balance</p>
                   <p className="text-[22px] font-bold text-[#eaecef] mt-0.5">{token === 'USDT' ? fmt(usdt) : fmtSol(sol)}</p>
@@ -156,23 +151,70 @@ export function WalletModal({ isOpen, onClose }: Props) {
                   <button onClick={() => goWithdraw(token)} disabled={(token === 'USDT' ? usdtBal : solBal) <= 0} className="flex-1 border border-[#2b3139] text-[#eaecef] hover:bg-[#2b3139] disabled:opacity-30 rounded-sm font-bold h-9 text-xs flex items-center justify-center gap-1.5"><WithdrawSvg /> Withdraw</button>
                 </div>
                 <div className="border-t border-[#2b3139] my-3" />
-                <p className="text-[10px] text-[#848e9c] uppercase font-bold tracking-wider mb-2">Recent activity</p>
-                {txLoad ? <div className="text-center py-6"><Loader2 size={16} className="animate-spin mx-auto text-[#848e9c]" /></div> : txs.length === 0 ? <p className="text-center text-[10px] text-[#5e6673] py-4">No recent transactions</p> : (
-                  <div className="max-h-[180px] overflow-y-auto">
-                    {txs.map((tx, i) => (
-                      <a key={i} href={explorer(tx.sig)} target="_blank" rel="noreferrer"
-                        className="flex items-center gap-2 px-1 py-1.5 border-b border-white/[0.05] hover:bg-white/[0.02] no-underline text-left last:border-b-0">
-                        <span className="shrink-0">{tx.err ? <FailSvg /> : <CheckSvg />}</span>
-                        <span className={`text-[11px] font-medium w-16 shrink-0 ${tx.amount > 0 ? 'text-[#02c076]' : 'text-[#f84960]'}`}>{tx.amount > 0 ? '+' : ''}{Math.abs(tx.amount).toFixed(tx.amount % 1 === 0 ? 0 : 4)}</span>
-                        <span className="text-[10px] text-[#5e6673] flex-1 truncate font-mono">{tx.sig.substring(0, 6)}...{tx.sig.substring(tx.sig.length - 4)}</span>
-                        <span className="text-[9px] text-[#5e6673] shrink-0">{tx.time ? new Date(tx.time * 1000).toLocaleDateString() : ''}</span>
-                      </a>
-                    ))}
+
+                {/* ── Transaction Table ── */}
+                <div className="mb-3">
+                  {/* Filter bar */}
+                  <div className="flex items-center justify-between bg-white/[0.03] rounded-sm px-3 py-2 mb-2">
+                    <div className="flex items-center gap-1">
+                      {(['all', 'deposit', 'withdraw'] as TxFilter[]).map(f => (
+                        <button key={f} onClick={() => setTxFilter(f)}
+                          className={`text-[10px] font-medium rounded-sm px-2.5 py-1 capitalize ${
+                            txFilter === f ? 'bg-[#FF6B00]/15 border border-[#FF6B00]/35 text-[#FF6B00]' : 'bg-white/[0.05] text-[#848e9c]'
+                          }`}>{f === 'all' ? 'All' : f + 's'}</button>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {(['all', 'USDT', 'SOL'] as TokenFilter[]).map(f => (
+                        <button key={f} onClick={() => setTokenFilter(f)}
+                          className={`text-[10px] font-medium rounded-sm px-2.5 py-1 ${
+                            tokenFilter === f ? (f === 'USDT' ? 'bg-[#FF6B00]/15 border border-[#FF6B00]/35 text-[#FF6B00]' : f === 'SOL' ? 'bg-[#9945FF]/15 border border-[#9945FF]/35 text-[#9945FF]' : 'bg-white/[0.08] border border-white/[0.12] text-[#eaecef]') : 'bg-white/[0.05] text-[#848e9c]'
+                          }`}>{f === 'all' ? 'All' : f}</button>
+                      ))}
+                    </div>
                   </div>
-                )}
-                <a href={explorerAcct(token)} target="_blank" rel="noreferrer" className="block text-center text-[10px] text-[#FF6B00] hover:underline font-medium mt-2">
-                  View all on Solscan <ExternalLink size={10} className="inline" />
-                </a>
+
+                  {/* Table header */}
+                  <div className="flex items-center text-[10px] text-[#5e6673] uppercase tracking-wider font-medium border-b border-white/[0.08] pb-2 px-1 gap-1">
+                    <span className="w-6 shrink-0 text-center">#</span>
+                    <span className="w-12 shrink-0">Type</span>
+                    <span className="flex-1">Amount</span>
+                    <span className="w-[5.5rem] shrink-0 text-right">Date</span>
+                  </div>
+
+                  {/* Rows */}
+                  {txLoad ? <div className="text-center py-8"><Loader2 size={16} className="animate-spin mx-auto text-[#848e9c]" /></div>
+                    : filteredTxs.length === 0 ? <p className="text-center text-[10px] text-[#5e6673] py-6">No transactions</p>
+                    : (
+                      <div className="max-h-[220px] overflow-y-auto">
+                        {filteredTxs.map((tx, i) => (
+                          <a key={i} href={explorer(tx.sig)} target="_blank" rel="noreferrer"
+                            className="flex items-center border-b border-white/[0.05] hover:bg-white/[0.03] no-underline px-1 py-2 gap-1">
+                            <span className="w-6 shrink-0 flex justify-center">{tx.err ? <FailSvg /> : <CheckSvg />}</span>
+                            <span className={`w-12 shrink-0 text-[9px] font-bold rounded-sm px-1.5 py-0.5 text-center ${tx.amount >= 0 ? 'bg-[#02c076]/10 text-[#02c076]' : 'bg-[#f84960]/10 text-[#f84960]'}`}>
+                              {tx.amount >= 0 ? 'Deposit' : 'Withdraw'}
+                            </span>
+                            <span className={`flex-1 text-[11px] font-medium font-mono ${tx.amount >= 0 ? 'text-[#02c076]' : 'text-[#f84960]'}`}>
+                              {tx.amount >= 0 ? '+' : ''}{Math.abs(tx.amount).toFixed(tx.amount % 1 === 0 ? 0 : 4)} {tx.amount >= 0 ? '' : tx.token === 'SOL' ? 'SOL' : 'USDT'}
+                              <br /><span className="text-[9px] text-[#5e6673] font-mono">{tx.sig.substring(0, 6)}...{tx.sig.substring(tx.sig.length - 4)}</span>
+                            </span>
+                            <span className="w-[5.5rem] shrink-0 text-[9px] text-[#5e6673] text-right">
+                              {tx.time ? new Date(tx.time * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                            </span>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between border-t border-white/[0.07] pt-2 mt-1">
+                    <span className="text-[9px] text-[#5e6673]">Showing {filteredTxs.length} of {txs.length} txns</span>
+                    <a href={explorerAcct(token)} target="_blank" rel="noreferrer"
+                      className="text-[10px] text-[#FF6B00] hover:underline font-medium flex items-center gap-1">
+                      View all <ExternalLink size={10} />
+                    </a>
+                  </div>
+                </div>
               </div>
             </>
           )}

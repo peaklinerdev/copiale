@@ -5,7 +5,7 @@
 
 const TOKEN_DP = 6; // Standard for USDC/USDT on Solana
 const FIAT_DP = 2;
-const ESCROW_TOKEN_MAX_MICRO = 100n * 10n ** BigInt(TOKEN_DP);
+const ESCROW_TOKEN_MAX_MICRO = 10000n * 10n ** BigInt(TOKEN_DP);
 
 const TOKEN_REGEX = /^(0|[1-9]\d*)(\.\d{1,6})?$/;
 const FIAT_REGEX = /^(0|[1-9]\d*)(\.\d{1,2})?$/;
@@ -63,12 +63,12 @@ export function toTokenString(input: string | number | bigint): string {
 }
 
 /**
- * Same as toTokenString but enforces the escrow contract cap of 100.000000.
+ * Same as toTokenString but enforces the escrow contract cap of 10,000.000000.
  */
 export function toEscrowTokenString(input: string | number | bigint): string {
   const s = toTokenString(input);
   if (toScaled(s, TOKEN_DP) > ESCROW_TOKEN_MAX_MICRO) {
-    throw new RangeError(`escrow amount must be <= 100.000000: "${input}"`);
+    throw new RangeError(`escrow amount must be <= 10,000.000000: "${input}"`);
   }
   return s;
 }

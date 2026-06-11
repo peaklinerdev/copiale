@@ -40,14 +40,18 @@ function AccountPage({ account, setAccount }: AccountPageProps) {
 
   useEffect(() => {
     if (!primaryWallet?.address) return;
+    let cancelled = false;
     (async () => {
       try {
         const u = await blockchainService.getWalletBalance();
-        setUsdtBal((u / 1_000_000).toFixed(2));
+        if (!cancelled) setUsdtBal((u / 1_000_000).toFixed(2));
+      } catch { /* rate limited */ }
+      try {
         const s = await blockchainService.getSolBalance();
-        setSolBal(s.toFixed(4));
-      } catch { /* */ }
+        if (!cancelled) setSolBal(s.toFixed(4));
+      } catch { /* rate limited */ }
     })();
+    return () => { cancelled = true; };
   }, [primaryWallet?.address]);
 
   if (!primaryWallet) {

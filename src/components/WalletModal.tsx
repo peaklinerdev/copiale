@@ -72,6 +72,7 @@ export function WalletModal({ isOpen, onClose }: Props) {
   const explorerAcct = (t: Token) => `https://solscan.io/account/${t === 'SOL' ? addr : usdtAta}?cluster=devnet`;
 
   const nonZeroTxs = txs.filter(tx => tx.amount !== 0);
+  const trend = nonZeroTxs.reduce((sum, tx) => sum + tx.amount, 0);
 
   /* ── Modal shell ── */
   return (
@@ -135,7 +136,14 @@ export function WalletModal({ isOpen, onClose }: Props) {
               <div className="px-5 pb-2">
                 <div className="text-center py-3">
                   <p className="text-[10px] text-[#848e9c] uppercase font-bold tracking-wider">{token} balance</p>
-                  <p className="text-[22px] font-bold text-[#eaecef] mt-0.5">{token === 'USDT' ? fmt(usdt) : fmtSol(sol)}</p>
+                  <p className="text-[22px] font-bold text-[#eaecef] mt-0.5 flex items-center justify-center gap-2">
+                    {token === 'USDT' ? fmt(usdt) : fmtSol(sol)}
+                    {nonZeroTxs.length > 0 && (
+                      <span className={`text-xs font-medium ${trend > 0 ? 'text-[#02c076]' : 'text-[#f84960]'}`}>
+                        {trend > 0 ? '↑' : '↓'}{Math.abs(trend).toFixed(trend % 1 === 0 ? 0 : 4)}
+                      </span>
+                    )}
+                  </p>
                   <p className="text-[10px] text-[#848e9c]">${token === 'USDT' ? fmt(usdtUsd) : fmt(solUsd)}</p>
                 </div>
                 <div className="flex gap-2">

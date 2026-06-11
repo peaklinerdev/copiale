@@ -65,7 +65,7 @@ const TradeConfirmationDialog = ({
     !usdcLoading &&
     !usdcError &&
     amountToEscrow > 0 &&
-    usdcBalanceNum < amountToEscrow;
+    usdcBalanceNum < amountToEscrow * 1.01;
 
   const canConfirm = !loading && !amountError && !insufficient && fiatAmount > 0 && amount !== '';
   const rateNum = numericValue(offer.rate_adjustment);
@@ -158,11 +158,11 @@ const TradeConfirmationDialog = ({
             <div className="min-h-[20px]">
               {isSeller && usdcBalanceNum !== null && (
                 <span className="text-[11px] text-[#848e9c]">
-                  Balance:{' '}
+                  Available:{' '}
                   <span className={insufficient ? 'text-[#f84960] font-bold' : 'text-[#eaecef]'}>
-                    {usdcBalanceNum.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                    {(usdcBalanceNum / 1.01).toLocaleString('en-US', { maximumFractionDigits: 2 })}
                   </span>{' '}
-                  {offer.token}
+                  {offer.token} <span className="text-[10px] text-[#5e6673]">(balance: {usdcBalanceNum.toLocaleString('en-US', { maximumFractionDigits: 2 })})</span>
                 </span>
               )}
               {amountError && (

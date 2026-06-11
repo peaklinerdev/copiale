@@ -1,6 +1,14 @@
 import { useCallback, useRef } from 'react';
 import { Trade, getTradeById } from '@/api';
 import { useSmartPolling } from './useSmartPolling';
+import { toast } from 'sonner';
+
+const TERMINAL_STATES = ['COMPLETED', 'RELEASED', 'CANCELLED'];
+const STATE_LABELS: Record<string, string> = {
+  COMPLETED: 'Trade completed',
+  RELEASED: 'Crypto released',
+  CANCELLED: 'Trade cancelled',
+};
 
 export function useTradeUpdates(tradeId: number) {
   // Keep track of the previous data and ETag
@@ -46,6 +54,17 @@ export function useTradeUpdates(tradeId: number) {
 
   // Handle trade state changes
   const handleTradeStateChange = (newTrade: Trade) => {
+    const newState = newTrade.leg1_state;
+    
+    // Show toast when trade reaches a terminal state
+    if (newState && TERMINAL_STATES.includes(newState)) {
+      const label = STATE_LABELS[newState] || newState;
+      const isGood = newState === 'COMPLETED' || newState === 'RELEASED';
+      isGood
+        ? toast.success(label, { description: `Trade #${tradeId} has been ${newState.toLowerCase()}.`, duration: 8000 })
+        : toast.warning(label, { description: `Trade #${tradeId} has been cancelled.` });
+    }
+    
     // Dispatch a custom event to notify other components
     const event = new CustomEvent('copiale-p2p:trade-state-changed', {
       detail: { tradeId, newState: newTrade.leg1_state },

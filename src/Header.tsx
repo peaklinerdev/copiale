@@ -80,7 +80,7 @@ function Header({ isLoggedIn, account }: HeaderProps) {
       }
     };
     fetchBalances();
-    const interval = setInterval(fetchBalances, 30000);
+    const interval = setInterval(fetchBalances, 120000);
     return () => clearInterval(interval);
   }, [isConnected, primaryWallet, currentNetwork, blockchainService]);
 

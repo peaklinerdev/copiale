@@ -80,10 +80,10 @@ export function useTradeUpdates(tradeId: number) {
 
   // Use smart polling
   const polling = useSmartPolling(fetchTrade, [tradeId], {
-    initialInterval: 5000,
-    minInterval: 2000,
-    maxInterval: 10000, // Reduced from 30000 to 10000 (10 seconds max)
-    inactivityThreshold: 3 * 60 * 1000, // 3 minutes
+    initialInterval: 15000,
+    minInterval: 5000,
+    maxInterval: 30000,
+    inactivityThreshold: 5 * 60 * 1000,
     tradeStateChangeCallback: handleTradeStateChange,
   });
 

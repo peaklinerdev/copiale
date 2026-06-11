@@ -60,6 +60,8 @@ export interface SolanaProgramInterface {
 
   // Withdraw
   withdrawUsdt(destinationAddress: string, amount: number): Promise<TransactionResult>;
+
+  getUsdtAta(): Promise<string>;
 }
 
 export class SolanaProgram implements SolanaProgramInterface {
@@ -840,6 +842,12 @@ export class SolanaProgram implements SolanaProgramInterface {
       console.error('[ERROR] withdrawUsdt failed:', error);
       return { success: false, error: this.handleError(error) };
     }
+  }
+
+  async getUsdtAta(): Promise<string> {
+    const wallet = new PublicKey(this.dynamicWallet.address);
+    const ata = await getAssociatedTokenAddress(this.usdtMint, wallet);
+    return ata.toBase58();
   }
 
   async getEscrowStateByAddress(escrowAddress: string): Promise<EscrowState> {

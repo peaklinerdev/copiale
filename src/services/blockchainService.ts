@@ -54,6 +54,7 @@ export interface BlockchainService {
 
   // Withdraw
   withdrawUsdt(destinationAddress: string, amount: number): Promise<TransactionResult>;
+  getUsdtAta(): Promise<string>;
 
   // Event monitoring
   subscribeToEscrowEvents(
@@ -209,6 +210,11 @@ export class UnifiedBlockchainService implements BlockchainService {
       throw new Error('Solana program not initialized');
     }
     return this.solanaProgram.withdrawUsdt(destinationAddress, amount);
+  }
+
+  async getUsdtAta(): Promise<string> {
+    if (!this.solanaProgram) throw new Error('Solana program not initialized');
+    return this.solanaProgram.getUsdtAta();
   }
 
   // Dispute Operations (Solana devnet only for now)

@@ -20,7 +20,8 @@ interface WalletModalProps {
 
 export function WalletModal({ isOpen, onClose }: WalletModalProps) {
   const { primaryWallet } = useDynamicContext();
-  const address = primaryWallet?.address || '';
+  const walletAddress = primaryWallet?.address || '';
+  const [usdtAta, setUsdtAta] = useState<string>('');
   const [balance, setBalance] = useState<string>('0.00');
   const [copied, setCopied] = useState(false);
   const [withdrawAddress, setWithdrawAddress] = useState('');
@@ -29,22 +30,24 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
   useEffect(() => {
     if (!isOpen) return;
-    const fetchBalance = async () => {
+    const init = async () => {
       try {
         const b = await blockchainService.getWalletBalance();
         setBalance((b / 1_000_000).toFixed(2));
+        const ata = await blockchainService.getUsdtAta();
+        setUsdtAta(ata);
       } catch { setBalance('0.00'); }
     };
-    fetchBalance();
-    const interval = setInterval(fetchBalance, 15000);
+    init();
+    const interval = setInterval(init, 15000);
     return () => clearInterval(interval);
   }, [isOpen]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(address);
+    navigator.clipboard.writeText(usdtAta);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    toast.success('Address copied');
+    toast.success('USDT deposit address copied');
   };
 
   const handleWithdraw = async () => {
@@ -96,11 +99,11 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
               <ArrowDownLeft size={14} className="text-[#02c076]" /> Deposit
             </div>
             <p className="text-[11px] text-[#848e9c] mb-2">
-              Send USDT (Solana devnet) to your wallet address:
+              Send USDT (Solana) to this address:
             </p>
             <div className="flex gap-2">
               <Input
-                value={address}
+                value={usdtAta}
                 readOnly
                 className="bg-[#0b0e11] border-[#2b3139] text-[#848e9c] text-xs font-mono h-9 rounded-sm"
               />
@@ -113,6 +116,9 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
                 {copied ? <Check size={14} className="text-[#02c076]" /> : <Copy size={14} />}
               </Button>
             </div>
+            <p className="text-[10px] text-[#5e6673] mt-1.5">
+              This is your wallet address: <span className="font-mono text-[#848e9c]">{walletAddress.substring(0, 8)}...{walletAddress.substring(walletAddress.length - 8)}</span>
+            </p>
           </div>
 
           {/* Withdraw */}

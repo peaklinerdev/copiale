@@ -178,6 +178,8 @@ function Header({ isLoggedIn, account }: HeaderProps) {
                   </button>
                   {/* Hover tooltip */}
                   <div className="absolute top-full right-0 mt-2 hidden group-hover:block z-50">
+                    {/* Arrow */}
+                    <div className="absolute -top-1 right-4 w-2 h-2 bg-[#0b0e11] border-t border-l border-[#2b3139] rotate-45" />
                     <div className="bg-[#0b0e11] border border-[#2b3139] rounded-sm p-3 min-w-[150px] shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
                       <div className="flex items-center justify-between gap-4 text-[11px] mb-1">
                         <span className="text-[#848e9c]">USDT</span>

@@ -176,9 +176,9 @@ function Header({ isLoggedIn, account }: HeaderProps) {
                 </div>
                 <button
                   onClick={() => setWalletModalOpen(true)}
-                  className="bg-[#2b3139] hover:bg-[#3b4149] text-[#eaecef] font-bold px-3 h-8 text-xs rounded-sm flex items-center gap-1.5"
+                  className="bg-[#1e2329] border border-[#2b3139] hover:border-[#3b4149] text-[#eaecef] font-bold px-3 h-8 text-xs rounded-sm flex items-center gap-1.5 transition-colors"
                 >
-                  <Wallet size={14} />
+                  <Wallet size={14} className="text-[#848e9c]" />
                   Wallet
                 </button>
                 <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>

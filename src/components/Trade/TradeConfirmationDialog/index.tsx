@@ -46,7 +46,7 @@ const TradeConfirmationDialog = ({
   } = useSellerUsdcBalance(isSeller ? primaryWallet?.address : undefined, isOpen, '');
 
   const usdcBalanceNum = usdcBalance !== null ? Number(usdcBalance) / 1e6 : null;
-  const maxFromBalance = isSeller && usdcBalanceNum !== null ? usdcBalanceNum / 1.01 : undefined;
+  const maxFromBalance = isSeller && usdcBalanceNum !== null ? Math.floor(usdcBalanceNum * 1e6 / 1.01) / 1e6 : undefined;
 
   const {
     amount,
@@ -67,7 +67,7 @@ const TradeConfirmationDialog = ({
     !usdcLoading &&
     !usdcError &&
     amountToEscrow > 0 &&
-    usdcBalanceNum < amountToEscrow * 1.01;
+    usdcBalanceNum < Math.round(amountToEscrow * 1.01 * 1e6) / 1e6;
 
   const canConfirm = !loading && !amountError && !insufficient && fiatAmount > 0 && amount !== '';
   const rateNum = numericValue(offer.rate_adjustment);

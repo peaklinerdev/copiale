@@ -4,7 +4,6 @@ import Container from '@/components/Shared/Container';
 import { versionInfo } from '@/utils/version';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 
-const GITHUB_REPO_URL = 'https://github.com/Copiale/copiale-p2p';
 
 function explorerAddressUrl(
   blockExplorerUrl: string | null | undefined,

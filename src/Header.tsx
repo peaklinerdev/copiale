@@ -9,7 +9,7 @@ import {
 import { Account, setAuthToken, getPrices } from './api';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Menu, X, Plus, LayoutDashboard, ScrollText, ClipboardList, LogOut, ArrowUpRight, Wallet } from 'lucide-react';
+import { User, Menu, X, Plus, LayoutDashboard, ScrollText, ClipboardList, LogOut, ArrowUpRight } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,12 +53,12 @@ function Header({ isLoggedIn, account }: HeaderProps) {
   const fetchPrices = useCallback(async () => {
     try {
       const response = await getPrices();
-      setPrices(response.data.data.USDT || response.data.data.USDC);
+      setPrices(response.data.data.USDC);
       setPriceError(null);
     } catch (err) {
       try {
         const fallback = await loadFallbackPrices();
-        setPrices(fallback.data.USDT || fallback.data.USDC);
+        setPrices(fallback.data.USDC);
         setPriceError(null);
       } catch (fbErr) {
         setPriceError('Price data unavailable');

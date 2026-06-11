@@ -41,7 +41,7 @@ export function useTradeUpdates(tradeId: number) {
 
       // Compare with previous data to detect changes
       const previousData = previousDataRef.current;
-      const hasStateChanged = previousData && previousData.leg1_state !== tradeData.leg1_state;
+      const _hasStateChanged = previousData && previousData.leg1_state !== tradeData.leg1_state;
 
       // Store the trade data for future conditional requests
       previousDataRef.current = tradeData;

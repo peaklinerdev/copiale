@@ -52,6 +52,9 @@ export interface BlockchainService {
   // Platform config
   initializeConfig(arbitrator: string, acceptedMint: string): Promise<TransactionResult>;
 
+  // Withdraw
+  withdrawUsdt(destinationAddress: string, amount: number): Promise<TransactionResult>;
+
   // Event monitoring
   subscribeToEscrowEvents(
     escrowId: number,
@@ -199,6 +202,13 @@ export class UnifiedBlockchainService implements BlockchainService {
       throw new Error('Solana program not initialized');
     }
     return this.solanaProgram.initializeConfig(arbitrator, acceptedMint);
+  }
+
+  async withdrawUsdt(destinationAddress: string, amount: number): Promise<TransactionResult> {
+    if (!this.solanaProgram) {
+      throw new Error('Solana program not initialized');
+    }
+    return this.solanaProgram.withdrawUsdt(destinationAddress, amount);
   }
 
   // Dispute Operations (Solana devnet only for now)

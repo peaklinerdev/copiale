@@ -57,6 +57,9 @@ export interface SolanaProgramInterface {
 
   // Platform config
   initializeConfig(arbitrator: string, acceptedMint: string): Promise<TransactionResult>;
+
+  // Withdraw
+  withdrawUsdt(destinationAddress: string, amount: number): Promise<TransactionResult>;
 }
 
 export class SolanaProgram implements SolanaProgramInterface {
@@ -803,6 +806,42 @@ export class SolanaProgram implements SolanaProgramInterface {
   }
 
   // New methods that accept escrow address directly
+  async withdrawUsdt(destinationAddress: string, amount: number): Promise<TransactionResult> {
+    try {
+      const from = new PublicKey(this.dynamicWallet.address);
+      const to = new PublicKey(destinationAddress);
+
+      const fromAta = await getAssociatedTokenAddress(this.usdtMint, from);
+      const toAta = await getAssociatedTokenAddress(this.usdtMint, to);
+
+      const { createTransferInstruction } = await import('@solana/spl-token');
+      const tx = new Transaction();
+
+      // Create destination ATA if needed
+      const toAccountInfo = await this.connection.getAccountInfo(toAta);
+      if (!toAccountInfo) {
+        tx.add(createAssociatedTokenAccountInstruction(from, toAta, to, this.usdtMint));
+      }
+
+      tx.add(
+        createTransferInstruction(
+          fromAta,
+          toAta,
+          from,
+          BigInt(Math.round(amount * 1_000_000)),
+        )
+      );
+
+      const useRelay = this.gasPayerPubkey !== null;
+      const signature = await this.sendTransaction(tx, useRelay);
+
+      return { success: true, signature, slot: await this.connection.getSlot() };
+    } catch (error) {
+      console.error('[ERROR] withdrawUsdt failed:', error);
+      return { success: false, error: this.handleError(error) };
+    }
+  }
+
   async getEscrowStateByAddress(escrowAddress: string): Promise<EscrowState> {
     try {
       // Get provider and program with Dynamic.xyz wallet

@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { Account } from '@/api';
-import { blockchainService } from '@/services/blockchainService';
 import CreateAccountForm from '@/components/Account/CreateAccountForm';
 import EditAccountForm from '@/components/Account/EditAccountForm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -35,24 +34,6 @@ function AccountPage({ account, setAccount }: AccountPageProps) {
   const { primaryWallet } = useDynamicContext();
   const [isEditing, setIsEditing] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState('');
-  const [usdtBal, setUsdtBal] = useState('0.00');
-  const [solBal, setSolBal] = useState('0.00');
-
-  useEffect(() => {
-    if (!primaryWallet?.address) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const u = await blockchainService.getWalletBalance();
-        if (!cancelled) setUsdtBal((u / 1_000_000).toFixed(2));
-      } catch { /* rate limited */ }
-      try {
-        const s = await blockchainService.getSolBalance();
-        if (!cancelled) setSolBal(s.toFixed(4));
-      } catch { /* rate limited */ }
-    })();
-    return () => { cancelled = true; };
-  }, [primaryWallet?.address]);
 
   if (!primaryWallet) {
     return (
@@ -187,24 +168,6 @@ function ProfileDisplay({ account }: { account: Account }) {
                     <Copy className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-              </div>
-            </div>
-
-            {/* Wallet Balance Bar */}
-            <div className="w-full max-w-xs mx-auto mt-4 bg-[#0b0e11] border border-[#2b3139] rounded-sm p-3">
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#02c076]" />
-                  <span className="text-[#848e9c]">USDT</span>
-                </div>
-                <span className="text-[#eaecef] font-medium">{usdtBal}</span>
-              </div>
-              <div className="flex items-center justify-between text-xs mt-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#9945FF]" />
-                  <span className="text-[#848e9c]">SOL</span>
-                </div>
-                <span className="text-[#eaecef] font-medium">{solBal}</span>
               </div>
             </div>
 

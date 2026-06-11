@@ -2,27 +2,59 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Copy, ArrowDownLeft, ArrowUpRight, Check, Loader2, QrCode, X, ExternalLink, RefreshCw, Shield } from 'lucide-react';
+import { Check, Loader2, QrCode, X, Shield } from 'lucide-react';
 import { blockchainService } from '@/services/blockchainService';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { formatNumber } from '@/lib/utils';
 
-interface WalletModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onRefresh?: () => void;
-}
+interface WalletModalProps { isOpen: boolean; onClose: () => void; }
 
 type View = 'main' | 'deposit' | 'withdraw';
 
-export function WalletModal({ isOpen, onClose, onRefresh }: WalletModalProps) {
+const DepositIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="2" x2="12" y2="16" /><polyline points="8 12 12 16 16 12" /><line x1="4" y1="20" x2="20" y2="20" />
+  </svg>
+);
+
+const WithdrawIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="22" x2="12" y2="8" /><polyline points="8 12 12 8 16 12" /><line x1="4" y1="4" x2="20" y2="4" />
+  </svg>
+);
+
+const CopyIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+);
+
+const CheckIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+);
+
+const RefreshIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>
+);
+
+const SolIcon = () => (
+  <div className="w-9 h-9 rounded-full bg-[#9945FF]/20 flex items-center justify-center">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9945FF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="6" y1="18" x2="18" y2="6" /><polyline points="9 6 18 6 18 15" />
+    </svg>
+  </div>
+);
+
+const UsdtIcon = () => (
+  <div className="w-9 h-9 rounded-full bg-[#02c076]/20 flex items-center justify-center">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#02c076" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" /><line x1="12" y1="6" x2="12" y2="18" /><polyline points="8 10 12 6 16 10" /><polyline points="8 14 12 18 16 14" />
+    </svg>
+  </div>
+);
+
+export function WalletModal({ isOpen, onClose }: WalletModalProps) {
   const { primaryWallet } = useDynamicContext();
   const address = primaryWallet?.address || '';
   const [view, setView] = useState<View>('main');
@@ -30,18 +62,12 @@ export function WalletModal({ isOpen, onClose, onRefresh }: WalletModalProps) {
   const [solBalance, setSolBalance] = useState(0);
   const [usdtAta, setUsdtAta] = useState('');
   const [loading, setLoading] = useState(true);
-
-  // Withdraw
   const [toAddress, setToAddress] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawing, setWithdrawing] = useState(false);
-
-  // Deposit
   const [creatingAta, setCreatingAta] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState('');
-
-  // Copy
-  const [copiedField, setCopiedField] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -60,22 +86,22 @@ export function WalletModal({ isOpen, onClose, onRefresh }: WalletModalProps) {
 
   useEffect(() => { if (isOpen) { setView('main'); loadData(); } }, [isOpen, address]);
 
-  const handleCopy = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedField(label);
-    setTimeout(() => setCopiedField(''), 2000);
-    toast.success(`${label} copied`);
+  const usdtDisplay = (usdtBalance / 1_000_000);
+  const solDisplay = solBalance;
+  const totalUsd = usdtDisplay + solDisplay * 140; // rough SOL price
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(address);
+    setCopied(true); setTimeout(() => setCopied(false), 2000);
+    toast.success('Address copied');
   };
 
   const handleDeposit = async () => {
-    setCreatingAta(true);
-    setView('deposit');
+    setCreatingAta(true); setView('deposit');
     try {
-      const ata = await blockchainService.createUsdtAta();
-      setUsdtAta(ata);
+      const ata = await blockchainService.createUsdtAta(); setUsdtAta(ata);
       const QRCode = (await import('qrcode')).default;
-      const url = await QRCode.toDataURL(ata, { width: 220, margin: 1 });
-      setQrDataUrl(url);
+      setQrDataUrl(await QRCode.toDataURL(ata, { width: 200, margin: 1 }));
     } catch { toast.error('Failed to create USDT account'); }
     setCreatingAta(false);
   };
@@ -85,221 +111,173 @@ export function WalletModal({ isOpen, onClose, onRefresh }: WalletModalProps) {
     setWithdrawing(true);
     try {
       const result = await blockchainService.withdrawUsdt(toAddress, Number(withdrawAmount));
-      if (result.success) {
-        toast.success(`Sent ${withdrawAmount} USDT`);
-        setToAddress(''); setWithdrawAmount(''); setView('main'); loadData(); onRefresh?.();
-      } else {
-        toast.error(result.error || 'Withdraw failed');
-      }
+      if (result.success) { toast.success(`Sent ${withdrawAmount} USDT`); setToAddress(''); setWithdrawAmount(''); setView('main'); loadData(); }
+      else toast.error(result.error || 'Withdraw failed');
     } catch (e) { toast.error(e instanceof Error ? e.message : 'Withdraw failed'); }
     setWithdrawing(false);
   };
 
-  const usdtDisplay = (usdtBalance / 1_000_000);
-  const solDisplay = solBalance;
+  const solPct = totalUsd > 0 ? (solDisplay * 140 / totalUsd * 100) : 0;
+  const usdtPct = 100 - solPct;
 
   return (
     <Dialog open={isOpen} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="bg-[#1e2329] border border-[#2b3139] text-[#eaecef] max-w-md w-full rounded-sm p-0 gap-0">
-        {/* ── MAIN VIEW ── */}
+      <DialogContent className="bg-[#1e2329] border border-[#2b3139] text-[#eaecef] max-w-[380px] w-full rounded-sm p-0 gap-0">
         {view === 'main' && (
           <>
-            <DialogHeader className="px-6 pt-6 pb-4">
+            {/* Header */}
+            <DialogHeader className="px-5 pt-5 pb-0">
               <div className="flex items-center justify-between">
                 <DialogTitle className="text-[#eaecef] text-base font-bold">Wallet</DialogTitle>
-                <button onClick={loadData} className="text-[#848e9c] hover:text-[#eaecef]" title="Refresh">
-                  <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-                </button>
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1 bg-[#02c076]/10 border border-[#02c076]/20 rounded-sm px-2 py-0.5 text-[10px] font-bold text-[#02c076]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#02c076]" /> Solana devnet
+                  </span>
+                  <button onClick={loadData} className="text-[#848e9c] hover:text-[#eaecef]"><RefreshIcon /></button>
+                  <button onClick={onClose} className="text-[#848e9c] hover:text-[#eaecef]"><X size={15} /></button>
+                </div>
               </div>
             </DialogHeader>
 
-            <div className="px-6 pb-6 space-y-4">
+            <div className="px-5 pb-5 space-y-4">
               {/* Total balance */}
-              <div className="bg-gradient-to-br from-[#FF6B00]/10 to-[#1e2329] border border-[#2b3139] rounded-sm p-4 text-center">
+              <div className="text-center pt-2">
                 <div className="text-[10px] text-[#848e9c] uppercase font-bold tracking-wider mb-1">Total Balance</div>
-                <div className="text-2xl font-bold text-[#eaecef]">
-                  {loading ? '...' : usdtDisplay.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  <span className="text-sm text-[#848e9c] font-normal"> USDT</span>
+                <div className="text-[32px] font-bold text-[#eaecef] leading-tight">
+                  ${loading ? '...' : totalUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
-                <div className="text-[10px] text-[#5e6673] mt-0.5">{formatNumber(address.substring(0, 4) + '...' + address.substring(address.length - 4))}</div>
+                <div className="mt-2">
+                  <span className="inline-flex items-center gap-1 bg-[#02c076]/10 text-[10px] font-bold text-[#02c076] px-2 py-0.5 rounded-sm">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 8 12 2 6 8" /><line x1="12" y1="2" x2="12" y2="22" /></svg>
+                    +{solPct > 0 ? '0.0' : '0.0'}% today
+                  </span>
+                </div>
               </div>
 
-              {/* Token list */}
-              <div className="space-y-1.5">
-                {/* USDT */}
-                <div className="bg-[#0b0e11] border border-[#2b3139] rounded-sm p-3 flex items-center justify-between">
+              {/* Allocation bar */}
+              <div className="flex h-[3px] rounded-full overflow-hidden">
+                <div className="bg-[#02c076]" style={{ width: `${Math.max(usdtPct, 0.5)}%` }} />
+                <div className="bg-[#9945FF]" style={{ width: `${Math.max(solPct, 0.5)}%` }} />
+              </div>
+
+              {/* Asset rows */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between p-3 rounded-sm hover:bg-white/[0.03] transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-[#02c076]/20 flex items-center justify-center text-xs font-bold text-[#02c076]">$</div>
+                    <UsdtIcon />
                     <div>
                       <div className="text-sm font-bold text-[#eaecef]">USDT</div>
                       <div className="text-[10px] text-[#5e6673]">Tether USD</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-bold text-[#eaecef]">{loading ? '...' : usdtDisplay.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    <div className="text-sm font-bold text-[#eaecef]">${loading ? '...' : usdtDisplay.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    <div className="text-[10px] text-[#5e6673]">{loading ? '...' : usdtDisplay.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT</div>
                   </div>
                 </div>
-
-                {/* SOL */}
-                <div className="bg-[#0b0e11] border border-[#2b3139] rounded-sm p-3 flex items-center justify-between">
+                <div className="flex items-center justify-between p-3 rounded-sm hover:bg-white/[0.03] transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-[#9945FF]/20 flex items-center justify-center text-xs font-bold text-[#9945FF]">S</div>
+                    <SolIcon />
                     <div>
                       <div className="text-sm font-bold text-[#eaecef]">SOL</div>
-                      <div className="text-[10px] text-[#5e6673]">Solana</div>
+                      <div className="text-[10px] text-[#5e6673]">Solana · {totalUsd > 0 ? `~$${(solDisplay > 0 ? (usdtDisplay / solDisplay).toFixed(2) : '0')} ea.` : '...'}</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-bold text-[#eaecef]">{loading ? '...' : solDisplay.toFixed(4)}</div>
+                    <div className="text-sm font-bold text-[#eaecef]">${loading ? '...' : (solDisplay * 140).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    <div className="text-[10px] text-[#5e6673]">{loading ? '...' : solDisplay.toFixed(4)} SOL</div>
                   </div>
                 </div>
               </div>
 
               {/* Actions */}
               <div className="flex gap-3">
-                <button
-                  onClick={handleDeposit}
-                  className="flex-1 bg-[#02c076] hover:opacity-90 !text-[#0b0e11] rounded-sm font-bold h-10 text-sm flex items-center justify-center gap-2"
-                >
-                  <ArrowDownLeft size={15} /> Deposit
+                <button onClick={handleDeposit} className="flex-1 bg-[#02c076] hover:opacity-90 !text-[#0b0e11] rounded-sm font-bold h-10 text-sm flex items-center justify-center gap-2">
+                  <DepositIcon /> Deposit
                 </button>
-                <button
-                  onClick={() => setView('withdraw')}
-                  disabled={usdtBalance <= 0}
-                  className="flex-1 bg-[#f84960] hover:opacity-90 disabled:opacity-30 !text-[#0b0e11] rounded-sm font-bold h-10 text-sm flex items-center justify-center gap-2"
-                >
-                  <ArrowUpRight size={15} /> Withdraw
+                <button onClick={() => setView('withdraw')} disabled={usdtBalance <= 0} className="flex-1 border border-[#2b3139] text-[#eaecef] hover:bg-[#2b3139] disabled:opacity-30 rounded-sm font-bold h-10 text-sm flex items-center justify-center gap-2">
+                  <WithdrawIcon /> Withdraw
                 </button>
               </div>
 
               {/* Wallet address */}
-              <button
-                onClick={() => handleCopy(address, 'Address')}
-                className="w-full bg-[#0b0e11] border border-[#2b3139] rounded-sm p-3 text-left hover:border-[#3b4149] transition-colors"
-              >
-                <div className="text-[10px] text-[#848e9c] uppercase font-bold tracking-wider mb-1">Wallet Address</div>
+              <div className="bg-[#0b0e11] border border-[#2b3139] rounded-sm p-3">
+                <div className="text-[9px] text-[#5e6673] uppercase font-bold tracking-wider mb-1.5">Wallet Address</div>
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs text-[#848e9c]">{address.substring(0, 12)}...{address.substring(address.length - 8)}</span>
-                  <span className="text-[#848e9c]">{copiedField === 'Address' ? <Check size={14} className="text-[#02c076]" /> : <Copy size={14} />}</span>
+                  <span className="font-mono text-[11px] text-[#848e9c] select-all">
+                    {address.substring(0, 14)}...{address.substring(address.length - 8)}
+                  </span>
+                  <button onClick={handleCopy} className="text-[#848e9c] hover:text-[#eaecef]">
+                    {copied ? <span className="text-[#02c076]"><CheckIcon /></span> : <CopyIcon />}
+                  </button>
                 </div>
-              </button>
+              </div>
             </div>
           </>
         )}
 
-        {/* ── DEPOSIT VIEW ── */}
         {view === 'deposit' && (
           <>
-            <DialogHeader className="px-6 pt-6 pb-2">
+            <DialogHeader className="px-5 pt-5 pb-2">
               <div className="flex items-center justify-between">
-                <button onClick={() => setView('main')} className="text-[#848e9c] hover:text-[#eaecef]"><X size={18} /></button>
+                <button onClick={() => { setView('main'); setQrDataUrl(''); }} className="text-[#848e9c] hover:text-[#eaecef]"><X size={16} /></button>
                 <DialogTitle className="text-[#eaecef] text-base font-bold">Deposit USDT</DialogTitle>
                 <div className="w-5" />
               </div>
             </DialogHeader>
-
-            <div className="px-6 pb-6 space-y-4 text-center">
+            <div className="px-5 pb-5 space-y-4 text-center">
               {creatingAta ? (
                 <div className="py-12">
-                  <Loader2 size={28} className="animate-spin mx-auto text-[#FF6B00] mb-4" />
+                  <Loader2 size={28} className="animate-spin mx-auto text-[#02c076] mb-3" />
                   <p className="text-sm text-[#eaecef]">Creating your USDT account...</p>
-                  <p className="text-[10px] text-[#848e9c] mt-1">This only happens once</p>
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-center gap-2 text-xs text-[#f84960] bg-[#f84960]/10 border border-[#f84960]/20 rounded-sm py-2 px-3">
-                    <Shield size={13} />
-                    Send only USDT (Solana) to this address
+                  <div className="flex items-center justify-center gap-2 text-[10px] text-[#f84960] bg-[#f84960]/10 border border-[#f84960]/20 rounded-sm py-2 px-3">
+                    <Shield size={12} /> Send only USDT (Solana) to this address
                   </div>
-
-                  <div className="bg-white p-4 rounded-sm inline-block shadow-lg">
-                    {qrDataUrl ? (
-                      <img src={qrDataUrl} alt="Deposit QR" className="w-52 h-52" />
-                    ) : (
-                      <QrCode size={208} className="text-[#0b0e11]" />
-                    )}
+                  <div className="bg-white p-3 rounded-sm inline-block">
+                    {qrDataUrl ? <img src={qrDataUrl} alt="QR" className="w-48 h-48" /> : <QrCode size={192} className="text-[#0b0e11]" />}
                   </div>
-
-                  <div>
-                    <p className="text-[10px] text-[#848e9c] uppercase font-bold tracking-wider mb-2">Deposit Address</p>
-                    <div className="bg-[#0b0e11] border border-[#2b3139] rounded-sm p-3 font-mono text-xs text-[#eaecef] break-all leading-relaxed">
-                      {usdtAta || address}
-                    </div>
-                    <div className="flex gap-2 mt-2">
-                      <Button
-                        variant="outline" size="sm"
-                        onClick={() => handleCopy(usdtAta || address, 'Address')}
-                        className="flex-1 border-[#2b3139] text-[#eaecef] hover:bg-[#2b3139] rounded-sm h-9 text-xs"
-                      >
-                        {copiedField === 'Address' ? <Check size={14} className="mr-1 text-[#02c076]" /> : <Copy size={14} className="mr-1" />}
-                        {copiedField === 'Address' ? 'Copied' : 'Copy Address'}
-                      </Button>
-                    </div>
+                  <div className="bg-[#0b0e11] border border-[#2b3139] rounded-sm p-3 font-mono text-xs text-[#eaecef] break-all">
+                    {usdtAta || address}
                   </div>
+                  <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(usdtAta || address); toast.success('Address copied'); }} className="w-full border-[#2b3139] text-[#eaecef] hover:bg-[#2b3139] rounded-sm h-9 text-xs">
+                    <CopyIcon /> <span className="ml-1.5">Copy Address</span>
+                  </Button>
                 </>
               )}
             </div>
           </>
         )}
 
-        {/* ── WITHDRAW VIEW ── */}
         {view === 'withdraw' && (
           <>
-            <DialogHeader className="px-6 pt-6 pb-2">
+            <DialogHeader className="px-5 pt-5 pb-2">
               <div className="flex items-center justify-between">
-                <button onClick={() => { setView('main'); setToAddress(''); setWithdrawAmount(''); }} className="text-[#848e9c] hover:text-[#eaecef]"><X size={18} /></button>
+                <button onClick={() => { setView('main'); setToAddress(''); setWithdrawAmount(''); }} className="text-[#848e9c] hover:text-[#eaecef]"><X size={16} /></button>
                 <DialogTitle className="text-[#eaecef] text-base font-bold">Withdraw USDT</DialogTitle>
                 <div className="w-5" />
               </div>
             </DialogHeader>
-
-            <div className="px-6 pb-6 space-y-4">
-              <div className="bg-[#0b0e11] border border-[#2b3139] rounded-sm p-3 flex items-center justify-between">
-                <div>
-                  <div className="text-[10px] text-[#848e9c] uppercase font-bold">Available</div>
-                  <div className="text-lg font-bold text-[#eaecef]">{usdtDisplay.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm text-[#848e9c] font-normal">USDT</span></div>
-                </div>
-                <div className="w-9 h-9 rounded-full bg-[#02c076]/20 flex items-center justify-center text-xs font-bold text-[#02c076]">$</div>
+            <div className="px-5 pb-5 space-y-4">
+              <div className="bg-[#0b0e11] border border-[#2b3139] rounded-sm p-3">
+                <div className="text-[10px] text-[#848e9c] uppercase font-bold tracking-wider mb-1">Available</div>
+                <div className="text-lg font-bold text-[#eaecef]">{usdtDisplay.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm text-[#848e9c] font-normal">USDT</span></div>
               </div>
-
               <div className="space-y-1.5">
                 <label className="text-[10px] text-[#848e9c] uppercase font-bold tracking-wider">Destination</label>
-                <Input
-                  placeholder="Wallet address or USDT account"
-                  value={toAddress}
-                  onChange={(e) => setToAddress(e.target.value)}
-                  className="bg-[#0b0e11] border-[#2b3139] text-[#eaecef] text-xs h-9 rounded-sm font-mono"
-                />
+                <Input placeholder="Wallet address or USDT account" value={toAddress} onChange={e => setToAddress(e.target.value)} className="bg-[#0b0e11] border-[#2b3139] text-[#eaecef] text-xs h-9 rounded-sm font-mono" />
               </div>
-
               <div className="space-y-1.5">
                 <label className="text-[10px] text-[#848e9c] uppercase font-bold tracking-wider">Amount (USDT)</label>
                 <div className="flex gap-2">
-                  <Input
-                    type="text" inputMode="decimal" placeholder="0.00"
-                    value={withdrawAmount}
-                    onChange={(e) => { if (/^\d*\.?\d{0,2}$/.test(e.target.value)) setWithdrawAmount(e.target.value); }}
-                    className="bg-[#0b0e11] border-[#2b3139] text-[#eaecef] text-xs h-9 rounded-sm flex-1"
-                  />
-                  <button
-                    onClick={() => setWithdrawAmount(usdtDisplay.toFixed(2))}
-                    className="border border-[#2b3139] text-[#848e9c] hover:text-[#eaecef] hover:bg-[#2b3139] rounded-sm h-9 px-3 text-xs font-medium"
-                  >
-                    Max
-                  </button>
+                  <Input type="text" inputMode="decimal" placeholder="0.00" value={withdrawAmount} onChange={e => { if (/^\d*\.?\d{0,2}$/.test(e.target.value)) setWithdrawAmount(e.target.value); }} className="bg-[#0b0e11] border-[#2b3139] text-[#eaecef] text-xs h-9 rounded-sm flex-1" />
+                  <button onClick={() => setWithdrawAmount(usdtDisplay.toFixed(2))} className="border border-[#2b3139] text-[#848e9c] hover:text-[#eaecef] hover:bg-[#2b3139] rounded-sm h-9 px-3 text-xs font-medium">Max</button>
                 </div>
               </div>
-
-              <Button
-                onClick={handleWithdraw}
-                disabled={!toAddress || !withdrawAmount || withdrawing}
-                className="w-full bg-[#f84960] hover:opacity-90 disabled:opacity-40 !text-[#0b0e11] rounded-sm font-bold h-10 text-sm"
-              >
-                {withdrawing ? (
-                  <><Loader2 size={15} className="animate-spin mr-2" /> Sending...</>
-                ) : (
-                  `Withdraw ${withdrawAmount || '0'} USDT`
-                )}
+              <Button onClick={handleWithdraw} disabled={!toAddress || !withdrawAmount || withdrawing} className="w-full bg-[#f84960] hover:opacity-90 disabled:opacity-40 !text-[#0b0e11] rounded-sm font-bold h-10 text-sm">
+                {withdrawing ? <><Loader2 size={15} className="animate-spin mr-2" /> Sending...</> : `Withdraw ${withdrawAmount || '0'} USDT`}
               </Button>
             </div>
           </>

@@ -67,7 +67,7 @@ const TradeConfirmationDialog = ({
     !usdcLoading &&
     !usdcError &&
     amountToEscrow > 0 &&
-    Number(usdcBalance) < Math.round(amountToEscrow * 1.01 * 1_000_000);
+    Number(usdcBalance) < Math.round(amountToEscrow * 1.01 * 1_000_000) - 1;
 
   const canConfirm = !loading && !amountError && !insufficient && fiatAmount > 0 && amount !== '';
   const rateNum = numericValue(offer.rate_adjustment);

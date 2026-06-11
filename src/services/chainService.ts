@@ -48,6 +48,11 @@ const deriveTokenAccount = async (walletAddress: string, token: string = 'USDT')
   return tokenAccount.toString();
 };
 
+/**
+ * Determines whether the relay should pay gas for this transaction.
+ * Checks user's SOL balance — if they have enough to cover the tx fee they pay,
+ * otherwise the relay (gas payer) covers it.
+ */
 const shouldUseRelay = async (wallet: any): Promise<boolean> => {
   if (!config.gasPayerPubkey) return false;
 
@@ -55,10 +60,12 @@ const shouldUseRelay = async (wallet: any): Promise<boolean> => {
     const network = blockchainService.getCurrentNetwork();
     const connection = new Connection(network.rpcUrl, 'confirmed');
     const balance = await connection.getBalance(new PublicKey(wallet.address));
-    const thresholdLamports = config.relayThresholdSol * 1_000_000_000;
-    return balance < thresholdLamports;
+    
+    // Estimated cost of a Solana transaction with priority fee (~10k lamports)
+    const estimatedTxCost = 10_000; // 0.00001 SOL
+    return balance < estimatedTxCost;
   } catch {
-    return false;
+    return true; // If we can't check balance, fall back to relay
   }
 };
 

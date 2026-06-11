@@ -159,7 +159,7 @@ export default function BiblePage() {
           <Section id="trade-checklist" title="3. Trade Safety Checklist">
             <H3>Before starting a trade</H3>
             <Ul>
-              <li><strong>Check reputation depth, not just score.</strong> Traders with 1,000+ completed trades are significantly less likely to scam. Look at account age and whether recent reviews mention disputes. <span className="text-[10px] text-[#FF6B00]">— Copiale shows trade count, account age, and reviews on every profile.</span></li>
+              <li><strong>Check reputation depth, not just score.</strong> Traders with 1,000+ completed trades are significantly less likely to scam. Look at account age and whether recent reviews mention disputes. <span className="text-[10px] text-[#FF6B00]">— Copiale shows account age and reviews on every profile.</span></li>
               <li><strong>Match payment name to platform ID.</strong> The name on the incoming transfer must exactly match the verified name on the platform profile. Any discrepancy is a red flag — cancel and walk away.</li>
               <li><strong>Prefer non-reversible payment methods when selling.</strong> Instant rails like UPI (India), PIX (Brazil), PromptPay (Thailand), GCash (Philippines), and most mobile money systems settle immediately and cannot be charged back.</li>
               <li><strong>Start small with new counterparties.</strong> Even a high-reputation trader is unproven with you personally. Test with a smaller trade first.</li>

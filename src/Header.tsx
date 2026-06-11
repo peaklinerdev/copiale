@@ -10,7 +10,7 @@ import {
 import { Account, setAuthToken, getPrices } from './api';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Menu, X, Plus, LayoutDashboard, ScrollText, ClipboardList, LogOut, ArrowUpRight } from 'lucide-react';
+import { User, Menu, X, Plus, LayoutDashboard, ScrollText, ClipboardList, LogOut } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +29,6 @@ import Container from '@/components/Shared/Container';
 import { useBlockchainService } from './hooks/useBlockchainService';
 import { loadFallbackPrices } from './lib/priceFallback';
 import { REFERENCE_CURRENCIES, TRADING_CURRENCIES } from './lib/currencies';
-import { WalletModal } from '@/components/WalletModal';
 
 interface HeaderProps {
   isLoggedIn: boolean;
@@ -48,7 +47,6 @@ function Header({ isLoggedIn, account }: HeaderProps) {
   const [_priceError, setPriceError] = useState<string | null>(null);
   const [usdtBalance, setUsdtBalance] = useState<string>('0.00');
   const [currentNetwork, setCurrentNetwork] = useState<number | string | null>(null);
-  const [walletModalOpen, setWalletModalOpen] = useState(false);
 
   const fetchPrices = useCallback(async () => {
     try {
@@ -166,10 +164,7 @@ function Header({ isLoggedIn, account }: HeaderProps) {
 
             {isLoggedIn ? (
               <div className="flex items-center gap-4">
-                <div
-                  className="hidden sm:flex flex-col items-end cursor-pointer hover:opacity-80"
-                  onClick={() => setWalletModalOpen(true)}
-                >
+                <div className="hidden sm:flex flex-col items-end">
                   <span className="text-[10px] text-[#848e9c] uppercase font-bold tracking-wider">Balance</span>
                   <span className="text-sm font-bold text-[#eaecef]">{usdtBalance} USDT</span>
                 </div>
@@ -209,10 +204,6 @@ function Header({ isLoggedIn, account }: HeaderProps) {
                       </Link>
                     </DropdownMenuItem>
                     <div className="h-px bg-[#2b3139] my-1.5 mx-1" />
-                    <DropdownMenuItem onClick={() => { setIsDropdownOpen(false); setWalletModalOpen(true); }} className="cursor-pointer hover:bg-[#2b3139] rounded-sm flex items-center gap-3 px-3 py-2 text-sm">
-                      <ArrowUpRight size={15} className="text-[#848e9c] shrink-0" />
-                      Wallet
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => { setIsDropdownOpen(false); setIsLogoutDialogOpen(true); }} className="cursor-pointer hover:bg-[#f84960]/10 rounded-sm flex items-center gap-3 px-3 py-2 text-sm text-[#f84960]">
                       <LogOut size={15} className="text-[#f84960] shrink-0" />
                       Logout
@@ -298,8 +289,6 @@ function Header({ isLoggedIn, account }: HeaderProps) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-
-    <WalletModal isOpen={walletModalOpen} onClose={() => setWalletModalOpen(false)} />
     </>
   );
 }

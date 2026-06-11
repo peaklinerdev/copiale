@@ -10,8 +10,6 @@ import usdtLogo from '@/assets/usdt.svg';
 interface Props { isOpen: boolean; onClose: () => void; }
 type Token = 'USDT' | 'SOL';
 type View = 'overview' | 'detail' | 'deposit' | 'withdraw';
-type TxFilter = 'all' | 'deposit' | 'withdraw';
-type TokenFilter = 'all' | Token;
 
 /* ── Inline SVGs ── */
 const BackSvg = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>);
@@ -38,8 +36,6 @@ export function WalletModal({ isOpen, onClose }: Props) {
   const [qr, setQr] = useState('');
   const [txs, setTxs] = useState<any[]>([]);
   const [txLoad, setTxLoad] = useState(false);
-  const [txFilter, setTxFilter] = useState<TxFilter>('all');
-  const [tokenFilter, setTokenFilter] = useState<TokenFilter>('all');
 
   const usdt = usdtBal / 1_000_000;
   const sol = solBal;
@@ -65,7 +61,7 @@ export function WalletModal({ isOpen, onClose }: Props) {
   const goWithdraw = (t: Token) => { setToken(t); setView('withdraw'); setTo(''); setAmt(''); };
   const doWithdraw = async () => { if (!to || !amt) return; setWd(true); try { const r = await blockchainService.withdrawUsdt(to, Number(amt)); if (r.success) { toast.success(`Sent ${amt} USDT`); setTo(''); setAmt(''); setView('overview'); load(); } else toast.error(r.error || 'Failed'); } catch (e: any) { toast.error(e?.message || 'Failed'); } setWd(false); };
 
-  const goDetail = async (t: Token) => { setToken(t); setView('detail'); setTxFilter('all'); setTokenFilter('all'); setTxs([]); setTxLoad(true);
+  const goDetail = async (t: Token) => { setToken(t); setView('detail'); setTxs([]); setTxLoad(true);
     try { const c = new Connection('https://api.devnet.solana.com', 'confirmed'); const target = t === 'SOL' ? addr : usdtAta; if (!target) { setTxLoad(false); return; }
       const sigs = await c.getSignaturesForAddress(new PublicKey(target), { limit: 20 }); const p: any[] = [];
       for (const s of sigs) { try { const tx = await c.getTransaction(s.signature, { maxSupportedTransactionVersion: 0 }); if (!tx) continue; const meta = tx.meta; const pre = meta?.preTokenBalances?.find(b => b.mint === (t === 'SOL' ? undefined : '8yonSxM...')); const post = meta?.postTokenBalances?.find(b => b.mint === (t === 'SOL' ? undefined : '8yonSxM...')); const diff = pre && post ? (post.uiTokenAmount?.uiAmount || 0) - (pre.uiTokenAmount?.uiAmount || 0) : t === 'SOL' ? (meta?.preBalances?.[0] && meta?.postBalances?.[0] ? (meta.postBalances[0] - meta.preBalances[0]) / 1e9 : 0) : 0; p.push({ sig: s.signature, time: tx.blockTime || 0, err: !!meta?.err, amount: diff, token: t }); } catch { /* */ } }
@@ -74,18 +70,13 @@ export function WalletModal({ isOpen, onClose }: Props) {
   const explorer = (s: string) => `https://solscan.io/tx/${s}?cluster=devnet`;
   const explorerAcct = (t: Token) => `https://solscan.io/account/${t === 'SOL' ? addr : usdtAta}?cluster=devnet`;
 
-  const filteredTxs = txs.filter(tx => {
-    if (txFilter === 'deposit' && tx.amount <= 0) return false;
-    if (txFilter === 'withdraw' && tx.amount >= 0) return false;
-    if (tokenFilter !== 'all' && tx.token !== tokenFilter) return false;
-    return true;
-  });
+  const nonZeroTxs = txs.filter(tx => tx.amount !== 0);
 
   /* ── Modal shell ── */
   return (
     <div style={isOpen ? {} : { display: 'none' }}>
       {isOpen && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-        <div className="relative bg-[#0b0e11]/95 backdrop-blur-md border border-white/[0.06] rounded-sm w-[380px] max-h-[90vh] overflow-y-auto shadow-[0_8px_32px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)]" onClick={e => e.stopPropagation()}>
+        <div className="relative bg-[#0b0e11]/95 backdrop-blur-md border border-white/[0.06] rounded-sm w-[420px] max-h-[90vh] overflow-y-auto shadow-[0_8px_32px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)]" onClick={e => e.stopPropagation()}>
           {/* ── OVERVIEW ── */}
           {view === 'overview' && (
             <>
@@ -154,26 +145,6 @@ export function WalletModal({ isOpen, onClose }: Props) {
 
                 {/* ── Transaction Table ── */}
                 <div className="mb-3">
-                  {/* Filter bar */}
-                  <div className="flex items-center justify-between bg-white/[0.03] rounded-sm px-3 py-2 mb-2">
-                    <div className="flex items-center gap-1">
-                      {(['all', 'deposit', 'withdraw'] as TxFilter[]).map(f => (
-                        <button key={f} onClick={() => setTxFilter(f)}
-                          className={`text-[10px] font-medium rounded-sm px-2.5 py-1 capitalize ${
-                            txFilter === f ? 'bg-[#FF6B00]/15 border border-[#FF6B00]/35 text-[#FF6B00]' : 'bg-white/[0.05] text-[#848e9c]'
-                          }`}>{f === 'all' ? 'All' : f + 's'}</button>
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {(['all', 'USDT', 'SOL'] as TokenFilter[]).map(f => (
-                        <button key={f} onClick={() => setTokenFilter(f)}
-                          className={`text-[10px] font-medium rounded-sm px-2.5 py-1 ${
-                            tokenFilter === f ? (f === 'USDT' ? 'bg-[#FF6B00]/15 border border-[#FF6B00]/35 text-[#FF6B00]' : f === 'SOL' ? 'bg-[#9945FF]/15 border border-[#9945FF]/35 text-[#9945FF]' : 'bg-white/[0.08] border border-white/[0.12] text-[#eaecef]') : 'bg-white/[0.05] text-[#848e9c]'
-                          }`}>{f === 'all' ? 'All' : f}</button>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Table header */}
                   <div className="flex items-center text-[10px] text-[#5e6673] uppercase tracking-wider font-medium border-b border-white/[0.08] pb-2 px-1 gap-1">
                     <span className="w-6 shrink-0 text-center">#</span>
@@ -184,10 +155,10 @@ export function WalletModal({ isOpen, onClose }: Props) {
 
                   {/* Rows */}
                   {txLoad ? <div className="text-center py-8"><Loader2 size={16} className="animate-spin mx-auto text-[#848e9c]" /></div>
-                    : filteredTxs.length === 0 ? <p className="text-center text-[10px] text-[#5e6673] py-6">No transactions</p>
+                    : nonZeroTxs.length === 0 ? <p className="text-center text-[10px] text-[#5e6673] py-6">No transactions</p>
                     : (
                       <div className="max-h-[220px] overflow-y-auto">
-                        {filteredTxs.map((tx, i) => (
+                        {nonZeroTxs.map((tx, i) => (
                           <a key={i} href={explorer(tx.sig)} target="_blank" rel="noreferrer"
                             className="flex items-center border-b border-white/[0.05] hover:bg-white/[0.03] no-underline px-1 py-2 gap-1">
                             <span className="w-6 shrink-0 flex justify-center">{tx.err ? <FailSvg /> : <CheckSvg />}</span>
@@ -208,7 +179,7 @@ export function WalletModal({ isOpen, onClose }: Props) {
 
                   {/* Footer */}
                   <div className="flex items-center justify-between border-t border-white/[0.07] pt-2 mt-1">
-                    <span className="text-[9px] text-[#5e6673]">Showing {filteredTxs.length} of {txs.length} txns</span>
+                    <span className="text-[9px] text-[#5e6673]">Showing {nonZeroTxs.length} of {txs.length} txns</span>
                     <a href={explorerAcct(token)} target="_blank" rel="noreferrer"
                       className="text-[10px] text-[#FF6B00] hover:underline font-medium flex items-center gap-1">
                       View all <ExternalLink size={10} />

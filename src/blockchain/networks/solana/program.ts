@@ -815,20 +815,26 @@ export class SolanaProgram implements SolanaProgramInterface {
       const to = new PublicKey(destinationAddress);
 
       const fromAta = await getAssociatedTokenAddress(this.usdtMint, from);
-      let toAta: PublicKey;
-      try {
-        toAta = await getAssociatedTokenAddress(this.usdtMint, to);
-      } catch {
-        return { success: false, error: 'Invalid destination address — must be a regular Solana wallet, not a program or contract address.' };
-      }
-
       const { createTransferInstruction } = await import('@solana/spl-token');
       const tx = new Transaction();
 
-      // Create destination ATA if needed
-      const toAccountInfo = await this.connection.getAccountInfo(toAta);
-      if (!toAccountInfo) {
-        tx.add(createAssociatedTokenAccountInstruction(from, toAta, to, this.usdtMint));
+      // Determine destination: if it's already a USDT token account, use directly;
+      // otherwise treat it as a wallet address and derive the ATA.
+      let toAta: PublicKey;
+      const toAccountInfo = await this.connection.getAccountInfo(to);
+      if (toAccountInfo && toAccountInfo.owner.toBase58() === 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA') {
+        toAta = to;
+      } else {
+        try {
+          toAta = await getAssociatedTokenAddress(this.usdtMint, to);
+        } catch {
+          return { success: false, error: 'Invalid destination — must be a Solana wallet address or USDT token account.' };
+        }
+        // Create destination ATA if needed (only when deriving from wallet)
+        const taInfo = await this.connection.getAccountInfo(toAta);
+        if (!taInfo) {
+          tx.add(createAssociatedTokenAccountInstruction(from, toAta, to, this.usdtMint));
+        }
       }
 
       tx.add(

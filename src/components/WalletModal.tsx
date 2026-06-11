@@ -180,7 +180,13 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
                 </div>
               </div>
 
-              {/* Wallet list */}
+              {/* SOL balance */}
+              <SolBalanceCard onClose={onClose} />
+
+              {/* SOL balance */}
+              <SolCard />
+
+              {/* Wallet list*/}
               {loading ? (
                 <div className="text-center text-[#848e9c] text-sm py-4">
                   <Loader2 size={16} className="animate-spin inline mr-2" />
@@ -343,5 +349,37 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function SolCard() {
+  const [solBal, setSolBal] = useState('0.00');
+  const [copied, setCopied] = useState(false);
+  const { primaryWallet } = useDynamicContext();
+
+  useEffect(() => {
+    blockchainService.getSolBalance().then(b => setSolBal(b.toFixed(4))).catch(() => {});
+  }, [primaryWallet?.address]);
+
+  return (
+    <div className="bg-[#0b0e11] border border-[#2b3139] rounded-sm p-3">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-sm font-bold text-[#eaecef]">SOL</span>
+        <span className="text-sm font-bold text-[#eaecef]">{solBal}</span>
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText(primaryWallet?.address || '');
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          }}
+          className="flex-1 bg-[#2b3139] hover:bg-[#3b4149] text-[#eaecef] rounded-sm font-bold h-8 text-xs"
+        >
+          {copied ? <Check size={12} className="inline mr-1" /> : <Copy size={12} className="inline mr-1" />}
+          {copied ? 'Copied' : 'Copy Address'}
+        </button>
+      </div>
+    </div>
   );
 }

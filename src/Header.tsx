@@ -3,14 +3,13 @@ import { Link } from 'react-router-dom';
 import { formatNumber } from './lib/utils';
 import {
   useDynamicContext,
-  DynamicWidget,
   getAuthToken,
   useWalletConnectorEvent,
 } from '@dynamic-labs/sdk-react-core';
 import { Account, setAuthToken, getPrices } from './api';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Menu, X, Plus, LayoutDashboard, ScrollText, ClipboardList, LogOut, ArrowUpRight } from 'lucide-react';
+import { User, Menu, X, Plus, LayoutDashboard, ScrollText, ClipboardList, LogOut, ArrowUpRight, Wallet } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +46,7 @@ function Header({ isLoggedIn, account }: HeaderProps) {
   );
   const [_priceError, setPriceError] = useState<string | null>(null);
   const [usdtBalance, setUsdtBalance] = useState<string>('0.00');
+  const [solBalance, setSolBalance] = useState<string>('0.00');
   const [currentNetwork, setCurrentNetwork] = useState<number | string | null>(null);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
 
@@ -67,20 +67,20 @@ function Header({ isLoggedIn, account }: HeaderProps) {
   }, []);
 
   useEffect(() => {
-    const fetchUsdtBalance = async () => {
+    const fetchBalances = async () => {
       if (isConnected && primaryWallet?.address) {
         try {
-          const balance = await blockchainService.getWalletBalance();
-          const formattedBalance = (balance / 1_000_000).toFixed(2);
-          setUsdtBalance(formattedBalance);
+          const usdt = await blockchainService.getWalletBalance();
+          setUsdtBalance((usdt / 1_000_000).toFixed(2));
+          const sol = await blockchainService.getSolBalance();
+          setSolBalance(sol.toFixed(4));
         } catch (error) {
-          console.error('Error fetching USDT balance:', error);
+          console.error('Error fetching balances:', error);
         }
       }
     };
-
-    fetchUsdtBalance();
-    const interval = setInterval(fetchUsdtBalance, 30000);
+    fetchBalances();
+    const interval = setInterval(fetchBalances, 30000);
     return () => clearInterval(interval);
   }, [isConnected, primaryWallet, currentNetwork, blockchainService]);
 
@@ -172,8 +172,15 @@ function Header({ isLoggedIn, account }: HeaderProps) {
                 >
                   <span className="text-[10px] text-[#848e9c] uppercase font-bold tracking-wider">Balance</span>
                   <span className="text-sm font-bold text-[#eaecef]">{usdtBalance} USDT</span>
+                  <span className="text-[10px] text-[#5e6673]">{solBalance} SOL</span>
                 </div>
-                <DynamicWidget />
+                <button
+                  onClick={() => setWalletModalOpen(true)}
+                  className="bg-[#2b3139] hover:bg-[#3b4149] text-[#eaecef] font-bold px-3 h-8 text-xs rounded-sm flex items-center gap-1.5"
+                >
+                  <Wallet size={14} />
+                  Wallet
+                </button>
                 <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
                   <DropdownMenuTrigger className="focus:outline-none">
                     <Avatar className="w-8 h-8 rounded-sm ring-1 ring-[#2b3139] hover:ring-[#FF6B00] transition-all">

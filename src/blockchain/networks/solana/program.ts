@@ -63,6 +63,8 @@ export interface SolanaProgramInterface {
 
   getUsdtAta(): Promise<string>;
   createUsdtAta(): Promise<string>;
+
+  getSolBalance(): Promise<number>;
 }
 
 export class SolanaProgram implements SolanaProgramInterface {
@@ -876,6 +878,12 @@ export class SolanaProgram implements SolanaProgramInterface {
     await this.sendTransaction(tx, useRelay);
 
     return ata.toBase58();
+  }
+
+  async getSolBalance(): Promise<number> {
+    const wallet = new PublicKey(this.dynamicWallet.address);
+    const balance = await this.connection.getBalance(wallet);
+    return balance / 1_000_000_000; // lamports → SOL
   }
 
   async getEscrowStateByAddress(escrowAddress: string): Promise<EscrowState> {

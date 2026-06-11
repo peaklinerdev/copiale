@@ -45,7 +45,7 @@ const TradeConfirmationDialog = ({
     handleAmountChange,
     setQuickAmount,
     handleConfirm,
-  } = useTradeConfirmation(isOpen, offer, onConfirm);
+  } = useTradeConfirmation(isOpen, offer, onConfirm, maxFromBalance);
 
   const { primaryWallet } = useDynamicContext();
   const isSeller = offer.offer_type === 'BUY' && !!primaryWallet?.address;
@@ -59,6 +59,7 @@ const TradeConfirmationDialog = ({
 
   const amountToEscrow = numericValue(amount);
   const usdcBalanceNum = usdcBalance !== null ? Number(usdcBalance) / 1e6 : null;
+  const maxFromBalance = isSeller && usdcBalanceNum !== null ? usdcBalanceNum / 1.01 : undefined;
   const insufficient =
     isSeller &&
     usdcBalanceNum !== null &&
@@ -158,11 +159,11 @@ const TradeConfirmationDialog = ({
             <div className="min-h-[20px]">
               {isSeller && usdcBalanceNum !== null && (
                 <span className="text-[11px] text-[#848e9c]">
-                  Available:{' '}
+                  Balance:{' '}
                   <span className={insufficient ? 'text-[#f84960] font-bold' : 'text-[#eaecef]'}>
-                    {(usdcBalanceNum / 1.01).toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                    {usdcBalanceNum.toLocaleString('en-US', { maximumFractionDigits: 2 })}
                   </span>{' '}
-                  {offer.token} <span className="text-[10px] text-[#5e6673]">(balance: {usdcBalanceNum.toLocaleString('en-US', { maximumFractionDigits: 2 })})</span>
+                  {offer.token}
                 </span>
               )}
               {amountError && (

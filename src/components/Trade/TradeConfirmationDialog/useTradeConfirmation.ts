@@ -22,10 +22,11 @@ interface UseTradeConfirmationResult {
 export const useTradeConfirmation = (
   isOpen: boolean,
   offer: Offer,
-  onConfirm: (leg1_offer_id: number, leg1_crypto_amount: string, leg1_fiat_amount: number) => void
+  onConfirm: (leg1_offer_id: number, leg1_crypto_amount: string, leg1_fiat_amount: number) => void,
+  maxFromBalance?: number
 ): UseTradeConfirmationResult => {
   const { priceData, loading, error } = usePriceData(isOpen);
-  const { amount, amountError, handleAmountChange, setQuickAmount } = useAmountInput(offer, isOpen);
+  const { amount, amountError, handleAmountChange, setQuickAmount } = useAmountInput(offer, isOpen, maxFromBalance);
 
   const [fiatAmount, setFiatAmount] = useState<number>(0);
   const [platformFee, setPlatformFee] = useState<number>(0);

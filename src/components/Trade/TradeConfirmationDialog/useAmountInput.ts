@@ -13,7 +13,7 @@ interface UseAmountInputResult {
 
 const QUICK_PRESETS = [0, 0.25, 0.5, 0.75, 1] as const;
 
-export const useAmountInput = (offer: Offer, isOpen: boolean): UseAmountInputResult => {
+export const useAmountInput = (offer: Offer, isOpen: boolean, maxFromBalance?: number): UseAmountInputResult => {
   const [amount, setAmount] = useState<string>('');
   const [amountError, setAmountError] = useState<string | null>(null);
 
@@ -42,13 +42,16 @@ export const useAmountInput = (offer: Offer, isOpen: boolean): UseAmountInputRes
   const setQuickAmount = useCallback(
     (pct: number) => {
       const min = numericValue(offer.min_amount);
-      const max = Math.min(numericValue(offer.max_amount), numericValue(offer.total_available_amount));
+      let max = Math.min(numericValue(offer.max_amount), numericValue(offer.total_available_amount));
+      if (maxFromBalance !== undefined && maxFromBalance < max) {
+        max = maxFromBalance;
+      }
       const val = pct === 0 ? min : pct === 1 ? max : min + (max - min) * pct;
       const rounded = val.toFixed(2);
       setAmount(rounded);
       setAmountError(validateAmount(rounded));
     },
-    [offer, validateAmount]
+    [offer, validateAmount, maxFromBalance]
   );
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {

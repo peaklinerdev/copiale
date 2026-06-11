@@ -122,7 +122,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="bg-[#1e2329] border border-[#2b3139] text-[#eaecef] max-w-[320px] w-full rounded-sm p-0 gap-0">
+      <DialogContent className="bg-[#0b0e11] border border-[#2b3139] text-[#eaecef] max-w-[320px] w-full rounded-sm p-0 gap-0">
         {view === 'main' && (
           <>
             {/* Header */}
@@ -180,7 +180,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
               {/* Actions */}
               <div className="flex gap-3">
-                <button onClick={handleDeposit} className="flex-1 bg-[#02c076] hover:opacity-90 !text-[#0b0e11] rounded-sm font-bold h-10 text-sm flex items-center justify-center gap-2">
+                <button onClick={handleDeposit} className="flex-1 bg-[#FF6B00] hover:opacity-90 !text-[#0b0e11] rounded-sm font-bold h-10 text-sm flex items-center justify-center gap-2">
                   <DepositIcon /> Deposit
                 </button>
                 <button onClick={() => setView('withdraw')} disabled={usdtBalance <= 0} className="flex-1 border border-[#2b3139] text-[#eaecef] hover:bg-[#2b3139] disabled:opacity-30 rounded-sm font-bold h-10 text-sm flex items-center justify-center gap-2">

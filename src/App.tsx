@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useDynamicContext, getAuthToken } from '@dynamic-labs/sdk-react-core';
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
 import { getAccount, setAuthToken, exchangeDynamicToken } from './api';

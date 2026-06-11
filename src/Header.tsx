@@ -165,22 +165,39 @@ function Header({ isLoggedIn, account }: HeaderProps) {
             </div>
 
             {isLoggedIn ? (
-              <div className="flex items-center gap-4">
-                <div
-                  className="hidden sm:flex flex-col items-end cursor-pointer hover:opacity-80"
-                  onClick={() => setWalletModalOpen(true)}
-                >
-                  <span className="text-[10px] text-[#848e9c] uppercase font-bold tracking-wider">Balance</span>
-                  <span className="text-sm font-bold text-[#eaecef]">{usdtBalance} USDT</span>
-                  <span className="text-[10px] text-[#5e6673]">{solBalance} SOL</span>
+              <div className="flex items-center gap-2.5">
+                {/* Wallet button with hover balance tooltip */}
+                <div className="relative group">
+                  <button
+                    onClick={() => setWalletModalOpen(true)}
+                    className="bg-[#FF6B00]/10 border border-[#FF6B00]/20 hover:border-[#FF6B00]/30 text-[#FF6B00] font-bold px-2.5 py-1.5 text-xs rounded-sm flex items-center gap-1.5 transition-all"
+                  >
+                    <Wallet size={13} />
+                    Wallet
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+                  </button>
+                  {/* Hover tooltip */}
+                  <div className="absolute top-full right-0 mt-2 hidden group-hover:block z-50">
+                    <div className="bg-[#0b0e11] border border-[#2b3139] rounded-sm p-3 min-w-[150px] shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
+                      <div className="flex items-center justify-between gap-4 text-[11px] mb-1">
+                        <span className="text-[#848e9c]">USDT</span>
+                        <span className="text-[#eaecef] font-medium text-xs">{usdtBalance}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-4 text-[11px] mb-1">
+                        <span className="text-[#848e9c]">SOL</span>
+                        <span className="text-[#eaecef] font-medium text-xs">{solBalance}</span>
+                      </div>
+                      <div className="border-t border-[#2b3139] my-1.5" />
+                      <div className="flex items-center justify-between gap-4 text-[11px]">
+                        <span className="text-[#848e9c]">Total</span>
+                        <span className="text-[#02c076] font-bold text-xs">
+                          ≈ ${(parseFloat(usdtBalance) + parseFloat(solBalance) * 140).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <button
-                  onClick={() => setWalletModalOpen(true)}
-                  className="bg-[#1e2329] border border-[#2b3139] hover:border-[#3b4149] text-[#eaecef] font-bold px-3 h-8 text-xs rounded-sm flex items-center gap-1.5 transition-colors"
-                >
-                  <Wallet size={14} className="text-[#848e9c]" />
-                  Wallet
-                </button>
+
                 <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
                   <DropdownMenuTrigger className="focus:outline-none">
                     <Avatar className="w-8 h-8 rounded-sm ring-1 ring-[#2b3139] hover:ring-[#FF6B00] transition-all">

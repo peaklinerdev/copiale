@@ -35,6 +35,19 @@ const TradeConfirmationDialog = ({
   onConfirm,
   triggerButton,
 }: TradeConfirmationDialogProps) => {
+  const { primaryWallet } = useDynamicContext();
+  const isSeller = offer.offer_type === 'BUY' && !!primaryWallet?.address;
+  const isBuy = offer.offer_type === 'SELL';
+
+  const {
+    balance: usdcBalance,
+    loading: usdcLoading,
+    error: usdcError,
+  } = useSellerUsdcBalance(isSeller ? primaryWallet?.address : undefined, isOpen, '');
+
+  const usdcBalanceNum = usdcBalance !== null ? Number(usdcBalance) / 1e6 : null;
+  const maxFromBalance = isSeller && usdcBalanceNum !== null ? usdcBalanceNum / 1.01 : undefined;
+
   const {
     amount,
     amountError,
@@ -47,19 +60,7 @@ const TradeConfirmationDialog = ({
     handleConfirm,
   } = useTradeConfirmation(isOpen, offer, onConfirm, maxFromBalance);
 
-  const { primaryWallet } = useDynamicContext();
-  const isSeller = offer.offer_type === 'BUY' && !!primaryWallet?.address;
-  const isBuy = offer.offer_type === 'SELL';
-
-  const {
-    balance: usdcBalance,
-    loading: usdcLoading,
-    error: usdcError,
-  } = useSellerUsdcBalance(isSeller ? primaryWallet?.address : undefined, isOpen, amount);
-
   const amountToEscrow = numericValue(amount);
-  const usdcBalanceNum = usdcBalance !== null ? Number(usdcBalance) / 1e6 : null;
-  const maxFromBalance = isSeller && usdcBalanceNum !== null ? usdcBalanceNum / 1.01 : undefined;
   const insufficient =
     isSeller &&
     usdcBalanceNum !== null &&

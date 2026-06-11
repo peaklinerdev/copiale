@@ -147,10 +147,11 @@ export function WalletModal({ isOpen, onClose }: Props) {
                 <div className="mb-3">
                   {/* Table header */}
                   <div className="flex items-center text-[10px] text-[#5e6673] uppercase tracking-wider font-medium border-b border-white/[0.08] pb-2 px-1 gap-1">
-                    <span className="w-6 shrink-0 text-center">#</span>
-                    <span className="w-12 shrink-0">Type</span>
-                    <span className="flex-1">Amount</span>
-                    <span className="w-[5.5rem] shrink-0 text-right">Date</span>
+                    <span className="w-5 shrink-0" />
+                    <span className="w-14 shrink-0">Type</span>
+                    <span className="w-[4.5rem] shrink-0">Amount</span>
+                    <span className="flex-1">Address</span>
+                    <span className="w-16 shrink-0 text-right">Date</span>
                   </div>
 
                   {/* Rows */}
@@ -161,16 +162,16 @@ export function WalletModal({ isOpen, onClose }: Props) {
                         {nonZeroTxs.map((tx, i) => (
                           <a key={i} href={explorer(tx.sig)} target="_blank" rel="noreferrer"
                             className="flex items-center border-b border-white/[0.05] hover:bg-white/[0.03] no-underline px-1 py-2 gap-1">
-                            <span className="w-6 shrink-0 flex justify-center">{tx.err ? <FailSvg /> : <CheckSvg />}</span>
-                            <span className={`w-12 shrink-0 text-[9px] font-bold rounded-sm px-1.5 py-0.5 text-center ${tx.amount >= 0 ? 'bg-[#02c076]/10 text-[#02c076]' : 'bg-[#f84960]/10 text-[#f84960]'}`}>
-                              {tx.amount >= 0 ? 'Deposit' : 'Withdraw'}
+                            <span className="w-5 shrink-0 flex justify-center">{tx.err ? <FailSvg /> : <CheckSvg />}</span>
+                            <span className={`w-14 shrink-0 text-[9px] font-bold rounded-sm px-1.5 py-0.5 text-center ${tx.amount >= 0 ? 'bg-[#02c076]/10 text-[#02c076]' : 'bg-[#f84960]/10 text-[#f84960]'}`}>
+                              {tx.amount >= 0 ? 'In' : 'Out'}
                             </span>
-                            <span className={`flex-1 text-[11px] font-medium font-mono ${tx.amount >= 0 ? 'text-[#02c076]' : 'text-[#f84960]'}`}>
-                              {tx.amount >= 0 ? '+' : ''}{Math.abs(tx.amount).toFixed(tx.amount % 1 === 0 ? 0 : 4)} {tx.amount >= 0 ? '' : tx.token === 'SOL' ? 'SOL' : 'USDT'}
-                              <br /><span className="text-[9px] text-[#5e6673] font-mono">{tx.sig.substring(0, 6)}...{tx.sig.substring(tx.sig.length - 4)}</span>
+                            <span className={`w-[4.5rem] shrink-0 text-[11px] font-medium font-mono ${tx.amount >= 0 ? 'text-[#02c076]' : 'text-[#f84960]'}`}>
+                              {tx.amount >= 0 ? '+' : ''}{Math.abs(tx.amount).toFixed(tx.amount % 1 === 0 ? 0 : 4)}
                             </span>
-                            <span className="w-[5.5rem] shrink-0 text-[9px] text-[#5e6673] text-right">
-                              {tx.time ? new Date(tx.time * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                            <span className="flex-1 text-[10px] text-[#5e6673] font-mono truncate">{tx.sig.substring(0, 6)}...{tx.sig.substring(tx.sig.length - 4)}</span>
+                            <span className="w-16 shrink-0 text-[9px] text-[#5e6673] text-right">
+                              {tx.time ? new Date(tx.time * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
                             </span>
                           </a>
                         ))}

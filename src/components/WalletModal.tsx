@@ -7,6 +7,8 @@ import { Loader2, QrCode, X, Shield, ExternalLink } from 'lucide-react';
 import { blockchainService } from '@/services/blockchainService';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { Connection, PublicKey } from '@solana/web3.js';
+import solLogo from '@/assets/sol.svg';
+import usdtLogo from '@/assets/usdt.svg';
 
 interface WalletModalProps { isOpen: boolean; onClose: () => void; }
 type View = 'main' | 'deposit' | 'withdraw' | 'tokenDetail';
@@ -29,17 +31,8 @@ const RefreshSvg = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>
 );
 const TokenIcon = ({ token }: { token: TokenType }) => (
-  <div className={`w-9 h-9 rounded-full flex items-center justify-center ${token === 'USDT' ? 'bg-[#02c076]/20' : 'bg-[#9945FF]/20'}`}>
-    {token === 'USDT' ? (
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#02c076" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="9" /><line x1="12" y1="6" x2="12" y2="18" /><polyline points="8 10 12 6 16 10" /><polyline points="8 14 12 18 16 14" />
-      </svg>
-    ) : (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9945FF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="6" y1="18" x2="18" y2="6" /><polyline points="9 6 18 6 18 15" />
-      </svg>
-    )}
-  </div>
+  <img src={token === 'USDT' ? usdtLogo : solLogo} alt={token}
+    className="w-9 h-9 rounded-full" />
 );
 
 const CheckCircleSvg = () => (

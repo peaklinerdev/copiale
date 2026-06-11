@@ -65,7 +65,24 @@ export function WalletModal({ isOpen, onClose }: Props) {
     try { const c = new Connection('https://api.devnet.solana.com', 'confirmed'); const target = t === 'SOL' ? addr : usdtAta; if (!target) { setTxLoad(false); return; }
       const sigs = await c.getSignaturesForAddress(new PublicKey(target), { limit: 20 }); const p: any[] = [];
       const usdtMint = '8yonSxMEjBvP2Be4Qr6Ene5tcZEodEKWyoucLWcSadGV';
-      for (const s of sigs) { try { const tx = await c.getParsedTransaction(s.signature, { maxSupportedTransactionVersion: 0 }); if (!tx) continue; const meta = tx.meta; if (t === 'SOL') { const diff = meta?.preBalances?.[0] && meta?.postBalances?.[0] ? (meta.postBalances[0] - meta.preBalances[0]) / 1e9 : 0; p.push({ sig: s.signature, time: tx.blockTime || 0, err: !!meta?.err, amount: diff, token: t }); } else { const changes = meta?.preTokenBalances?.map((pre, i) => { const post = meta?.postTokenBalances?.find(p => p.accountIndex === pre.accountIndex); if (pre.mint === usdtMint && post) return (post.uiTokenAmount.uiAmount || 0) - (pre.uiTokenAmount.uiAmount || 0); return 0; }) || []; const diff = changes.reduce((a, b) => a + b, 0); p.push({ sig: s.signature, time: tx.blockTime || 0, err: !!meta?.err, amount: diff, token: t }); } } catch { /* */ } }
+      for (const s of sigs) {
+        try {
+          const tx = await c.getParsedTransaction(s.signature, { maxSupportedTransactionVersion: 0 });
+          if (!tx || !tx.meta) continue;
+          const m = tx.meta;
+          if (t === 'SOL') {
+            const diff = m.preBalances?.[0] && m.postBalances?.[0] ? (m.postBalances[0] - m.preBalances[0]) / 1e9 : 0;
+            p.push({ sig: s.signature, time: tx.blockTime || 0, err: !!m.err, amount: diff, token: t });
+          } else {
+            const changes = m.preTokenBalances?.map(pre => {
+              const post = m.postTokenBalances?.find(p => p.accountIndex === pre.accountIndex);
+              if (pre.mint === usdtMint && post) return (post.uiTokenAmount.uiAmount || 0) - (pre.uiTokenAmount.uiAmount || 0);
+              return 0;
+            }) || [];
+            p.push({ sig: s.signature, time: tx.blockTime || 0, err: !!m.err, amount: changes.reduce((a, b) => a + b, 0), token: t });
+          }
+        } catch { /* */ }
+      }
       setTxs(p); } catch { /* */ } setTxLoad(false);
   };
   const explorer = (s: string) => `https://solscan.io/tx/${s}?cluster=devnet`;
@@ -142,7 +159,7 @@ export function WalletModal({ isOpen, onClose }: Props) {
                   <p className="text-[10px] text-[#848e9c]">${token === 'USDT' ? fmt(usdtUsd) : fmt(solUsd)}</p>
                   {nonZeroTxs.length > 0 && (
                     <p className={`text-[10px] font-medium mt-0.5 ${recentTrend > 0 ? 'text-[#02c076]' : 'text-[#f84960]'}`}>
-                      {recentTrend > 0 ? '↑' : '↓'} {Math.abs(recentTrend).toFixed(4)}
+                      {recentTrend > 0 ? '↑' : '↓'} {recentTrend.toFixed(4)}
                     </p>
                   )}
                 </div>
@@ -175,8 +192,8 @@ export function WalletModal({ isOpen, onClose }: Props) {
                             <span className={`w-14 shrink-0 text-[9px] font-bold rounded-sm px-1.5 py-0.5 text-center ${tx.amount >= 0 ? 'bg-[#02c076]/10 text-[#02c076]' : 'bg-[#f84960]/10 text-[#f84960]'}`}>
                               {tx.amount >= 0 ? 'In' : 'Out'}
                             </span>
-                            <span className={`w-[4.5rem] shrink-0 text-[11px] font-medium font-mono ${tx.amount >= 0 ? 'text-[#02c076]' : 'text-[#f84960]'}`}>
-                              {tx.amount >= 0 ? '+' : ''}{Math.abs(tx.amount).toFixed(tx.amount % 1 === 0 ? 0 : 4)}
+                            <span className={`w-[4.5rem] shrink-0 text-[11px] font-medium font-mono ${tx.amount > 0 ? 'text-[#02c076]' : 'text-[#f84960]'}`}>
+                              {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(tx.amount % 1 === 0 ? 0 : 4)}
                             </span>
                             <span className="flex-1 text-[10px] text-[#5e6673] font-mono truncate">{tx.sig.substring(0, 6)}...{tx.sig.substring(tx.sig.length - 4)}</span>
                             <span className="w-16 shrink-0 text-[9px] text-[#5e6673] text-right">

@@ -72,7 +72,7 @@ export function WalletModal({ isOpen, onClose }: Props) {
   const explorerAcct = (t: Token) => `https://solscan.io/account/${t === 'SOL' ? addr : usdtAta}?cluster=devnet`;
 
   const nonZeroTxs = txs.filter(tx => tx.amount !== 0);
-  const trend = nonZeroTxs.reduce((sum, tx) => sum + tx.amount, 0);
+  const recentTrend = nonZeroTxs.slice(0, 2).reduce((sum, tx) => sum + tx.amount, 0);
 
   /* ── Modal shell ── */
   return (
@@ -139,12 +139,12 @@ export function WalletModal({ isOpen, onClose }: Props) {
                   <p className="text-[22px] font-bold text-[#eaecef] mt-0.5">
                     {token === 'USDT' ? fmt(usdt) : fmtSol(sol)}
                   </p>
+                  <p className="text-[10px] text-[#848e9c]">${token === 'USDT' ? fmt(usdtUsd) : fmt(solUsd)}</p>
                   {nonZeroTxs.length > 0 && (
-                    <p className={`text-[10px] font-medium ${trend > 0 ? 'text-[#02c076]' : 'text-[#f84960]'}`}>
-                      {trend > 0 ? '↑' : '↓'} {Math.abs(trend).toFixed(4)} net change
+                    <p className={`text-[10px] font-medium mt-0.5 ${recentTrend > 0 ? 'text-[#02c076]' : 'text-[#f84960]'}`}>
+                      {recentTrend > 0 ? '↑' : '↓'} {Math.abs(recentTrend).toFixed(4)}
                     </p>
                   )}
-                  <p className="text-[10px] text-[#848e9c]">${token === 'USDT' ? fmt(usdtUsd) : fmt(solUsd)}</p>
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => goDeposit(token)} className="flex-1 bg-[#FF6B00] hover:opacity-90 !text-[#0b0e11] rounded-sm font-bold h-9 text-xs flex items-center justify-center gap-1.5"><DepositSvg /> Deposit</button>

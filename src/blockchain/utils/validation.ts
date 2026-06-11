@@ -27,7 +27,7 @@ export class ValidationUtils {
   /**
    * Validate amount is positive and within limits
    */
-  static isValidAmount(amount: string, maxAmount: number = 100): boolean {
+  static isValidAmount(amount: string, maxAmount: number = 10000): boolean {
     const num = parseFloat(amount);
     return !isNaN(num) && num > 0 && num <= maxAmount;
   }

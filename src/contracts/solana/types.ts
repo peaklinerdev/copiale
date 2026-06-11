@@ -1939,7 +1939,7 @@ export type LocalsolanaContracts = {
     {
       "code": 6001,
       "name": "exceedsMaximum",
-      "msg": "Amount exceeds maximum (100 USDC)"
+      "msg": "Amount exceeds maximum (10,000 USDC)"
     },
     {
       "code": 6002,

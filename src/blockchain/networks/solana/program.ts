@@ -965,7 +965,7 @@ export class SolanaProgram implements SolanaProgramInterface {
         case 0:
           return 'Invalid amount: Zero or negative';
         case 1:
-          return 'Amount exceeds maximum (100 USDC)';
+          return 'Amount exceeds maximum (10,000 USDC)';
         case 2:
           return 'Unauthorized caller';
         case 3:

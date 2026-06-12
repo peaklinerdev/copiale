@@ -76,7 +76,7 @@ export const Footer: React.FC = () => {
               <span>•</span>
               <span>DB: {health.dbStatus ?? '—'}</span>
               <span>•</span>
-              <span>Contract: {health.contractVersion ?? '—'}</span>
+              <span>Contract: {health.contractVersion && health.contractVersion.length > 16 ? `${health.contractVersion.slice(0, 8)}…${health.contractVersion.slice(-8)}` : (health.contractVersion ?? '—')}</span>
             </div>
           )}
         </div>

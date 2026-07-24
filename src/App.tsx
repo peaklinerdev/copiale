@@ -6,6 +6,7 @@ import Footer from './Footer';
 import { getAccount, setAuthToken, exchangeDynamicToken } from './api';
 import { Account } from './api';
 import Container from '@/components/Shared/Container';
+import { ErrorBoundary } from '@/components/Shared/ErrorBoundary';
 import { Toaster } from 'sonner';
 import { dispatchAuthStateChange } from './utils/events';
 import { runStorageMigrations } from './utils/storageMigrations';
@@ -113,44 +114,46 @@ function App() {
         <Header isLoggedIn={!!primaryWallet} account={account} />
         <main className="main-content">
           <Container>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/login" element={<LoginPage account={account} />} />
-                <Route
-                  path="/register"
-                  element={<RegisterPage account={account} setAccount={setAccount} />}
-                />
-                <Route
-                  path="/account"
-                  element={<AccountPage account={account} setAccount={setAccount} />}
-                />
-                <Route path="/" element={<HomePage />} />
-                <Route path="/create-offer" element={<CreateOfferPage account={account} />} />
-                <Route path="/offers" element={<MyOffersPage account={account} />} />
-                <Route path="/trades" element={<MyTradesPage account={account} />} />
-                <Route path="/escrows" element={<MyEscrowsPage account={account} />} />
-                <Route path="/transactions" element={<MyTransactionsPage account={account} />} />
-                <Route path="/offer/:id" element={<OfferDetailPage />} />
-                <Route path="/edit-offer/:id" element={<EditOfferPage />} />
-                <Route path="/trade/:id" element={<TradePage />} />
-                <Route path="/status" element={<Status />} />
-                <Route path="/manifesto" element={<ManifestoPage />} />
-                <Route path="/bible" element={<BiblePage />} />
-                <Route path="/fees" element={<FeesPage />} />
-                <Route path="/terms" element={<TermsPage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/network-test" element={<NetworkTestPage />} />
-                <Route path="/admin/login" element={<AdminLoginPage />} />
-                <Route path="/admin" element={<AdminLayout />}>
-                  <Route index element={<AdminOverviewPage />} />
-                  <Route path="trades" element={<AdminTradesPage />} />
-                  <Route path="accounts" element={<AdminAccountsPage />} />
-                  <Route path="disputes" element={<AdminDisputesPage />} />
-                  <Route path="config" element={<AdminConfigPage />} />
-                </Route>
-                <Route path="*" element={<NotFoundPage />} />
-              </Routes>
-            </Suspense>
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/login" element={<LoginPage account={account} />} />
+                  <Route
+                    path="/register"
+                    element={<RegisterPage account={account} setAccount={setAccount} />}
+                  />
+                  <Route
+                    path="/account"
+                    element={<AccountPage account={account} setAccount={setAccount} />}
+                  />
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/create-offer" element={<CreateOfferPage account={account} />} />
+                  <Route path="/offers" element={<MyOffersPage account={account} />} />
+                  <Route path="/trades" element={<MyTradesPage account={account} />} />
+                  <Route path="/escrows" element={<MyEscrowsPage account={account} />} />
+                  <Route path="/transactions" element={<MyTransactionsPage account={account} />} />
+                  <Route path="/offer/:id" element={<OfferDetailPage />} />
+                  <Route path="/edit-offer/:id" element={<EditOfferPage />} />
+                  <Route path="/trade/:id" element={<TradePage />} />
+                  <Route path="/status" element={<Status />} />
+                  <Route path="/manifesto" element={<ManifestoPage />} />
+                  <Route path="/bible" element={<BiblePage />} />
+                  <Route path="/fees" element={<FeesPage />} />
+                  <Route path="/terms" element={<TermsPage />} />
+                  <Route path="/privacy" element={<PrivacyPage />} />
+                  <Route path="/network-test" element={<NetworkTestPage />} />
+                  <Route path="/admin/login" element={<AdminLoginPage />} />
+                  <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<AdminOverviewPage />} />
+                    <Route path="trades" element={<AdminTradesPage />} />
+                    <Route path="accounts" element={<AdminAccountsPage />} />
+                    <Route path="disputes" element={<AdminDisputesPage />} />
+                    <Route path="config" element={<AdminConfigPage />} />
+                  </Route>
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
           </Container>
         </main>
         <Footer />

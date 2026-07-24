@@ -181,7 +181,7 @@ function EditOfferPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex justify-center items-center py-16">
-              <p className="text-neutral-500">Loading offer details...</p>
+              <p className="text-muted">Loading offer details...</p>
             </div>
           </CardContent>
         </Card>

@@ -162,7 +162,7 @@ const TradeActionButton: React.FC<TradeActionButtonProps> = ({
       variant={variant}
       onClick={onClick}
       disabled={disabled || loading}
-      className="flex items-center bg-primary-600 text-white hover:bg-primary-800 focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50 transition duration-150 ease-in-out"
+      className="flex items-center bg-primary text-white hover:bg-primary-800 focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50 transition duration-150 ease-in-out"
     >
       {loading ? (
         <svg

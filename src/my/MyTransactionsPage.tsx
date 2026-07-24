@@ -215,7 +215,7 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
             </CardHeader>
             <CardContent className="p-6">
               <Alert className="bg-[#FF6B00]/10 border-[#FF6B00]/30 rounded-sm">
-                <AlertDescription className="text-amber-700">
+                <AlertDescription className="text-[#f97316]">
                   Please create an account first to view your transactions.
                 </AlertDescription>
               </Alert>
@@ -238,7 +238,7 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
               </div>
               <div className="w-full sm:w-auto">
                 <Select value={filter} onValueChange={handleFilterChange}>
-                  <SelectTrigger className="w-full sm:w-[250px] border-neutral-300 focus:ring-primary-500">
+                  <SelectTrigger className="w-full sm:w-[250px] border-border focus:ring-primary-500">
                     <SelectValue placeholder="Filter by type" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1e2329] border border-[#2b3139] rounded-sm">
@@ -259,7 +259,7 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
           <CardContent className="px-6">
             {error && (
               <Alert className="bg-[#f84960]/10 border-[#f84960]/30 rounded-sm mb-4">
-                <AlertDescription className="text-red-700">{error}</AlertDescription>
+                <AlertDescription className="text-error">{error}</AlertDescription>
               </Alert>
             )}
 
@@ -282,7 +282,7 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
                           <span className="font-medium text-neutral-800">
                             {getTransactionTypeLabel(tx.transaction_type)}
                           </span>
-                          <div className="text-sm text-neutral-500 mt-1">
+                          <div className="text-sm text-muted mt-1">
                             {formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}
                           </div>
                         </div>
@@ -297,11 +297,11 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
 
                       <div className="grid grid-cols-2 gap-3 text-sm mt-4">
                         <div>
-                          <span className="text-neutral-500 block mb-1">ID:</span>
+                          <span className="text-muted block mb-1">ID:</span>
                           <span className="font-medium">{formatDisplayId(tx.id)}</span>
                         </div>
                         <div>
-                          <span className="text-neutral-500 block mb-1">Trade:</span>
+                          <span className="text-muted block mb-1">Trade:</span>
                           <Link
                             to={`/trade/${tx.trade_id}`}
                             className="text-blue-600 hover:text-blue-800 font-medium"
@@ -310,23 +310,23 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
                           </Link>
                         </div>
                         <div className="mt-2">
-                          <span className="text-neutral-500 block mb-1">From:</span>
+                          <span className="text-muted block mb-1">From:</span>
                           <span>{formatAddress(tx.from_address)}</span>
                         </div>
                         <div className="mt-2">
-                          <span className="text-neutral-500 block mb-1">To:</span>
+                          <span className="text-muted block mb-1">To:</span>
                           <span>{tx.to_address ? formatAddress(tx.to_address) : '-'}</span>
                         </div>
                         <div className="col-span-2 mt-2">
-                          <span className="text-neutral-500 block mb-1">Amount:</span>
+                          <span className="text-muted block mb-1">Amount:</span>
                           <span>{tx.amount ? `${tx.amount} ${tx.token_type || 'USDT'}` : '-'}</span>
                         </div>
                         <div className="col-span-2 mt-2">
-                          <span className="text-neutral-500 block mb-1">Network:</span>
+                          <span className="text-muted block mb-1">Network:</span>
                           <span>{tx.network ? getNetworkDisplayName(tx.network) : '-'}</span>
                         </div>
                         <div className="col-span-2 mt-2">
-                          <span className="text-neutral-500 block mb-1">Transaction:</span>
+                          <span className="text-muted block mb-1">Transaction:</span>
                           <a
                             href={getExplorerUrl(getTransactionId(tx), tx.network)}
                             target="_blank"
@@ -347,16 +347,16 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-primary-700 font-medium">ID</TableHead>
-                        <TableHead className="text-primary-700 font-medium">Type</TableHead>
-                        <TableHead className="text-primary-700 font-medium">Trade ID</TableHead>
-                        <TableHead className="text-primary-700 font-medium">From</TableHead>
-                        <TableHead className="text-primary-700 font-medium">To</TableHead>
-                        <TableHead className="text-primary-700 font-medium">Amount</TableHead>
-                        <TableHead className="text-primary-700 font-medium">Network</TableHead>
-                        <TableHead className="text-primary-700 font-medium">Status</TableHead>
-                        <TableHead className="text-primary-700 font-medium">Time</TableHead>
-                        <TableHead className="text-primary-700 font-medium">Transaction</TableHead>
+                        <TableHead className="text-primary font-medium">ID</TableHead>
+                        <TableHead className="text-primary font-medium">Type</TableHead>
+                        <TableHead className="text-primary font-medium">Trade ID</TableHead>
+                        <TableHead className="text-primary font-medium">From</TableHead>
+                        <TableHead className="text-primary font-medium">To</TableHead>
+                        <TableHead className="text-primary font-medium">Amount</TableHead>
+                        <TableHead className="text-primary font-medium">Network</TableHead>
+                        <TableHead className="text-primary font-medium">Status</TableHead>
+                        <TableHead className="text-primary font-medium">Time</TableHead>
+                        <TableHead className="text-primary font-medium">Transaction</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -391,7 +391,7 @@ function MyTransactionsPage({ account }: MyTransactionsPageProps) {
                               {tx.status}
                             </span>
                           </TableCell>
-                          <TableCell className="text-neutral-500 text-sm">
+                          <TableCell className="text-muted text-sm">
                             {formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}
                           </TableCell>
                           <TableCell>

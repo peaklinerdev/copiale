@@ -142,7 +142,7 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
       case 'CREATED':
         return 'bg-[#FF6B00]/10 text-[#FF6B00]';
       case 'FUNDED':
-        return 'bg-amber-100 text-amber-800';
+        return 'bg-amber-100 text-[#f97316]';
       case 'RELEASED':
         return 'bg-green-100 text-green-800';
       case 'CANCELLED':
@@ -194,7 +194,7 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
           </CardHeader>
           <CardContent className="p-6">
             <Alert className="bg-[#FF6B00]/10 border-[#FF6B00]/30 rounded-sm">
-              <AlertDescription className="text-amber-700">
+              <AlertDescription className="text-[#f97316]">
                 Please create an account first to view your escrows.
               </AlertDescription>
             </Alert>
@@ -215,7 +215,7 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
             </div>
             <div className="w-full sm:w-auto">
               <Select value={filter} onValueChange={handleFilterChange}>
-                <SelectTrigger className="w-full sm:w-[250px] border-neutral-300 focus:ring-primary-500">
+                <SelectTrigger className="w-full sm:w-[250px] border-border focus:ring-primary-500">
                   <SelectValue placeholder="Filter by state" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#1e2329] rounded-sm">
@@ -233,15 +233,15 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
         <CardContent className="p-6">
           {loading ? (
             <div className="flex justify-center items-center h-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-700"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : error ? (
             <Alert className="bg-[#f84960]/10 border-[#f84960]/30 rounded-sm mb-4">
-              <AlertDescription className="text-red-700">{error}</AlertDescription>
+              <AlertDescription className="text-error">{error}</AlertDescription>
             </Alert>
           ) : myEscrows.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-neutral-500 mb-4">You don't have any escrows yet.</p>
+              <p className="text-muted mb-4">You don't have any escrows yet.</p>
               <Button className="bg-primary-800 hover:bg-primary-300 w-full sm:w-auto" asChild>
                 <Link to="/">
                   <span className="text-neutral-100">Find Offers</span>
@@ -308,7 +308,7 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
 
                       <div className="mobile-card-view-row">
                         <span className="mobile-card-view-label">Created</span>
-                        <span className="text-neutral-500 text-sm">
+                        <span className="text-muted text-sm">
                           {formatDistanceToNow(new Date(escrow.created_at))} ago
                         </span>
                       </div>
@@ -333,15 +333,15 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-primary-700 font-medium">On-chain ID</TableHead>
-                      <TableHead className="text-primary-700 font-medium">Trade ID</TableHead>
-                      <TableHead className="text-primary-700 font-medium">Role</TableHead>
-                      <TableHead className="text-primary-700 font-medium">Token</TableHead>
-                      <TableHead className="text-primary-700 font-medium">Amount</TableHead>
-                      <TableHead className="text-primary-700 font-medium">Network</TableHead>
-                      <TableHead className="text-primary-700 font-medium">State</TableHead>
-                      <TableHead className="text-primary-700 font-medium">Created</TableHead>
-                      <TableHead className="text-primary-700 font-medium">Actions</TableHead>
+                      <TableHead className="text-primary font-medium">On-chain ID</TableHead>
+                      <TableHead className="text-primary font-medium">Trade ID</TableHead>
+                      <TableHead className="text-primary font-medium">Role</TableHead>
+                      <TableHead className="text-primary font-medium">Token</TableHead>
+                      <TableHead className="text-primary font-medium">Amount</TableHead>
+                      <TableHead className="text-primary font-medium">Network</TableHead>
+                      <TableHead className="text-primary font-medium">State</TableHead>
+                      <TableHead className="text-primary font-medium">Created</TableHead>
+                      <TableHead className="text-primary font-medium">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -378,7 +378,7 @@ function MyEscrowsPage({ account }: MyEscrowsPageProps) {
                             {escrow.state}
                           </span>
                         </TableCell>
-                        <TableCell className="text-neutral-500 text-sm">
+                        <TableCell className="text-muted text-sm">
                           {formatDistanceToNow(new Date(escrow.created_at))} ago
                         </TableCell>
                         <TableCell>

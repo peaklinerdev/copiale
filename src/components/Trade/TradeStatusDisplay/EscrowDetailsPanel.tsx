@@ -141,7 +141,7 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
             {lastUpdated && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="text-xs text-neutral-500">
+                  <span className="text-xs text-muted">
                     {isRefreshing
                       ? 'Refreshing...'
                       : `Updated ${formatDistanceToNow(lastUpdated)} ago`}
@@ -170,7 +170,7 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="bg-[#2b3139] p-3 rounded-sm md:col-span-2">
-                  <div className="text-sm text-neutral-500">Escrow Address (PDA)</div>
+                  <div className="text-sm text-muted">Escrow Address (PDA)</div>
                   <div className="font-medium flex items-center gap-1">
                     <span className="truncate">{formatAddress(escrowAddress)}</span>
                     <a
@@ -184,15 +184,15 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
                   </div>
                 </div>
                 <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-neutral-500">Escrow ID</div>
+                  <div className="text-sm text-muted">Escrow ID</div>
                   <div className="font-medium">{escrowDetails.escrowId.toString()}</div>
                 </div>
                 <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-neutral-500">Trade ID</div>
+                  <div className="text-sm text-muted">Trade ID</div>
                   <div className="font-medium">{escrowDetails.tradeId.toString()}</div>
                 </div>
                 <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-neutral-500">State</div>
+                  <div className="text-sm text-muted">State</div>
                   <div className="font-medium">
                     <Badge className={getStateBadgeColor(escrowDetails.state)}>
                       {typeof escrowDetails.state === 'string'
@@ -202,29 +202,29 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
                   </div>
                 </div>
                 <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-neutral-500">Amount</div>
+                  <div className="text-sm text-muted">Amount</div>
                   <div className="font-medium">{formatAmount(escrowDetails.amount)} USDC</div>
                 </div>
                 <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-neutral-500">Current Balance</div>
+                  <div className="text-sm text-muted">Current Balance</div>
                   <div className="font-medium">{balance} USDC</div>
                 </div>
                 <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-neutral-500">Fiat Paid</div>
+                  <div className="text-sm text-muted">Fiat Paid</div>
                   <div className="font-medium">{escrowDetails.fiatPaid ? 'Yes' : 'No'}</div>
                 </div>
                 <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-neutral-500">Deposit Deadline</div>
+                  <div className="text-sm text-muted">Deposit Deadline</div>
                   <div className="font-medium">
                     {formatTimestamp(escrowDetails.depositDeadline)}
                   </div>
                 </div>
                 <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-neutral-500">Fiat Deadline</div>
+                  <div className="text-sm text-muted">Fiat Deadline</div>
                   <div className="font-medium">{formatTimestamp(escrowDetails.fiatDeadline)}</div>
                 </div>
                 <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-neutral-500">Seller</div>
+                  <div className="text-sm text-muted">Seller</div>
                   <div className="font-medium flex items-center gap-1">
                     <span className="truncate">{formatAddress(escrowDetails.seller)}</span>
                     <a
@@ -238,7 +238,7 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
                   </div>
                 </div>
                 <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-neutral-500">Buyer</div>
+                  <div className="text-sm text-muted">Buyer</div>
                   <div className="font-medium flex items-center gap-1">
                     <span className="truncate">{formatAddress(escrowDetails.buyer)}</span>
                     <a
@@ -252,7 +252,7 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
                   </div>
                 </div>
                 <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-neutral-500">Arbitrator</div>
+                  <div className="text-sm text-muted">Arbitrator</div>
                   <div className="font-medium flex items-center gap-1">
                     <span className="truncate">{formatAddress(escrowDetails.arbitrator)}</span>
                     <a
@@ -266,14 +266,14 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDet
                   </div>
                 </div>
                 <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-neutral-500">Sequential</div>
+                  <div className="text-sm text-muted">Sequential</div>
                   <div className="font-medium">{escrowDetails.sequential ? 'Yes' : 'No'}</div>
                 </div>
               </div>
 
               {showFundButton && (
-                <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                  <p className="text-amber-800 mb-3">
+                <div className="mt-4 p-4 bg-[#f97316]/10 border border-[#f97316]/30 rounded-md">
+                  <p className="text-[#f97316] mb-3">
                     <strong>Action Required:</strong> This escrow has been created but not yet
                     funded. You need to fund it to proceed with the trade.
                   </p>

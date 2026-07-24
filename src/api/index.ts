@@ -527,5 +527,15 @@ export const getLiveness = () => api.get<LivenessResponse>('/health/live');
 export const getReadiness = () => api.get<ReadinessResponse>('/health/ready');
 export const getHealth = () => api.get<HealthResponse>('/health');
 
+export type FaucetResponse = {
+  success: boolean;
+  wallet: string;
+  signature: string;
+  sol: number;
+  usdt: number;
+};
+
+export const requestFaucetFunding = () => api.post<FaucetResponse>('/faucet');
+
 // Export the api instance for use elsewhere
 export default api;

@@ -161,7 +161,7 @@ function MyOffersPage({ account }: MyOffersPageProps) {
             </CardHeader>
             <CardContent className="p-6">
               <Alert className="bg-[#FF6B00]/10 border-[#FF6B00]/30 rounded-sm">
-                <AlertDescription className="text-amber-700">
+                <AlertDescription className="text-[#f97316]">
                   Please create an account first to manage your offers.
                 </AlertDescription>
               </Alert>
@@ -184,7 +184,7 @@ function MyOffersPage({ account }: MyOffersPageProps) {
               </div>
               <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
                 <Select value={filter} onValueChange={handleFilterChange}>
-                  <SelectTrigger className="w-full sm:w-[180px] border-neutral-300 focus:ring-primary-500">
+                  <SelectTrigger className="w-full sm:w-[180px] border-border focus:ring-primary-500">
                     <SelectValue placeholder="Filter by type" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1e2329] border border-[#2b3139] rounded-sm">
@@ -204,14 +204,14 @@ function MyOffersPage({ account }: MyOffersPageProps) {
           <CardContent className="p-6">
             {loading ? (
               <div className="flex justify-center items-center py-16">
-                <p className="text-neutral-500">Loading your offers...</p>
+                <p className="text-muted">Loading your offers...</p>
               </div>
             ) : error ? (
               <Alert className="bg-[#f84960]/10 border-[#f84960]/30 rounded-sm mb-4">
-                <AlertDescription className="text-red-700">{error}</AlertDescription>
+                <AlertDescription className="text-error">{error}</AlertDescription>
               </Alert>
             ) : deleteSuccess ? (
-              <Alert className="bg-green-50 border-green-200 mb-4">
+              <Alert className="bg-success/10 border-success/30 mb-4">
                 <AlertDescription className="text-green-700">{deleteSuccess}</AlertDescription>
               </Alert>
             ) : myOffers.length === 0 ? (
@@ -272,7 +272,7 @@ function MyOffersPage({ account }: MyOffersPageProps) {
 
                         <div className="mobile-card-view-row">
                           <span className="mobile-card-view-label">Created</span>
-                          <span className="text-neutral-500 text-sm">
+                          <span className="text-muted text-sm">
                             {formatDistanceToNow(new Date(offer.created_at))} ago
                           </span>
                         </div>
@@ -293,18 +293,18 @@ function MyOffersPage({ account }: MyOffersPageProps) {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-primary-700 font-medium">ID</TableHead>
-                        <TableHead className="text-primary-700 font-medium">Type</TableHead>
-                        <TableHead className="text-primary-700 font-medium">Token</TableHead>
-                        <TableHead className="text-primary-700 font-medium">Min Amount</TableHead>
-                        <TableHead className="text-primary-700 font-medium">Max Amount</TableHead>
-                        <TableHead className="text-primary-700 font-medium">
+                        <TableHead className="text-primary font-medium">ID</TableHead>
+                        <TableHead className="text-primary font-medium">Type</TableHead>
+                        <TableHead className="text-primary font-medium">Token</TableHead>
+                        <TableHead className="text-primary font-medium">Min Amount</TableHead>
+                        <TableHead className="text-primary font-medium">Max Amount</TableHead>
+                        <TableHead className="text-primary font-medium">
                           Total Available
                         </TableHead>
-                        <TableHead className="text-primary-700 font-medium">Rate</TableHead>
-                        <TableHead className="text-primary-700 font-medium">Currency</TableHead>
-                        <TableHead className="text-primary-700 font-medium">Created</TableHead>
-                        <TableHead className="text-primary-700 font-medium">Actions</TableHead>
+                        <TableHead className="text-primary font-medium">Rate</TableHead>
+                        <TableHead className="text-primary font-medium">Currency</TableHead>
+                        <TableHead className="text-primary font-medium">Created</TableHead>
+                        <TableHead className="text-primary font-medium">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -332,7 +332,7 @@ function MyOffersPage({ account }: MyOffersPageProps) {
                             </span>
                           </TableCell>
                           <TableCell>{offer.fiat_currency}</TableCell>
-                          <TableCell className="text-neutral-500 text-sm">
+                          <TableCell className="text-muted text-sm">
                             {formatDistanceToNow(new Date(offer.created_at))} ago
                           </TableCell>
                           <TableCell>

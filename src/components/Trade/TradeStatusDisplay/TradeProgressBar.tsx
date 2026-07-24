@@ -54,7 +54,7 @@ const TradeProgressBar: React.FC<TradeProgressBarProps> = ({ state, isExceptiona
     if (isExceptional) return 'bg-[#f84960]';
     if (state === TradeLegState.DISPUTED) return 'bg-[#FF6B00]';
     if (state === TradeLegState.CANCELLED) return 'bg-[#474d57]';
-    return 'bg-primary-600';
+    return 'bg-primary';
   };
 
   // Create our own progress bar instead of using the shadcn component
@@ -62,12 +62,12 @@ const TradeProgressBar: React.FC<TradeProgressBarProps> = ({ state, isExceptiona
     <div className="space-y-2">
       <div className="flex justify-between items-center">
         <div className="text-sm font-medium">Progress: {label}</div>
-        <div className="text-sm text-neutral-500">{progress}%</div>
+        <div className="text-sm text-muted">{progress}%</div>
       </div>
 
       <div className="relative pt-4 pb-8">
         {/* Custom progress bar */}
-        <div className="h-3 w-full bg-neutral-200 rounded-full overflow-hidden">
+        <div className="h-3 w-full bg-surface rounded-full overflow-hidden">
           <div
             className={`h-full ${getProgressBarColor()} rounded-full transition-all duration-500 ease-in-out`}
             style={{ width: `${progress}%` }}
@@ -87,8 +87,8 @@ const TradeProgressBar: React.FC<TradeProgressBarProps> = ({ state, isExceptiona
                       ? 'bg-[#FF6B00] border-[#FF6B00]/60'
                       : isExceptional
                       ? 'bg-[#f84960] border-[#f84960]/60'
-                      : 'bg-primary-600 border-primary-700'
-                    : 'bg-neutral-200 border-neutral-300'
+                      : 'bg-primary border-primary'
+                    : 'bg-surface border-border'
                 } -mt-1 ${
                   // Add pulsing animation for current milestone
                   progress >= milestone.position &&
@@ -101,7 +101,7 @@ const TradeProgressBar: React.FC<TradeProgressBarProps> = ({ state, isExceptiona
               />
               <div
                 className={`mt-2 text-xs text-center whitespace-nowrap ${
-                  milestone.completed ? 'text-primary-700 font-medium' : 'text-neutral-500'
+                  milestone.completed ? 'text-primary font-medium' : 'text-muted'
                 }`}
                 style={{
                   transform: 'translateX(-50%)',

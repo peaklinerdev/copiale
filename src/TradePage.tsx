@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import ChatSection from '@/components/Trade/ChatSection';
 import ParticipantsSection from '@/components/Trade/ParticipantsSection';
@@ -54,6 +54,7 @@ const escrowStateToNumber = (state: string | number): number => {
 function TradePage() {
   const { id } = useParams<{ id: string }>();
   const { primaryWallet } = useDynamicContext();
+  const navigate = useNavigate();
   const tradeId = id ? parseInt(id) : 0;
 
   // Custom hooks
@@ -96,6 +97,7 @@ function TradePage() {
     });
 
   const [pendingTxs, setPendingTxs] = useState<any[]>([]);
+  const [mobileTab, setMobileTab] = useState<'details' | 'chat'>('details');
 
   // Use ref to store pending transactions to avoid re-renders
   const pendingTxsRef = useRef<any[]>([]);
@@ -156,8 +158,7 @@ function TradePage() {
         toast.success('Wallet connected. Trade data refreshed.');
       } else {
         // Handle wallet disconnection
-        // Redirect to home page
-        window.location.href = '/';
+        navigate('/');
         // Show notification
         toast.info('Wallet disconnected. Redirecting to home page.');
       }
@@ -292,12 +293,36 @@ function TradePage() {
     (parseFloat(balance) === 0);
 
   return (
-    <div className="flex gap-4 min-h-[calc(100vh-80px)]" style={{ background: '#0a0a0a' }}>
-      {/* Left panel */}
-      <div className="w-[400px] shrink-0 space-y-3">
+    <div className="flex flex-col md:flex-row gap-4 min-h-[calc(100vh-80px)]" style={{ background: '#0a0a0a' }}>
+      {/* Mobile tab switcher */}
+      <div className="md:hidden flex border-b border-[#1f1f1f]">
+        <button
+          onClick={() => setMobileTab('details')}
+          className={`flex-1 py-2.5 text-xs font-mono font-bold tracking-wider uppercase ${
+            mobileTab === 'details'
+              ? 'text-primary border-b-2 border-primary'
+              : 'text-muted border-b-2 border-transparent'
+          }`}
+        >
+          Trade
+        </button>
+        <button
+          onClick={() => setMobileTab('chat')}
+          className={`flex-1 py-2.5 text-xs font-mono font-bold tracking-wider uppercase ${
+            mobileTab === 'chat'
+              ? 'text-primary border-b-2 border-primary'
+              : 'text-muted border-b-2 border-transparent'
+          }`}
+        >
+          Chat
+        </button>
+      </div>
+
+      {/* Left panel — hidden on mobile when chat tab active */}
+      <div className={`${mobileTab === 'chat' ? 'hidden' : ''} md:block md:w-[400px] md:shrink-0 space-y-3`}>
         <div className="flex items-center justify-between">
           <TradeHeader userRole={userRole} />
-          <span className="text-[11px] font-mono text-[#6b7280] tracking-wider">
+          <span className="text-[11px] font-mono text-muted tracking-wider">
             #{formatDisplayId(trade.id)}
           </span>
         </div>
@@ -314,7 +339,7 @@ function TradePage() {
         {/* Trade details */}
         <div className="bg-[#111111] border border-[#1f1f1f] rounded-sm p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono font-bold tracking-[0.15em] text-[#6b7280] uppercase">
+            <span className="text-[10px] font-mono font-bold tracking-[0.15em] text-muted uppercase">
               Status
             </span>
             <span
@@ -334,14 +359,14 @@ function TradePage() {
               {formatNumber(trade.leg1_crypto_amount || 0)} {token}
             </p>
             {trade.leg1_fiat_amount && (
-              <p className="text-sm font-mono text-[#6b7280]">
+              <p className="text-sm font-mono text-muted">
                 = {formatNumber(parseFloat(trade.leg1_fiat_amount))} {trade.from_fiat_currency}
               </p>
             )}
           </div>
 
           <div className="border-t border-[#1f1f1f] pt-3">
-            <span className="text-[10px] font-mono font-bold tracking-[0.15em] text-[#6b7280] uppercase">
+            <span className="text-[10px] font-mono font-bold tracking-[0.15em] text-muted uppercase">
               Rate
             </span>
             <p className="text-sm font-mono font-medium text-[#ffffff] mt-0.5">
@@ -350,7 +375,7 @@ function TradePage() {
                   ? parseFloat(trade.leg1_fiat_amount) / parseFloat(trade.leg1_crypto_amount)
                   : 0
               )}{' '}
-              <span className="text-[#6b7280]">{trade.from_fiat_currency}/{token}</span>
+              <span className="text-muted">{trade.from_fiat_currency}/{token}</span>
             </p>
           </div>
 
@@ -398,7 +423,7 @@ function TradePage() {
 
         {showEscrowContext && (
           <div className="bg-[#111111] border border-[#1f1f1f] rounded-sm px-4 py-2">
-            <p className="text-[11px] font-mono text-[#6b7280]">
+            <p className="text-[11px] font-mono text-muted">
               Funds held in escrow
             </p>
           </div>
@@ -406,25 +431,27 @@ function TradePage() {
 
         {renderPendingTransactions()}
 
-        {/* Awaiting state */}
-        <div className="bg-[#111111] border border-[#1f1f1f] rounded-sm p-4">
-          <div className="text-center">
-            <p className="text-[11px] font-mono text-[#6b7280] tracking-wider">
-              {action === 'buying' ? 'Waiting for seller' : 'Waiting for buyer'}
-            </p>
-            <div className="mt-1.5 flex justify-center gap-1">
-              <span className="w-1.5 h-1.5 bg-[#f97316] rounded-[1px] animate-pulse" />
-              <span className="w-1.5 h-1.5 bg-[#f97316] rounded-[1px] animate-pulse" style={{ animationDelay: '0.2s' }} />
-              <span className="w-1.5 h-1.5 bg-[#f97316] rounded-[1px] animate-pulse" style={{ animationDelay: '0.4s' }} />
+        {/* Awaiting state — only for active trades */}
+        {isActiveState && (
+          <div className="bg-[#111111] border border-[#1f1f1f] rounded-sm p-4">
+            <div className="text-center">
+              <p className="text-[11px] font-mono text-muted tracking-wider">
+                {action === 'buying' ? 'Waiting for seller' : 'Waiting for buyer'}
+              </p>
+              <div className="mt-1.5 flex justify-center gap-1">
+                <span className="w-1.5 h-1.5 bg-[#f97316] rounded-[1px] animate-pulse" />
+                <span className="w-1.5 h-1.5 bg-[#f97316] rounded-[1px] animate-pulse" style={{ animationDelay: '0.2s' }} />
+                <span className="w-1.5 h-1.5 bg-[#f97316] rounded-[1px] animate-pulse" style={{ animationDelay: '0.4s' }} />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <TradeNavigation />
       </div>
 
-      {/* Right panel - Chat */}
-      <div className="flex-1 flex flex-col">
+      {/* Right panel — Chat — hidden on mobile when details tab active */}
+      <div className={`${mobileTab === 'details' ? 'hidden' : ''} md:block flex-1 flex flex-col`}>
         <ChatSection counterparty={counterparty} className="flex-1" />
       </div>
     </div>

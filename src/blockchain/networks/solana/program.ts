@@ -332,7 +332,7 @@ export class SolanaProgram implements SolanaProgramInterface {
         const tokenAccount = await getAccount(this.connection, escrowTokenPDA);
         escrowMintKey = tokenAccount.mint;
       } catch {
-        escrowMintKey = new PublicKey('8yonSxMEjBvP2Be4Qr6Ene5tcZEodEKWyoucLWcSadGV');
+        escrowMintKey = new PublicKey('6ui3J2yHVf6wJsEMLgVx7TSG8KbQ54QYjuWL7rUcHyQe');
       }
 
       const buyerTokenAccount = await getAssociatedTokenAddress(escrowMintKey, buyer);

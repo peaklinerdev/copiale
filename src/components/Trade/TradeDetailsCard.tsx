@@ -130,7 +130,7 @@ function TradeDetailsCard({ trade, offer, userRole, counterparty }: TradeDetails
                 <div className="mt-2 flex items-center">
                   <strong className="mr-2">{otherPartyRole}:</strong>
                   <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-full bg-neutral-200 flex items-center justify-center text-xs mr-2 overflow-hidden">
+                    <div className="w-6 h-6 rounded-full bg-surface flex items-center justify-center text-xs mr-2 overflow-hidden">
                       {otherParty.profile_photo_url ? (
                         <img
                           src={otherParty.profile_photo_url}

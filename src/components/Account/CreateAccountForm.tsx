@@ -59,7 +59,7 @@ function CreateAccountForm({ setAccount }: CreateAccountFormProps) {
       });
 
       const accountId = response.data.id; // Extract id from response
-      setSuccess(`Account created with ID: ${accountId}`);
+      setSuccess(`Account created! 2 SOL and 2500 USDT are being sent to your devnet wallet.`);
 
       // Create a new account object with the returned ID and supplied data
       const newAccount: Account = {
@@ -128,7 +128,7 @@ function CreateAccountForm({ setAccount }: CreateAccountFormProps) {
           type="text"
           value={username}
           onChange={e => setUsername(e.target.value)}
-          className="border-neutral-300 focus:border-primary-500 focus:ring-primary-500"
+          className="border-border focus:border-primary-500 focus:ring-primary-500"
           required
           placeholder="Choose a username"
         />
@@ -144,7 +144,7 @@ function CreateAccountForm({ setAccount }: CreateAccountFormProps) {
           type="email"
           value={email}
           onChange={e => setEmail(e.target.value)}
-          className="border-neutral-300 focus:border-primary-500 focus:ring-primary-500"
+          className="border-border focus:border-primary-500 focus:ring-primary-500"
           required
           placeholder="example@email.com"
         />

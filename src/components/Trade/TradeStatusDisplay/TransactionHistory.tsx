@@ -171,7 +171,7 @@ export const TransactionHistory = ({ tradeId, className = '' }: TransactionHisto
             {lastUpdated && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="text-xs text-neutral-500">
+                  <span className="text-xs text-muted">
                     {isRefreshing
                       ? 'Refreshing...'
                       : `Updated ${formatDistanceToNow(lastUpdated)} ago`}

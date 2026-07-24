@@ -5,8 +5,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
  */
 export function TradeNotFoundAlert() {
   return (
-    <Alert className="mb-4 border-yellow-300 bg-yellow-50">
-      <AlertDescription className="text-primary-700">
+    <Alert className="mb-4 border-[#f97316]/30 bg-[#f97316]/10">
+      <AlertDescription className="text-[#f97316]">
         Trade not found or you don't have permission to view it.
       </AlertDescription>
     </Alert>

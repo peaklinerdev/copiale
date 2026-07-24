@@ -64,7 +64,7 @@ export function WalletModal({ isOpen, onClose }: Props) {
   const goDetail = async (t: Token) => { setToken(t); setView('detail'); setTxs([]); setTxLoad(true);
     try { const c = new Connection('https://api.devnet.solana.com', 'confirmed'); const target = t === 'SOL' ? addr : usdtAta; if (!target) { setTxLoad(false); return; }
       const sigs = await c.getSignaturesForAddress(new PublicKey(target), { limit: 20 }); const p: any[] = [];
-      const usdtMint = '8yonSxMEjBvP2Be4Qr6Ene5tcZEodEKWyoucLWcSadGV';
+      const usdtMint = '6ui3J2yHVf6wJsEMLgVx7TSG8KbQ54QYjuWL7rUcHyQe';
       for (const s of sigs) {
         try {
           const tx = await c.getParsedTransaction(s.signature, { maxSupportedTransactionVersion: 0 });

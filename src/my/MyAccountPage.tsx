@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { Account } from '@/api';
 import CreateAccountForm from '@/components/Account/CreateAccountForm';
+import DevnetFaucetButton from '@/components/Account/DevnetFaucetButton';
 import EditAccountForm from '@/components/Account/EditAccountForm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -108,6 +109,12 @@ function AccountPage({ account, setAccount }: AccountPageProps) {
             )
           ) : (
             <CreateAccountForm setAccount={setAccount} />
+          )}
+
+          {account && (
+            <div className="mt-6">
+              <DevnetFaucetButton />
+            </div>
           )}
         </CardContent>
       </Card>

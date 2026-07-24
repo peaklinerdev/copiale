@@ -33,7 +33,7 @@ export const isAdminLoggedIn = () => !!localStorage.getItem(ADMIN_TOKEN_KEY);
 
 // Auth
 export const adminLogin = (username: string, password: string) =>
-  adminApi.post<{ token: string }>('/admin/login', { username, password });
+  adminApi.post<{ token: string }>('/admin/login/login', { username, password });
 
 // Accounts
 export type AdminAccount = {

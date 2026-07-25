@@ -24,6 +24,8 @@ interface TradeStatusDisplayProps {
   escrowError?: Error | null;
   balance?: string;
   refreshEscrow?: () => Promise<void>;
+  onExpandEscrow?: () => void;
+  onViewAllTransactions?: () => void;
 }
 
 const TradeStatusDisplay = ({
@@ -38,6 +40,8 @@ const TradeStatusDisplay = ({
   escrowDetails,
   balance,
   refreshEscrow,
+  onExpandEscrow,
+  onViewAllTransactions,
 }: TradeStatusDisplayProps) => {
   const [localLoading, setLocalLoading] = useState<TradeAction | null>(null);
   const [lastLogTime, setLastLogTime] = useState(0);
@@ -65,10 +69,10 @@ const TradeStatusDisplay = ({
       <ExceptionalCases trade={trade} userRole={userRole} escrowDetails={escrowDetails} balance={balance} refreshEscrow={refreshEscrow} />
 
       {trade.leg1_escrow_address && (
-        <EscrowDetailsPanel escrowAddress={trade.leg1_escrow_address} trade={trade} userRole={userRole} />
+        <EscrowDetailsPanel escrowAddress={trade.leg1_escrow_address} trade={trade} userRole={userRole} onExpand={onExpandEscrow} />
       )}
 
-      <TransactionHistory tradeId={trade.id} />
+      <TransactionHistory tradeId={trade.id} onViewAll={onViewAllTransactions} />
     </div>
   );
 };

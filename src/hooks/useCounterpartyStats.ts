@@ -11,6 +11,8 @@ interface CounterpartyStats {
     total: number;
     completed: number;
     disputes: number;
+    cancelled: number;
+    open: number;
     completionRate: number;
   };
 }

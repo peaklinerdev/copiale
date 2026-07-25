@@ -17,6 +17,8 @@ interface TradeStatusCardProps {
   escrowError?: Error | null;
   balance?: string;
   refreshEscrow?: () => Promise<void>;
+  onExpandEscrow?: () => void;
+  onViewAllTransactions?: () => void;
 }
 
 /**
@@ -32,6 +34,8 @@ export function TradeStatusCard({
   escrowError,
   balance,
   refreshEscrow,
+  onExpandEscrow,
+  onViewAllTransactions,
 }: TradeStatusCardProps) {
   // Log trade state changes only
 
@@ -51,6 +55,8 @@ export function TradeStatusCard({
         escrowError={escrowError}
         balance={balance}
         refreshEscrow={refreshEscrow}
+        onExpandEscrow={onExpandEscrow}
+        onViewAllTransactions={onViewAllTransactions}
       />
     </div>
   );

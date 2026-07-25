@@ -1,324 +1,252 @@
 import { useState } from 'react';
 import { microToUsdcString } from '@/utils/amounts';
-import { useEscrowDetails, getEscrowStateName, EscrowState } from '@/hooks/useEscrowDetails';
+import { useEscrowDetails, EscrowState } from '@/hooks/useEscrowDetails';
 import { checkAndFundEscrow } from '@/services/chainService';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
-import { ChevronDown, ChevronUp, RefreshCw, ExternalLink } from 'lucide-react';
+import {
+  ChevronDown, ChevronUp, RefreshCw, ExternalLink,
+  Shield, X, ArrowLeft, Copy, Check, Info,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface EscrowDetailsPanelProps {
   escrowAddress: string;
   trade: { id: number; leg1_state?: string };
   userRole: 'buyer' | 'seller';
+  onExpand?: () => void;
 }
 
-export function EscrowDetailsPanel({ escrowAddress, trade, userRole }: EscrowDetailsPanelProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
+const STATE_COLORS: Record<string, string> = {
+  CREATED: 'bg-blue-500', FUNDED: 'bg-green-500', RELEASED: 'bg-green-500',
+  CANCELLED: 'bg-red-500', DISPUTED: 'bg-[#f97316]', RESOLVED: 'bg-teal-500',
+};
+const STATE_LABELS: Record<string, string> = {
+  CREATED: 'Pending', FUNDED: 'Funded', RELEASED: 'Released',
+  CANCELLED: 'Cancelled', DISPUTED: 'Disputed', RESOLVED: 'Resolved',
+};
+
+function formatAmount(amount: unknown): string {
+  if (!amount) return '0';
+  try { return microToUsdcString(BigInt(amount as string | number | bigint)); } catch { return '0'; }
+}
+
+function formatAddr(addr: string): string {
+  if (!addr || addr === '11111111111111111111111111111111') return 'None';
+  return `${addr.slice(0, 5)}...${addr.slice(-5)}`;
+}
+
+function explorerUrl(addr: string): string {
+  return `https://explorer.solana.com/address/${addr}?cluster=devnet`;
+}
+
+export function EscrowDetailsPanel({ escrowAddress, trade, userRole, onExpand }: EscrowDetailsPanelProps) {
+  const [expanded, setExpanded] = useState(false);
+  const [funding, setFunding] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { primaryWallet } = useDynamicContext();
+  const { escrowDetails, loading, error, balance, refresh } = useEscrowDetails(escrowAddress);
 
-  const { escrowDetails, loading, error, balance, lastUpdated, isRefreshing, refresh } =
-    useEscrowDetails(escrowAddress);
+  if (trade.leg1_state === 'RELEASED') return null;
 
-  // Don't show escrow details if the trade is in RELEASED state
-  // because the escrow account has been closed to recoup rent costs
-  if (trade.leg1_state === 'RELEASED') {
-    return null;
-  }
+  const stateStr = escrowDetails
+    ? (typeof escrowDetails.state === 'string' ? escrowDetails.state : EscrowState[escrowDetails.state])
+    : null;
 
-  const handleFundEscrow = async () => {
+  const needsFunding = escrowDetails && stateStr === 'CREATED' && parseFloat(balance) === 0;
+
+  const handleFund = async () => {
     if (!primaryWallet || !escrowAddress || !escrowDetails) return;
-
-    setActionLoading(true);
+    setFunding(true);
     try {
-      toast.info('Funding escrow on Solana...', {
-        description: 'Please approve the transaction in your wallet.',
-      });
-
+      toast.info('Funding escrow...', { description: 'Approve the transaction in your wallet.' });
       await checkAndFundEscrow(primaryWallet, escrowAddress);
-
-      toast.success('Escrow funded successfully!');
-      await refresh(); // Refresh escrow details
+      toast.success('Escrow funded');
+      await refresh();
     } catch (err) {
-      console.error('Error funding escrow:', err);
-      toast.error(`Escrow Funding Failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      setActionLoading(false);
-    }
+      toast.error('Funding failed', { description: err instanceof Error ? err.message : 'Unknown error' });
+    } finally { setFunding(false); }
   };
 
-  // Determine if the escrow needs funding
-  const needsFunding =
-    escrowDetails &&
-    (typeof escrowDetails.state === 'number'
-      ? escrowDetails.state === EscrowState.CREATED
-      : escrowDetails.state === 'CREATED') &&
-    parseFloat(balance) === 0;
-
-  // Only show fund button for seller
-  const showFundButton = userRole === 'seller' && needsFunding;
-
-  // Get Solana explorer URL for the network
-  const getSolanaExplorerUrl = (address: string) => {
-    // Using Solana devnet explorer
-    return `https://explorer.solana.com/address/${address}?cluster=devnet`;
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  // Format timestamp
-  const formatTimestamp = (timestamp: unknown) => {
-    if (!timestamp || timestamp.toString() === '0') return 'Not set';
-
-    // Per Invariant 4: handles native BigInt or number; u64 timestamps
-    // fit safely in JS number (up to 2^53 - 1 seconds, way beyond 2038).
-    const timestampNumber = Number(timestamp);
-    const date = new Date(timestampNumber * 1000);
-    return date.toLocaleString();
-  };
-
-  // Get state badge color
-  const getStateBadgeColor = (state: EscrowState | string) => {
-    const stateStr = typeof state === 'string' ? state : EscrowState[state];
-    switch (stateStr) {
-      case 'CREATED':
-        return 'bg-blue-100 text-blue-800';
-      case 'FUNDED':
-        return 'bg-green-100 text-green-800';
-      case 'RELEASED':
-        return 'bg-green-100 text-green-800';
-      case 'CANCELLED':
-        return 'bg-red-100 text-red-800';
-      case 'DISPUTED':
-        return 'bg-orange-100 text-orange-800';
-      case 'RESOLVED':
-        return 'bg-teal-100 text-teal-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  // Format address for display
-  const formatAddress = (address: string) => {
-    if (!address || address === '11111111111111111111111111111111') return 'None'; // Solana system program
-    return `${address.substring(0, 4)}...${address.substring(address.length - 4)}`;
-  };
-
-  // Format amount for display.
-  // The on-chain value is u64 micro-USDC. Canonical strings or BigInts
-  // are formatted via microToUsdcString for 6dp precision — never coerce
-  // u64 to JS number directly for logic (Invariant 4).
-  const formatAmount = (amount: unknown) => {
-    if (!amount) return '0';
-
-    try {
-      // microToUsdcString handles BigInt
-      return microToUsdcString(BigInt(amount as string | number | bigint));
-    } catch {
-      return '0';
-    }
-  };
-
-  return (
-    <TooltipProvider>
-      <Collapsible
-        open={isOpen}
-        onOpenChange={setIsOpen}
-        className="w-full border rounded-md p-2 mt-4 bg-[#1e2329]"
-      >
+  // ── Compact sidebar view ──
+  if (!expanded) {
+    return (
+      <div className="bg-[#111111] border border-[#1f1f1f] rounded-sm p-3 space-y-2">
         <div className="flex items-center justify-between">
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2 font-medium">
-              <span>Escrow Details (Solana On-Chain)</span>
-              {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            </Button>
-          </CollapsibleTrigger>
-
           <div className="flex items-center gap-2">
-            {lastUpdated && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="text-xs text-muted">
-                    {isRefreshing
-                      ? 'Refreshing...'
-                      : `Updated ${formatDistanceToNow(lastUpdated)} ago`}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent className="bg-[#2b3139] rounded-sm">
-                  <p>Auto-refreshes every minute</p>
-                </TooltipContent>
-              </Tooltip>
+            <div className={`w-2.5 h-2.5 rounded-full ${stateStr ? STATE_COLORS[stateStr] || 'bg-gray-500' : loading ? 'bg-gray-500 animate-pulse' : 'bg-red-500'}`} />
+            <span className="text-[11px] font-mono font-bold text-white uppercase tracking-wider">
+              {error ? 'Sync issue' : loading ? 'Loading...' : STATE_LABELS[stateStr || ''] || stateStr || 'Unknown'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {error && (
+              <button onClick={refresh} className="text-[10px] font-mono text-[#f97316] hover:underline">
+                Retry
+              </button>
             )}
-
-            <Button variant="outline" size="sm" onClick={refresh} disabled={isRefreshing}>
-              <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
-            </Button>
+            <button
+              onClick={() => onExpand ? onExpand() : setExpanded(true)}
+              className="text-muted hover:text-white p-1 rounded-sm hover:bg-[#1f1f1f] transition"
+            >
+              <ChevronUp className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
 
-        <CollapsibleContent className="pt-4">
-          {loading && !escrowDetails ? (
-            <div className="py-4 text-center">Loading escrow details...</div>
-          ) : error ? (
-            <div className="py-4 text-center text-red-500">
-              Error loading escrow details: {error.message}
-            </div>
-          ) : escrowDetails ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="bg-[#2b3139] p-3 rounded-sm md:col-span-2">
-                  <div className="text-sm text-muted">Escrow Address (PDA)</div>
-                  <div className="font-medium flex items-center gap-1">
-                    <span className="truncate">{formatAddress(escrowAddress)}</span>
-                    <a
-                      href={getSolanaExplorerUrl(escrowAddress)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:text-blue-700"
-                    >
-                      <ExternalLink size={14} />
-                    </a>
-                  </div>
-                </div>
-                <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-muted">Escrow ID</div>
-                  <div className="font-medium">{escrowDetails.escrowId.toString()}</div>
-                </div>
-                <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-muted">Trade ID</div>
-                  <div className="font-medium">{escrowDetails.tradeId.toString()}</div>
-                </div>
-                <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-muted">State</div>
-                  <div className="font-medium">
-                    <Badge className={getStateBadgeColor(escrowDetails.state)}>
-                      {typeof escrowDetails.state === 'string'
-                        ? escrowDetails.state
-                        : getEscrowStateName(Number(escrowDetails.state))}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-muted">Amount</div>
-                  <div className="font-medium">{formatAmount(escrowDetails.amount)} USDC</div>
-                </div>
-                <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-muted">Current Balance</div>
-                  <div className="font-medium">{balance} USDC</div>
-                </div>
-                <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-muted">Fiat Paid</div>
-                  <div className="font-medium">{escrowDetails.fiatPaid ? 'Yes' : 'No'}</div>
-                </div>
-                <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-muted">Deposit Deadline</div>
-                  <div className="font-medium">
-                    {formatTimestamp(escrowDetails.depositDeadline)}
-                  </div>
-                </div>
-                <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-muted">Fiat Deadline</div>
-                  <div className="font-medium">{formatTimestamp(escrowDetails.fiatDeadline)}</div>
-                </div>
-                <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-muted">Seller</div>
-                  <div className="font-medium flex items-center gap-1">
-                    <span className="truncate">{formatAddress(escrowDetails.seller)}</span>
-                    <a
-                      href={getSolanaExplorerUrl(escrowDetails.seller)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:text-blue-700"
-                    >
-                      <ExternalLink size={14} />
-                    </a>
-                  </div>
-                </div>
-                <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-muted">Buyer</div>
-                  <div className="font-medium flex items-center gap-1">
-                    <span className="truncate">{formatAddress(escrowDetails.buyer)}</span>
-                    <a
-                      href={getSolanaExplorerUrl(escrowDetails.buyer)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:text-blue-700"
-                    >
-                      <ExternalLink size={14} />
-                    </a>
-                  </div>
-                </div>
-                <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-muted">Arbitrator</div>
-                  <div className="font-medium flex items-center gap-1">
-                    <span className="truncate">{formatAddress(escrowDetails.arbitrator)}</span>
-                    <a
-                      href={getSolanaExplorerUrl(escrowDetails.arbitrator)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:text-blue-700"
-                    >
-                      <ExternalLink size={14} />
-                    </a>
-                  </div>
-                </div>
-                <div className="bg-[#2b3139] p-3 rounded-sm">
-                  <div className="text-sm text-muted">Sequential</div>
-                  <div className="font-medium">{escrowDetails.sequential ? 'Yes' : 'No'}</div>
-                </div>
-              </div>
-
-              {showFundButton && (
-                <div className="mt-4 p-4 bg-[#f97316]/10 border border-[#f97316]/30 rounded-md">
-                  <p className="text-[#f97316] mb-3">
-                    <strong>Action Required:</strong> This escrow has been created but not yet
-                    funded. You need to fund it to proceed with the trade.
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    <Button
-                      onClick={handleFundEscrow}
-                      disabled={actionLoading}
-                      className="bg-[#FF6B00] hover:opacity-90 text-[#0b0e11] font-bold"
-                    >
-                      {actionLoading ? (
-                        <span className="flex items-center gap-2">
-                          <RefreshCw size={16} className="animate-spin" />
-                          Funding...
-                        </span>
-                      ) : (
-                        'Fund Escrow Now'
-                      )}
-                    </Button>
-                    <p className="text-xs text-neutral-600">
-                      This will fund the escrow on the Solana blockchain.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {(typeof escrowDetails.state === 'number'
-                ? escrowDetails.state === EscrowState.CREATED
-                : escrowDetails.state === 'CREATED') &&
-                parseFloat(balance) > 0 && (
-                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-                    <p className="text-blue-800">
-                      <strong>Note:</strong> The escrow has a balance but is still in CREATED state.
-                      This may indicate a pending transaction or a blockchain synchronization delay.
-                    </p>
-                  </div>
-                )}
-            </div>
-          ) : (
-            <div className="py-4 text-center">No escrow details found</div>
-          )}
-          <div className="mt-4 text-xs text-neutral-600 text-center">
-            Escrow data automatically updates every minute via Solana RPC.
+        {/* Escrow amount + balance */}
+        {escrowDetails && (
+          <div className="flex items-center gap-3 text-xs font-mono">
+            <span className="text-muted">Escrow</span>
+            <span className="text-white font-bold">{formatAmount(escrowDetails.amount)} USDC</span>
+            <span className="text-muted">·</span>
+            <span className="text-muted">{balance} USDC held</span>
           </div>
-        </CollapsibleContent>
-      </Collapsible>
-    </TooltipProvider>
+        )}
+
+        {/* Fund button */}
+        {userRole === 'seller' && needsFunding && (
+          <Button onClick={handleFund} disabled={funding}
+            className="w-full bg-[#f97316] hover:opacity-90 text-white font-mono font-bold rounded-sm h-8 text-[11px] tracking-wider">
+            {funding ? 'Funding...' : 'Fund Escrow'}
+          </Button>
+        )}
+
+        {/* Short expand hint */}
+        <p className="text-[9px] font-mono text-muted text-right">
+          Tap to view full details
+        </p>
+      </div>
+    );
+  }
+
+  // ── Expanded full view (replaces content panel) ──
+  return (
+    <div className="bg-[#111111] border border-[#1f1f1f] rounded-sm overflow-hidden">
+      {/* Header */}
+      <div className="border-b border-[#1f1f1f] px-4 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button onClick={() => setExpanded(false)} className="text-muted hover:text-white p-1 -ml-1">
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span className="text-[11px] font-mono font-bold text-white tracking-wider uppercase">
+            Escrow Details
+          </span>
+          <Badge className={`text-[9px] font-mono px-2 py-0 ${stateStr ? STATE_COLORS[stateStr] : 'bg-gray-500'} text-white border-0`}>
+            {stateStr || '...'}
+          </Badge>
+        </div>
+        <button onClick={refresh} className="text-muted hover:text-white p-1 rounded-sm" title="Refresh">
+          <RefreshCw className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(100vh-200px)]">
+        {error ? (
+          <div className="text-center py-6 space-y-2">
+            <Shield className="w-8 h-8 text-muted mx-auto" />
+            <p className="text-[11px] font-mono text-muted">Unable to fetch escrow data</p>
+            <Button onClick={refresh} variant="outline" size="sm"
+              className="border-[#2b3139] text-muted hover:text-white font-mono text-[10px] rounded-sm">
+              Retry
+            </Button>
+          </div>
+        ) : loading && !escrowDetails ? (
+          <div className="flex items-center justify-center py-6">
+            <RefreshCw className="w-5 h-5 text-muted animate-spin" />
+          </div>
+        ) : escrowDetails ? (
+          <>
+            {/* Balance highlight */}
+            <div className="bg-[#f97316]/5 border border-[#f97316]/10 rounded-sm p-3">
+              <p className="text-[9px] font-mono text-muted uppercase tracking-wider mb-1">Balance</p>
+              <p className="text-xl font-mono font-bold text-white">{balance} USDC</p>
+              <p className="text-[10px] font-mono text-muted mt-1">of {formatAmount(escrowDetails.amount)} USDC total</p>
+            </div>
+
+            {/* Key details grid */}
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                ['Escrow ID', escrowDetails.escrowId.toString()],
+                ['Trade ID', escrowDetails.tradeId.toString()],
+                ['Fiat Paid', escrowDetails.fiatPaid ? 'Yes' : 'No'],
+                ['Sequential', escrowDetails.sequential ? 'Yes' : 'No'],
+              ].map(([label, value]) => (
+                <div key={label} className="bg-[#1a1a1a] rounded-sm px-3 py-2">
+                  <p className="text-[9px] font-mono text-muted">{label}</p>
+                  <p className="text-[11px] font-mono font-bold text-white">{value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Addresses */}
+            <div className="space-y-1.5">
+              <p className="text-[9px] font-mono font-bold text-muted tracking-[0.15em] uppercase">Addresses</p>
+              {[
+                ['Escrow (PDA)', escrowAddress],
+                ['Seller', escrowDetails.seller],
+                ['Buyer', escrowDetails.buyer],
+                ['Arbitrator', escrowDetails.arbitrator],
+              ].map(([label, addr]) => (
+                <div key={label} className="flex items-center gap-2 bg-[#1a1a1a] rounded-sm px-3 py-1.5">
+                  <span className="text-[9px] font-mono text-muted w-20 shrink-0">{label}</span>
+                  <code className="text-[10px] font-mono text-white truncate flex-1">{formatAddr(addr)}</code>
+                  <button onClick={() => handleCopy(addr)} className="text-muted hover:text-white shrink-0">
+                    {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                  </button>
+                  <a href={explorerUrl(addr)} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-400 shrink-0">
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              ))}
+            </div>
+
+            {/* Fund action */}
+            {userRole === 'seller' && needsFunding && (
+              <div className="p-3 bg-[#f97316]/5 border border-[#f97316]/10 rounded-sm space-y-2">
+                <p className="text-[11px] font-mono font-bold text-[#f97316]">Action Required</p>
+                <p className="text-[10px] font-mono text-muted">
+                  This escrow is created but unfunded. You must fund it with {formatAmount(escrowDetails.amount)} USDC on Solana devnet to proceed.
+                </p>
+                <Button onClick={handleFund} disabled={funding}
+                  className="w-full bg-[#f97316] hover:opacity-90 text-white font-mono font-bold rounded-sm h-9 text-[11px] tracking-wider">
+                  {funding ? 'Funding...' : 'Fund Escrow'}
+                </Button>
+              </div>
+            )}
+
+            {/* Debug (collapsible) */}
+            <details className="group">
+              <summary className="text-[9px] font-mono text-muted cursor-pointer hover:text-white flex items-center gap-1">
+                <Info className="w-3 h-3" /> Debug info
+              </summary>
+              <pre className="mt-2 text-[9px] font-mono text-muted bg-[#0a0a0a] p-2 rounded-sm overflow-x-auto max-h-[200px]">
+                {JSON.stringify({ ...escrowDetails, state: stateStr }, (_, v) => typeof v === 'bigint' ? v.toString() : v, 2)}
+              </pre>
+            </details>
+          </>
+        ) : null}
+      </div>
+
+      {/* Footer */}
+      <div className="border-t border-[#1f1f1f] px-4 py-2 flex items-center justify-between">
+        <span className="text-[9px] font-mono text-muted">
+          Auto-refreshes every 60s
+        </span>
+        <button onClick={() => setExpanded(false)}
+          className="text-[10px] font-mono font-bold text-[#f97316] hover:underline">
+          Collapse
+        </button>
+      </div>
+    </div>
   );
 }

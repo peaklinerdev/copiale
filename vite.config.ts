@@ -31,10 +31,11 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000, // Increase limit to 1MB to reduce warnings
   },
   server: {
+    port: 8082,
     hmr: {
       protocol: 'ws',
       host: 'localhost',
-      port: 5173,
+      port: 8082,
     },
     host: '0.0.0.0', // Listen on all available network interfaces
     // ngrok

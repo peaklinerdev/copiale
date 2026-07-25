@@ -13,6 +13,7 @@ import { useTradeActions } from './hooks/useTradeActions';
 import { TradeHeader } from './components/Trade/TradeHeader';
 import { TradeStatusCard } from './components/Trade/TradeStatusCard';
 import { TradeNavigation } from './components/Trade/TradeNavigation';
+import { EscrowDetailsTab } from './components/Trade/EscrowDetailsTab';
 import { LoadingIndicator } from './components/Trade/LoadingIndicator';
 import { TradeNotFoundAlert } from './components/Trade/TradeNotFoundAlert';
 import { refreshTrade } from './services/tradeService';
@@ -98,6 +99,7 @@ function TradePage() {
 
   const [pendingTxs, setPendingTxs] = useState<any[]>([]);
   const [mobileTab, setMobileTab] = useState<'details' | 'chat'>('details');
+  const [mainTab, setMainTab] = useState<'chat' | 'escrow'>('chat');
 
   // Use ref to store pending transactions to avoid re-renders
   const pendingTxsRef = useRef<any[]>([]);
@@ -419,6 +421,8 @@ function TradePage() {
           escrowError={escrowError}
           balance={balance}
           refreshEscrow={refreshEscrow}
+          onExpandEscrow={() => setMainTab('escrow')}
+          onViewAllTransactions={() => setMainTab('escrow')}
         />
 
         {showEscrowContext && (
@@ -450,16 +454,58 @@ function TradePage() {
         <TradeNavigation />
       </div>
 
-      {/* Right panel — Chat — hidden on mobile when details tab active */}
-      <div className={`${mobileTab === 'details' ? 'hidden' : ''} md:block flex-1 flex flex-col`}>
-        <ChatSection
-          counterparty={counterparty}
-          tradeId={trade?.id}
-          currentAccount={currentAccount}
-          leg1State={trade?.leg1_state}
-          cryptoAmount={trade?.leg1_crypto_amount}
-          className="flex-1"
-        />
+      {/* Main panel — Tab switcher (Chat | Trade Logs) */}
+      <div className={`${mobileTab === 'details' ? 'hidden' : ''} md:flex flex-1 flex-col min-w-0`}>
+        {/* Tab bar */}
+        <div className="flex items-center border-b border-[#1f1f1f] shrink-0">
+          <button
+            onClick={() => setMainTab('chat')}
+            className={`flex-1 py-2.5 text-xs font-mono font-bold tracking-wider uppercase transition ${
+              mainTab === 'chat'
+                ? 'text-[#f97316] border-b-2 border-[#f97316] bg-[#f97316]/5'
+                : 'text-muted border-b-2 border-transparent hover:text-white'
+            }`}
+          >
+            Chat
+          </button>
+          <button
+            onClick={() => setMainTab('escrow')}
+            className={`flex-1 py-2.5 text-xs font-mono font-bold tracking-wider uppercase transition ${
+              mainTab === 'escrow'
+                ? 'text-[#f97316] border-b-2 border-[#f97316] bg-[#f97316]/5'
+                : 'text-muted border-b-2 border-transparent hover:text-white'
+            }`}
+          >
+            Trade Logs
+          </button>
+        </div>
+
+        {/* Chat tab — hidden via CSS to preserve state */}
+        <div className={`flex-1 flex flex-col ${mainTab === 'chat' ? '' : 'hidden'}`}>
+          <ChatSection
+            counterparty={counterparty}
+            tradeId={trade?.id}
+            currentAccount={currentAccount}
+            leg1State={trade?.leg1_state}
+            cryptoAmount={trade?.leg1_crypto_amount}
+            className="flex-1"
+          />
+        </div>
+
+        {/* Escrow tab — hidden via CSS to preserve state */}
+        <div className={`flex-1 flex flex-col ${mainTab === 'escrow' ? '' : 'hidden'}`}>
+          <EscrowDetailsTab
+            escrowAddress={trade?.leg1_escrow_address ?? undefined}
+            escrowDetails={escrowDetails}
+            balance={balance}
+            escrowLoading={escrowLoading}
+            escrowError={escrowError}
+            tradeId={tradeId}
+            cryptoAmount={trade?.leg1_crypto_amount}
+            onSwitchToChat={() => setMainTab('chat')}
+            onRefresh={refreshEscrow}
+          />
+        </div>
       </div>
     </div>
   );

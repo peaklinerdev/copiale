@@ -6,7 +6,8 @@ import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 import { useTradeChat } from '@/hooks/useTradeChat';
 import { useCounterpartyStats } from '@/hooks/useCounterpartyStats';
-import type { Account } from '@/api';
+import api, { type Account } from '@/api';
+import { toast } from 'sonner';
 
 interface TradeChatProps {
   tradeId: number | undefined;
@@ -15,6 +16,7 @@ interface TradeChatProps {
   leg1State?: string;
   cryptoAmount?: string;
   className?: string;
+  onViewLogs?: () => void;
 }
 
 type DisplayMessage = 
@@ -32,7 +34,6 @@ const STATE_CONFIG: Record<string, { icon: typeof Shield; label: string; detail:
 
 export function TradeChat({ tradeId, currentAccount, counterparty, leg1State, cryptoAmount, className }: TradeChatProps) {
   const [panelOpen, setPanelOpen] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const {
     messages, loading: msgLoading, error: msgError,
@@ -41,43 +42,36 @@ export function TradeChat({ tradeId, currentAccount, counterparty, leg1State, cr
 
   const { counterparty: cpStats, loading: cpLoading } = useCounterpartyStats(tradeId);
 
-  // Merge real messages with status pseudo-messages
+  // Real messages + status pseudos, sorted newest-first for flex-col-reverse
   const displayMessages: DisplayMessage[] = useMemo(() => {
-    const real: DisplayMessage[] = messages.map(m => ({ type: 'message' as const, ...m }));
     const status: DisplayMessage[] = [];
-    
-    // Generate status message from current leg1_state if it exists and we have messages
     if (leg1State && STATE_CONFIG[leg1State]) {
-      // Only add if not already in the messages as a status
-      const stateKey = `status-${leg1State}`;
-      status.push({
-        type: 'status',
-        id: stateKey,
-        state: leg1State,
-        timestamp: new Date().toISOString(),
-      });
+      status.push({ type: 'status', id: `status-${leg1State}`, state: leg1State, timestamp: new Date().toISOString() });
     }
-
-    // De-duplicate: only show latest status
-    const combined = [...real];
-    if (status.length > 0) {
-      combined.push(status[0]);
-    }
-    
-    // Sort by timestamp (oldest first, so newest is at bottom)
-    return combined.sort((a, b) => new Date(a.created_at || a.timestamp).getTime() - new Date(b.created_at || b.timestamp).getTime());
+    const real: DisplayMessage[] = messages.map(m => ({ type: 'message' as const, ...m }));
+    return [...real, ...status].sort(
+      (a, b) => new Date(b.created_at || b.timestamp).getTime() - new Date(a.created_at || a.timestamp).getTime()
+    );
   }, [messages, leg1State]);
 
-  // Auto-scroll to bottom
-  useEffect(() => {
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-  }, [displayMessages.length]);
+  const handleAttach = async (file: File) => {
+    if (!tradeId) return;
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const res = await api.post(`/trades/${tradeId}/upload`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (res.data?.attachment_url) {
+        sendMessage(`[Attachment: ${file.name}]`);
+      }
+    } catch (e: any) {
+      toast.error('Upload failed', { description: e?.response?.data?.error || e.message });
+    }
+  };
 
   return (
     <div className={`flex h-full ${className || ''}`}>
-      {/* Chat area */}
       <div className="flex-1 flex flex-col bg-[#111111] border border-[#1f1f1f] rounded-sm min-w-0">
         <ChatHeader
           counterparty={counterparty}
@@ -86,8 +80,19 @@ export function TradeChat({ tradeId, currentAccount, counterparty, leg1State, cr
           onTogglePanel={() => setPanelOpen(p => !p)}
         />
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto py-3">
+        {/* flex-col-reverse: newest at bottom naturally, no scroll hacks */}
+        <div
+          className="flex-1 overflow-y-auto flex flex-col-reverse py-3 relative"
+          style={{
+            background: `
+              linear-gradient(rgba(17,17,17,0.94), rgba(17,17,17,0.94)),
+              url('/chat-bg.svg')
+            `,
+            backgroundSize: 'auto, 48px 48px',
+            backgroundRepeat: 'no-repeat, repeat',
+          }}
+          ref={scrollRef => { if (scrollRef) scrollRef.top = 0; }}
+        >
           {msgLoading ? (
             <div className="flex items-center justify-center h-full">
               <Loader2 className="w-5 h-5 text-muted animate-spin" />
@@ -120,45 +125,38 @@ export function TradeChat({ tradeId, currentAccount, counterparty, leg1State, cr
                 const Icon = cfg.icon;
                 const time = new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 return (
-                  <div key={item.id} className="flex items-center justify-center my-4 px-4">
-                    <div className="flex items-center gap-3 bg-[#1a1a1a] border border-[#2b3139] rounded-sm px-4 py-2 max-w-[360px] w-full">
-                      <div className="w-8 h-8 rounded-sm bg-[#f97316]/10 flex items-center justify-center shrink-0">
-                        <Icon className="w-4 h-4 text-[#f97316]" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-mono font-bold text-white">{cfg.label}</p>
-                        <p className="text-[10px] font-mono text-muted">{cfg.detail}</p>
-                      </div>
-                      <span className="text-[9px] font-mono text-muted shrink-0">{time}</span>
-                    </div>
+                  <div key={item.id} className="flex items-center justify-center gap-2 my-3 px-4 shrink-0">
+                    <Icon className="w-3.5 h-3.5 text-[#f97316] shrink-0" />
+                    <span className="text-[11px] text-muted">{cfg.label}</span>
+                    <span className="text-[9px] text-muted/50">{time}</span>
                   </div>
                 );
               }
               return (
-                <MessageBubble
-                  key={item.id}
-                  message={item.message}
-                  attachmentUrl={item.attachment_url}
-                  attachmentType={item.attachment_type}
-                  attachmentName={item.attachment_name}
-                  timestamp={item.created_at}
-                  isOwn={item.sender_account_id === currentAccount?.id}
-                  seen={!!item.seen_at}
-                  username={item.sender_username}
-                />
+                <div key={item.id} className="shrink-0">
+                  <MessageBubble
+                    message={item.message}
+                    attachmentUrl={item.attachment_url}
+                    attachmentType={item.attachment_type}
+                    attachmentName={item.attachment_name}
+                    timestamp={item.created_at}
+                    isOwn={item.sender_account_id === currentAccount?.id}
+                    seen={!!item.seen_at}
+                    username={item.sender_username}
+                  />
+                </div>
               );
             })
           )}
-          <div ref={messagesEndRef} />
         </div>
 
         <ChatInput
           onSend={sendMessage}
+          onAttach={handleAttach}
           disabled={!currentAccount || !tradeId}
         />
       </div>
 
-      {/* Counterparty panel */}
       <CounterpartyPanel
         open={panelOpen}
         onClose={() => setPanelOpen(false)}

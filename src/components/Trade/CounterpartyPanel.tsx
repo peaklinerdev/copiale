@@ -18,6 +18,8 @@ interface CounterpartyPanelProps {
       total: number;
       completed: number;
       disputes: number;
+      cancelled: number;
+      open: number;
       completionRate: number;
     };
   } | null;
@@ -89,7 +91,7 @@ export function CounterpartyPanel({ open, onClose, data, loading, cryptoAmount }
                 <p className="text-[9px] font-mono text-muted uppercase tracking-wider mb-1">Escrow Amount</p>
                 <div className="flex items-center gap-2">
                   <Wallet className="w-4 h-4 text-[#f97316]" />
-                  <span className="text-sm font-mono font-bold text-white">{cryptoAmount} USDT</span>
+                  <span className="text-sm font-mono font-bold text-white">{parseFloat(cryptoAmount).toFixed(2)} USDT</span>
                 </div>
               </div>
             )}
@@ -116,7 +118,7 @@ export function CounterpartyPanel({ open, onClose, data, loading, cryptoAmount }
                 Activity
               </p>
               <StatRow icon={Calendar} label="Joined" value={timeAgo(data.created_at)} />
-              <StatRow icon={Shield} label="Escrows" value={`${data.stats.total - data.stats.completed} active`} />
+              <StatRow icon={Shield} label="Open trades" value={data.stats.open} />
             </div>
 
             {/* Contact */}

@@ -452,7 +452,14 @@ function TradePage() {
 
       {/* Right panel — Chat — hidden on mobile when details tab active */}
       <div className={`${mobileTab === 'details' ? 'hidden' : ''} md:block flex-1 flex flex-col`}>
-        <ChatSection counterparty={counterparty} className="flex-1" />
+        <ChatSection
+          counterparty={counterparty}
+          tradeId={trade?.id}
+          currentAccount={currentAccount}
+          leg1State={trade?.leg1_state}
+          cryptoAmount={trade?.leg1_crypto_amount}
+          className="flex-1"
+        />
       </div>
     </div>
   );

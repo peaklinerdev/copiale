@@ -57,10 +57,12 @@ export function TradeChat({ tradeId, currentAccount, counterparty, leg1State, cr
   const handleAttach = async (file: File) => {
     if (!tradeId) return;
     try {
-      const form = new FormData();
-      form.append('file', file);
-      const res = await api.post(`/trades/${tradeId}/upload`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      const buf = await file.arrayBuffer();
+      const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+      const res = await api.post(`/trades/${tradeId}/upload`, {
+        filename: file.name,
+        mimetype: file.type,
+        data: b64,
       });
       if (res.data?.attachment_url) {
         sendMessage(`[Attachment: ${file.name}]`);

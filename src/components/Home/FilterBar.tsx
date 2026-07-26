@@ -18,6 +18,8 @@ interface FilterBarProps {
   onSortChange: (sort: string) => void;
   search: string;
   onSearchChange: (search: string) => void;
+  searchAll: boolean;
+  onSearchAllChange: () => void;
 }
 
 const ASSETS = [
@@ -91,6 +93,8 @@ const FilterBar = ({
   onSortChange,
   search,
   onSearchChange,
+  searchAll,
+  onSearchAllChange,
 }: FilterBarProps) => {
   const methods = PAYMENT_METHODS_BY_CURRENCY[currency] || PAYMENT_METHODS_BY_CURRENCY.ALL;
   const currentCurrency = CURRENCIES[currency];
@@ -215,7 +219,7 @@ const FilterBar = ({
           </Button>
 
           {/* Search */}
-          <div className="relative flex-1 max-w-[200px]">
+          <div className="relative flex-1">
             <svg className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-[#5e6673]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
@@ -223,10 +227,21 @@ const FilterBar = ({
               type="text"
               value={search}
               onChange={e => onSearchChange(e.target.value)}
-              placeholder="Search..."
+              placeholder="Search username, ad ID..."
               className="w-full bg-[#0b0e11] border border-[#2b3139] rounded-sm h-8 pl-8 pr-2 text-xs font-mono text-white placeholder:text-[#5e6673] focus:outline-none focus:border-[#FF6B00]/50"
             />
           </div>
+          <button
+            type="button"
+            onClick={onSearchAllChange}
+            className={`flex items-center gap-1.5 text-[10px] font-mono font-bold px-2 py-1.5 rounded-sm border whitespace-nowrap transition ${
+              searchAll
+                ? 'text-[#FF6B00] border-[#FF6B00]/30 bg-[#FF6B00]/5'
+                : 'text-[#5e6673] border-[#2b3139] hover:text-[#848e9c]'
+            }`}
+          >
+            All listings
+          </button>
 
           {/* Sort */}
         <div className="flex items-center gap-2 ml-auto">

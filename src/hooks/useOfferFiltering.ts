@@ -18,6 +18,7 @@ interface UseOfferFilteringResult {
   currentPage: number;
   totalPages: number;
   search: string;
+  searchAll: boolean;
   handleCurrencyChange: (currency: string) => void;
   handleTradeTypeChange: (type: string) => void;
   handleAssetChange: (asset: string) => void;
@@ -25,6 +26,8 @@ interface UseOfferFilteringResult {
   handlePaymentMethodChange: (method: string) => void;
   handleSortChange: (sort: string) => void;
   handlePageChange: (page: number) => void;
+  handleSearchChange: (val: string) => void;
+  handleSearchAllToggle: () => void;
 }
 
 /**
@@ -45,31 +48,33 @@ export const useOfferFiltering = ({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [search, setSearch] = useState<string>('');
+  const [searchAll, setSearchAll] = useState(true);
 
   // Function to apply all active filters - memoized to prevent unnecessary recreations
   const applyFilters = useCallback(() => {
     let filtered = [...offers];
+    const skipFilters = searchAll && search.trim().length > 0;
 
     // Filter by trade type (BUY shows SELL offers, SELL shows BUY offers)
-    // Note: In P2P markets, if I want to BUY, I look at SELL offers.
-    if (tradeType === 'BUY') {
-      filtered = filtered.filter(offer => offer.offer_type === 'SELL');
-    } else if (tradeType === 'SELL') {
-      filtered = filtered.filter(offer => offer.offer_type === 'BUY');
-    }
+    if (!skipFilters) {
+      if (tradeType === 'BUY') {
+        filtered = filtered.filter(offer => offer.offer_type === 'SELL');
+      } else if (tradeType === 'SELL') {
+        filtered = filtered.filter(offer => offer.offer_type === 'BUY');
+      }
 
-    // Filter by Asset (Token)
-    if (currentAsset !== 'ALL') {
-      filtered = filtered.filter(offer => offer.token === currentAsset);
-    }
+      // Filter by Asset (Token)
+      if (currentAsset !== 'ALL') {
+        filtered = filtered.filter(offer => offer.token === currentAsset);
+      }
 
-    // Filter by currency
-    if (currentCurrency !== 'ALL') {
-      filtered = filtered.filter(offer => offer.fiat_currency === currentCurrency);
-    }
+      // Filter by currency
+      if (currentCurrency !== 'ALL') {
+        filtered = filtered.filter(offer => offer.fiat_currency === currentCurrency);
+      }
 
-    // Filter by Amount (minimum amount should be <= available amount and match range)
-    if (amount) {
+      // Filter by Amount
+      if (amount) {
       const numAmount = parseFloat(amount);
       if (!isNaN(numAmount)) {
         filtered = filtered.filter(offer => {
@@ -96,6 +101,7 @@ export const useOfferFiltering = ({
         return methodName === target || methodName.includes(target);
       });
     }
+    } // end skipFilters
 
     // Search filter — fuzzy match across multiple fields
     if (search.trim()) {
@@ -204,5 +210,6 @@ export const useOfferFiltering = ({
     handleSortChange,
     handlePageChange,
     handleSearchChange,
+    handleSearchAllToggle: () => setSearchAll(v => !v),
   };
 };

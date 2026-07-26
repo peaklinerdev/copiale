@@ -109,10 +109,10 @@ function App() {
 
   return (
     <Router>
-      <div className="app">
+      <div className="app flex flex-col min-h-screen">
         <AuthGate primaryWallet={primaryWallet} account={account} authLoading={authLoading} />
         <Header isLoggedIn={!!primaryWallet} account={account} />
-        <main className="main-content">
+        <main className="main-content flex-1">
           <Container>
             <ErrorBoundary>
               <Suspense fallback={<PageLoader />}>

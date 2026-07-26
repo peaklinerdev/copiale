@@ -96,7 +96,6 @@ export const useOfferFiltering = ({
         return methodName === target || methodName.includes(target);
       });
     }
-    } // end skipFilters
 
     // Search filter — fuzzy match across multiple fields
     if (search.trim()) {

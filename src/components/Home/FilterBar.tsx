@@ -18,8 +18,6 @@ interface FilterBarProps {
   onSortChange: (sort: string) => void;
   search: string;
   onSearchChange: (search: string) => void;
-  searchAll: boolean;
-  onSearchAllChange: () => void;
 }
 
 const ASSETS = [
@@ -93,8 +91,6 @@ const FilterBar = ({
   onSortChange,
   search,
   onSearchChange,
-  searchAll,
-  onSearchAllChange,
 }: FilterBarProps) => {
   const methods = PAYMENT_METHODS_BY_CURRENCY[currency] || PAYMENT_METHODS_BY_CURRENCY.ALL;
   const currentCurrency = CURRENCIES[currency];
@@ -231,17 +227,6 @@ const FilterBar = ({
               className="w-full bg-[#0b0e11] border border-[#2b3139] rounded-sm h-8 pl-8 pr-2 text-xs font-mono text-white placeholder:text-[#5e6673] focus:outline-none focus:border-[#FF6B00]/50"
             />
           </div>
-          <button
-            type="button"
-            onClick={onSearchAllChange}
-            className={`flex items-center gap-1.5 text-[10px] font-mono font-bold px-2 py-1.5 rounded-sm border whitespace-nowrap transition ${
-              searchAll
-                ? 'text-[#FF6B00] border-[#FF6B00]/30 bg-[#FF6B00]/5'
-                : 'text-[#5e6673] border-[#2b3139] hover:text-[#848e9c]'
-            }`}
-          >
-            All listings
-          </button>
 
           {/* Sort */}
         <div className="flex items-center gap-2 ml-auto">

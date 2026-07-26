@@ -47,7 +47,6 @@ function HomePage() {
     currentPage,
     totalPages,
     search,
-    searchAll,
     handleCurrencyChange,
     handleTradeTypeChange,
     handleAssetChange,
@@ -56,7 +55,6 @@ function HomePage() {
     handleSortChange,
     handlePageChange,
     handleSearchChange,
-    handleSearchAllToggle,
   } = useOfferFiltering({
     offers,
     itemsPerPage: 25,
@@ -184,8 +182,6 @@ function HomePage() {
                   onSortChange={handleSortChange}
                   search={search}
                   onSearchChange={handleSearchChange}
-                  searchAll={searchAll}
-                  onSearchAllChange={handleSearchAllToggle}
                 />
               </div>
             </div>

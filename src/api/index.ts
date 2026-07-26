@@ -208,6 +208,7 @@ export type CreateOfferRequest = {
   terms?: string;
   escrow_deposit_time_limit?: string | { minutes: number };
   fiat_payment_time_limit?: string | { minutes: number };
+  payment_methods?: string[];
 };
 
 export const createOffer = (data: CreateOfferRequest) =>

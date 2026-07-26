@@ -4,6 +4,7 @@ import { Offer } from '../api';
 interface UseOfferFilteringProps {
   offers: Offer[];
   itemsPerPage: number;
+  creatorNames?: Record<number, string>;
 }
 
 interface UseOfferFilteringResult {
@@ -16,6 +17,7 @@ interface UseOfferFilteringResult {
   sortBy: string;
   currentPage: number;
   totalPages: number;
+  search: string;
   handleCurrencyChange: (currency: string) => void;
   handleTradeTypeChange: (type: string) => void;
   handleAssetChange: (asset: string) => void;
@@ -31,6 +33,7 @@ interface UseOfferFilteringResult {
 export const useOfferFiltering = ({
   offers,
   itemsPerPage,
+  creatorNames,
 }: UseOfferFilteringProps): UseOfferFilteringResult => {
   const [filteredOffers, setFilteredOffers] = useState<Offer[]>([]);
   const [tradeType, setTradeType] = useState<string>('BUY'); // Default to BUY as per Binance
@@ -41,6 +44,7 @@ export const useOfferFiltering = ({
   const [sortBy, setSortBy] = useState<string>('PRICE');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [search, setSearch] = useState<string>('');
 
   // Function to apply all active filters - memoized to prevent unnecessary recreations
   const applyFilters = useCallback(() => {
@@ -76,19 +80,35 @@ export const useOfferFiltering = ({
       }
     }
 
-    // Filter by Payment Method - parsed from offer.terms since there's no
-    // dedicated column. Terms embed: "Payment Method: Telebirr\nAccount: ..."
+    // Filter by Payment Method - checks payment_methods array first, then falls back to terms regex
     if (paymentMethod !== 'ALL') {
       filtered = filtered.filter(offer => {
-        const match = offer.terms?.match(/Payment Method:\s*(.+)/);
+        if (offer.payment_methods?.length) {
+          return offer.payment_methods.some(m => m.toLowerCase() === paymentMethod.toLowerCase() || m.toLowerCase().includes(paymentMethod.toLowerCase()));
+        }
+        const match = offer.terms?.match(/Payment Methods?:\s*(.+)/);
         if (!match) return false;
         const methodName = match[1].trim().toLowerCase();
-        // Map UI filter values to the names stored in terms
         const target = paymentMethod.toLowerCase();
         if (target === 'bank_transfer') {
           return methodName.includes('bank') || methodName === 'bank transfer';
         }
         return methodName === target || methodName.includes(target);
+      });
+    }
+
+    // Search filter — fuzzy match across multiple fields
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      filtered = filtered.filter(offer => {
+        const idStr = String(offer.id);
+        if (idStr.includes(q)) return true;
+        if (offer.terms?.toLowerCase().includes(q)) return true;
+        if (offer.payment_methods?.some(m => m.toLowerCase().includes(q))) return true;
+        if (offer.token?.toLowerCase().includes(q)) return true;
+        const name = creatorNames?.[offer.creator_account_id];
+        if (name?.toLowerCase().includes(q)) return true;
+        return false;
       });
     }
 
@@ -119,7 +139,7 @@ export const useOfferFiltering = ({
     const paginatedOffers = filtered.slice(startIndex, endIndex);
 
     setFilteredOffers(paginatedOffers);
-  }, [offers, tradeType, currentAsset, currentCurrency, amount, paymentMethod, sortBy, currentPage, itemsPerPage]);
+  }, [offers, tradeType, currentAsset, currentCurrency, amount, paymentMethod, sortBy, currentPage, search, creatorNames, itemsPerPage]);
 
   // Apply filters whenever dependencies change
   useEffect(() => {
@@ -160,6 +180,11 @@ export const useOfferFiltering = ({
     setCurrentPage(page);
   };
 
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    setCurrentPage(1);
+  };
+
   return {
     filteredOffers,
     tradeType,
@@ -170,6 +195,7 @@ export const useOfferFiltering = ({
     sortBy,
     currentPage,
     totalPages,
+    search,
     handleCurrencyChange,
     handleTradeTypeChange,
     handleAssetChange,
@@ -177,5 +203,6 @@ export const useOfferFiltering = ({
     handlePaymentMethodChange,
     handleSortChange,
     handlePageChange,
+    handleSearchChange,
   };
 };

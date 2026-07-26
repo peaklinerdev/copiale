@@ -46,6 +46,7 @@ function HomePage() {
     sortBy,
     currentPage,
     totalPages,
+    search,
     handleCurrencyChange,
     handleTradeTypeChange,
     handleAssetChange,
@@ -53,9 +54,11 @@ function HomePage() {
     handlePaymentMethodChange,
     handleSortChange,
     handlePageChange,
+    handleSearchChange,
   } = useOfferFiltering({
     offers,
     itemsPerPage: 25,
+    creatorNames,
   });
 
   const { handleDeleteOffer: performDelete, isDeleting: isDeletingOffer } = useOfferDeletion({
@@ -177,6 +180,8 @@ function HomePage() {
                   onPaymentMethodChange={handlePaymentMethodChange}
                   sortBy={sortBy}
                   onSortChange={handleSortChange}
+                  search={search}
+                  onSearchChange={handleSearchChange}
                 />
               </div>
             </div>

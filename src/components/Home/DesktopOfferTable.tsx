@@ -90,7 +90,8 @@ const DesktopOfferTable: React.FC<DesktopOfferTableProps> = ({
               <TableCell className="py-4">
                 <span className="bg-[#2b3139] text-[#eaecef] text-[10px] font-bold px-2 py-1 border-l-2 border-[#FF6B00]">
                   {(() => {
-                    const m = offer.terms?.match(/Payment Method:\s*(.+)/);
+                    if (offer.payment_methods?.length) return offer.payment_methods.join(', ');
+                    const m = offer.terms?.match(/Payment Methods?:\s*(.+)/);
                     return m ? m[1].trim() : 'On-chain Escrow';
                   })()}
                 </span>

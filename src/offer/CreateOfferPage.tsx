@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { getAccount, Account, CreateOfferRequest } from '@/api';
+import { PaymentMethodsModal } from '@/components/PaymentMethodsModal';
+import { usePaymentMethods } from '@/hooks/usePaymentMethods';
+import { Settings, X } from 'lucide-react';
 import { toUsdcString } from '@/utils/amounts';
 import { compareUsdcStrings } from '@/utils/money-display';
 import { useSolanaDevnetOffers } from '@/hooks/useNetworkAwareAPI';
@@ -110,9 +113,7 @@ interface FormState {
   escrow_deposit_time_limit: string;
   fiat_payment_time_limit: string;
   fiat_currency: string;
-  payment_method_id: string;
-  payment_account: string;
-  payment_notes: string;
+  payment_methods: string[];
 }
 
 // ===== Preview card =====
@@ -123,7 +124,7 @@ function OfferPreviewCard({
   formData: FormState;
   account: Account | null;
 }) {
-  const method = getPaymentMethodById(formData.payment_method_id);
+  const methods = formData.payment_methods.map(id => getPaymentMethodById(id)).filter(Boolean);
   const typeColor = formData.offer_type === 'BUY' ? 'text-[#02c076]' : 'text-[#f84960]';
   const typeBg = formData.offer_type === 'BUY' ? 'bg-[#02c076]/10' : 'bg-[#f84960]/10';
   const flag = FLAGS[formData.fiat_currency] || '';
@@ -170,7 +171,9 @@ function OfferPreviewCard({
         </div>
         <div className="col-span-2">
           <span className="text-[#848e9c]">Payment</span>
-          <p className="text-[#eaecef] font-medium">{method?.name || '—'}</p>
+          {methods.length > 0 && (
+            <p className="text-[#eaecef] font-medium">{methods.map(m => m?.name).join(', ')}</p>
+          )}
         </div>
       </div>
     </div>
@@ -189,9 +192,7 @@ const INITIAL_FORM: FormState = {
   escrow_deposit_time_limit: '15 minutes',
   fiat_payment_time_limit: '30 minutes',
   fiat_currency: 'ETB',
-  payment_method_id: 'telebirr',
-  payment_account: '',
-  payment_notes: '',
+  payment_methods: [],
 };
 
 interface CreateOfferPageProps {
@@ -210,6 +211,8 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
   const [error, setError] = useState<string | ApiError | ''>('');
   const [fallbackPrices, setFallbackPrices] = useState<PricesResponse | null>(null);
   const [fiatPriceInput, setFiatPriceInput] = useState('');
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const { methods: savedMethods } = usePaymentMethods();
 
   useEffect(() => {
     loadFallbackPrices().then(setFallbackPrices).catch(() => {});
@@ -275,8 +278,6 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
     }
   }, [marketPrice]);
 
-  const selectedPaymentMethod = getPaymentMethodById(formData.payment_method_id);
-
   const update = (patch: Partial<FormState>) => {
     setFormData(prev => ({ ...prev, ...patch }));
     setFieldError('');
@@ -286,7 +287,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
   const canAdvanceFrom = (s: number): boolean => {
     switch (s) {
       case 1:
-        return true; // defaults are always valid
+        return true;
       case 2: {
         if (!formData.min_amount || !formData.max_amount || !formData.total_available_amount) {
           setFieldError('All amount fields are required');
@@ -300,17 +301,9 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
         return true;
       }
       case 3: {
-        if (!formData.payment_account) {
-          setFieldError(`Please provide your ${selectedPaymentMethod?.accountLabel}`);
+        if (formData.payment_methods.length === 0) {
+          setFieldError('Select at least one payment method');
           return false;
-        }
-        const pmId = formData.payment_method_id;
-        if (pmId === 'telebirr' || pmId === 'cbe_birr') {
-          const digitsOnly = formData.payment_account.replace(/\D/g, '');
-          if (digitsOnly.length < 8) {
-            setFieldError(`${selectedPaymentMethod?.name} number must be at least 8 digits`);
-            return false;
-          }
         }
         return true;
       }
@@ -329,8 +322,9 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
   };
 
   // ---- Submit ----
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (step !== TOTAL_STEPS) return;
     setError('');
     setSuccess('');
 
@@ -342,10 +336,6 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
     }
 
     if (!accountId) { setError('Account ID is required'); return; }
-    if (!formData.payment_account) {
-      setError(`Please provide your ${selectedPaymentMethod?.accountLabel}`);
-      return;
-    }
 
     let minAmount: string, maxAmount: string, totalAmount: string;
     try {
@@ -366,10 +356,13 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
       return;
     }
 
+    const methodNames = formData.payment_methods
+      .map(id => getPaymentMethodById(id)?.name)
+      .filter(Boolean)
+      .join(', ');
+
     const fullTerms = [
-      `Payment Method: ${selectedPaymentMethod?.name}`,
-      `Account: ${formData.payment_account}`,
-      formData.payment_notes ? `Notes: ${formData.payment_notes}` : null,
+      `Payment Methods: ${methodNames || 'None'}`,
       formData.terms ? `\nAdditional Terms: ${formData.terms}` : null,
     ].filter(Boolean).join('\n');
 
@@ -386,6 +379,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
         escrow_deposit_time_limit: '15 minutes',
         fiat_payment_time_limit: '30 minutes',
         fiat_currency: formData.fiat_currency,
+        payment_methods: formData.payment_methods,
       };
 
       const response = await createOffer(data);
@@ -465,7 +459,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={e => e.preventDefault()} className="space-y-6">
             {/* ======== STEP 1: Trade Configuration ======== */}
             {step === 1 && (
               <div className="space-y-6">
@@ -649,59 +643,51 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
                   <h3 className="text-xs font-black text-[#FF6B00] uppercase tracking-widest">Payment Information</h3>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-[#848e9c] uppercase">Payment Method</label>
-                    <Select value={formData.payment_method_id} onValueChange={v => update({ payment_method_id: v })}>
-                      <SelectTrigger className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm h-10 focus-visible:ring-[#FF6B00]/30">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1e2329] border-[#2b3139] text-[#eaecef]">
-                        {PAYMENT_METHODS.map(method => (
-                          <SelectItem key={method.id} value={method.id}>{method.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FieldTip>How will buyers send payment to you? Choose the method you accept.</FieldTip>
+                    <label className="text-xs font-bold text-[#848e9c] uppercase">Payment Methods</label>
+
+                    {/* Selected methods tags */}
+                    {formData.payment_methods.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {formData.payment_methods.map(id => {
+                          const info = getPaymentMethodById(id);
+                          return (
+                            <button
+                              key={id}
+                              type="button"
+                              onClick={() => update({ payment_methods: formData.payment_methods.filter(m => m !== id) })}
+                              className="flex items-center gap-1 px-2 py-1 rounded-sm text-[10px] font-mono font-bold bg-[#FF6B00]/10 border border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/20 transition"
+                            >
+                              {info?.name || id}
+                              <X className="w-3 h-3" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-[10px] font-mono text-muted py-1">No methods selected</p>
+                    )}
+
+                    {/* Open modal button */}
+                    <button
+                      type="button"
+                      onClick={() => setPaymentModalOpen(true)}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2.5 border border-dashed border-[#2b3139] rounded-sm text-xs font-mono text-muted hover:text-white hover:border-[#3b4252] transition"
+                    >
+                      <Settings className="w-3.5 h-3.5" />
+                      {savedMethods.length > 0 ? 'Manage Payment Methods' : 'Add Payment Methods'}
+                    </button>
+
+                    <FieldTip>Select from your saved payment methods. Add new ones in the modal.</FieldTip>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-[#848e9c] uppercase">
-                      {selectedPaymentMethod?.accountLabel}
-                    </label>
-                    <Input
-                      className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm h-10 focus-visible:ring-[#FF6B00]/30"
-                      value={formData.payment_account}
-                      onChange={e => update({ payment_account: e.target.value })}
-                      placeholder={
-                        selectedPaymentMethod?.id === 'telebirr'
-                          ? 'e.g. 2519XXXXXXXX'
-                          : selectedPaymentMethod?.id === 'cash'
-                          ? 'e.g. Piazza, Bole area'
-                          : 'Enter your account details'
-                      }
-                    />
-                    <FieldTip>
-                      {selectedPaymentMethod?.id === 'telebirr'
-                        ? 'Your Telebirr phone number that buyers will send payment to'
-                        : selectedPaymentMethod?.id === 'cash'
-                        ? 'Where will you meet for the cash exchange?'
-                        : `Your ${selectedPaymentMethod?.name} account details for receiving payment`}
-                    </FieldTip>
-                  </div>
+                  {/* Modal */}
+                  <PaymentMethodsModal
+                    open={paymentModalOpen}
+                    onClose={() => setPaymentModalOpen(false)}
+                    selected={formData.payment_methods}
+                    onSelect={methods => update({ payment_methods: methods })}
+                  />
 
-                  {selectedPaymentMethod?.hasNotes && (
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-[#848e9c] uppercase">
-                        {selectedPaymentMethod?.notesLabel}
-                      </label>
-                      <Input
-                        className="border-[#2b3139] bg-[#0b0e11] text-[#eaecef] rounded-sm h-10 focus-visible:ring-[#FF6B00]/30"
-                        value={formData.payment_notes}
-                        onChange={e => update({ payment_notes: e.target.value })}
-                        placeholder="Optional transfer details"
-                      />
-                      <FieldTip>Extra information the buyer needs to complete the payment (optional)</FieldTip>
-                    </div>
-                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -757,7 +743,8 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
                 </Button>
               ) : (
                 <Button
-                  type="submit"
+                  type="button"
+                  onClick={handleSubmit}
                   className="flex-1 bg-[#02c076] hover:opacity-90 text-white font-bold h-11 rounded-sm"
                 >
                   Post Advertisement

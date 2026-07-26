@@ -30,24 +30,18 @@ export interface Account {
 export interface Offer {
   id: number;
   creator_account_id: number;
-  network_id?: number; // Added for multi-network support
+  network_id?: number;
   offer_type: 'BUY' | 'SELL';
   token: string;
-  /** USDC amount as decimal string (Design Invariant 3). */
   min_amount: string;
-  /** USDC amount as decimal string. */
   max_amount: string;
-  /** USDC amount as decimal string. */
   total_available_amount: string;
-  /**
-   * Rate multiplier as decimal string in responses (pg DECIMAL serializes
-   * as string). Requests still accept number — convert at form boundary.
-   */
   rate_adjustment: string;
   terms: string;
-  escrow_deposit_time_limit: { minutes: number } | string; // Support both object and string formats
-  fiat_payment_time_limit: { minutes: number } | string; // Support both object and string formats
+  escrow_deposit_time_limit: { minutes: number } | string;
+  fiat_payment_time_limit: { minutes: number } | string;
   fiat_currency: string;
+  payment_methods?: string[];
   created_at: string;
   updated_at: string;
 }

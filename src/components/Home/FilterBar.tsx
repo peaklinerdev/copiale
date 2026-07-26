@@ -16,6 +16,8 @@ interface FilterBarProps {
   onPaymentMethodChange: (method: string) => void;
   sortBy: string;
   onSortChange: (sort: string) => void;
+  search: string;
+  onSearchChange: (search: string) => void;
 }
 
 const ASSETS = [
@@ -86,7 +88,9 @@ const FilterBar = ({
   paymentMethod,
   onPaymentMethodChange,
   sortBy,
-  onSortChange
+  onSortChange,
+  search,
+  onSearchChange,
 }: FilterBarProps) => {
   const methods = PAYMENT_METHODS_BY_CURRENCY[currency] || PAYMENT_METHODS_BY_CURRENCY.ALL;
   const currentCurrency = CURRENCIES[currency];
@@ -207,10 +211,24 @@ const FilterBar = ({
             onSortChange("PRICE");
           }}
         >
-          Reset
-        </Button>
+            Reset
+          </Button>
 
-        {/* Sort */}
+          {/* Search */}
+          <div className="relative flex-1 max-w-[200px]">
+            <svg className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-[#5e6673]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={e => onSearchChange(e.target.value)}
+              placeholder="Search..."
+              className="w-full bg-[#0b0e11] border border-[#2b3139] rounded-sm h-8 pl-8 pr-2 text-xs font-mono text-white placeholder:text-[#5e6673] focus:outline-none focus:border-[#FF6B00]/50"
+            />
+          </div>
+
+          {/* Sort */}
         <div className="flex items-center gap-2 ml-auto">
           <span className="text-sm text-[#848e9c] whitespace-nowrap">Sort</span>
           <Select value={sortBy} onValueChange={onSortChange}>

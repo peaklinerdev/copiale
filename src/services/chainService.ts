@@ -61,9 +61,11 @@ const shouldUseRelay = async (wallet: any): Promise<boolean> => {
     const connection = new Connection(network.rpcUrl, 'confirmed');
     const balance = await connection.getBalance(new PublicKey(wallet.address));
     
-    // Estimated cost of a Solana transaction with priority fee (~10k lamports)
-    const estimatedTxCost = 10_000; // 0.00001 SOL
-    return balance < estimatedTxCost;
+    // Use configured relay threshold or default to escrow creation cost (~0.005 SOL)
+    const threshold = config.relayThresholdSol !== undefined 
+      ? config.relayThresholdSol * 1_000_000_000 
+      : 5_000_000; // 0.005 SOL (covers escrow PDA rent)
+    return balance < threshold;
   } catch {
     return true; // If we can't check balance, fall back to relay
   }

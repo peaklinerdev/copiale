@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { getOffers, Offer } from './api';
+import { getOffers, Offer, getActiveCurrencies } from './api';
 
 // UI Components
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -33,6 +33,7 @@ function HomePage() {
   const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
   const [selectedOfferId, setSelectedOfferId] = useState<number | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [activeCurrencies, setActiveCurrencies] = useState<string[]>([]);
 
   const { hasUsername, currentUserAccountId, creatorNames, setCreatorNames } =
     useUserAccount(primaryWallet);
@@ -108,6 +109,10 @@ function HomePage() {
     fetchOffers();
   }, [primaryWallet, setCreatorNames]);
 
+  useEffect(() => {
+    getActiveCurrencies().then(r => setActiveCurrencies((r.data || []).map((c: any) => c.fiat_currency))).catch(() => {});
+  }, []);
+
   const openTradeDialog = (offerId: number) => {
     setSelectedOfferId(offerId);
     setIsDialogOpen(true);
@@ -182,6 +187,7 @@ function HomePage() {
                   onSortChange={handleSortChange}
                   search={search}
                   onSearchChange={handleSearchChange}
+                  activeCurrencies={activeCurrencies}
                 />
               </div>
             </div>

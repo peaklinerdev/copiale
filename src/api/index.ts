@@ -500,6 +500,9 @@ export const getUserTransactions = (params?: {
 // Prices API
 export const getPrices = () => api.get<PricesResponse>('/prices');
 
+export const getActiveCurrencies = () =>
+  api.get<{ fiat_currency: string; offer_count: string }[]>('/currencies');
+
 // Health API
 //
 // copiale-p2p-api split health into three endpoints (commit 251a93d):

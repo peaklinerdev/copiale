@@ -18,6 +18,7 @@ interface FilterBarProps {
   onSortChange: (sort: string) => void;
   search: string;
   onSearchChange: (search: string) => void;
+  activeCurrencies?: string[];
 }
 
 const ASSETS = [
@@ -91,6 +92,7 @@ const FilterBar = ({
   onSortChange,
   search,
   onSearchChange,
+  activeCurrencies,
 }: FilterBarProps) => {
   const methods = PAYMENT_METHODS_BY_CURRENCY[currency] || PAYMENT_METHODS_BY_CURRENCY.ALL;
   const currentCurrency = CURRENCIES[currency];
@@ -172,7 +174,8 @@ const FilterBar = ({
                   )}
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent className="bg-[#1e2329] border-[#2b3139] text-[#eaecef]">
+              <SelectContent className="bg-[#1e2329] border-[#2b3139] text-[#eaecef] max-h-[300px]">
+                {/* Hardcoded currencies (always shown) */}
                 {Object.values(CURRENCIES).map((c) => (
                   <SelectItem key={c.code} value={c.code}>
                     <span className="flex items-center gap-2">
@@ -181,6 +184,54 @@ const FilterBar = ({
                     </span>
                   </SelectItem>
                 ))}
+
+                {/* Active currencies from DB not in hardcoded list */}
+                {activeCurrencies?.filter(c => !CURRENCIES[c]).length > 0 && (
+                  <div className="text-[10px] text-muted px-2 py-1 font-mono uppercase tracking-wider border-t border-[#2b3139] mt-1">
+                    Active Markets
+                  </div>
+                )}
+                {activeCurrencies?.filter(c => !CURRENCIES[c]).map((c) => (
+                  <SelectItem key={c} value={c}>
+                    <span className="flex items-center gap-2">
+                      <span className="text-base">🌐</span>
+                      <span>{c}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+
+                {/* Custom currency option */}
+                <div className="border-t border-[#2b3139] mt-1 pt-1">
+                  <div className="px-2 py-1.5">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        maxLength={3}
+                        placeholder="Add currency..."
+                        className="w-full bg-[#0b0e11] border border-[#2b3139] rounded-sm px-2 py-1 text-xs font-mono text-white placeholder:text-[#5e6673] uppercase focus:outline-none focus:border-[#FF6B00]/50"
+                        onChange={(e) => {
+                          const val = e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
+                          if (val.length === 3) {
+                            const blocked = ['USD','EUR','GBP','JPY','CHF','CAD','AUD'];
+                            if (blocked.includes(val)) return;
+                            onCurrencyChange(val);
+                            e.target.value = '';
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            const val = (e.target as HTMLInputElement).value;
+                            const blocked = ['USD','EUR','GBP','JPY','CHF','CAD','AUD'];
+                            if (val.length === 3 && !blocked.includes(val)) {
+                              onCurrencyChange(val);
+                              (e.target as HTMLInputElement).value = '';
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
               </SelectContent>
             </Select>
           </div>

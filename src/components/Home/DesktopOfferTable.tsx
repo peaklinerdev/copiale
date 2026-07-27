@@ -61,9 +61,21 @@ const DesktopOfferTable: React.FC<DesktopOfferTableProps> = ({
             <TableRow key={offer.id} className="border-b border-[#2b3139] hover:bg-[#2b3139]/30 transition-colors">
               <TableCell className="py-4">
                 <div className="flex flex-col">
-                  <span className="text-[#eaecef] font-bold text-sm">
-                    {creatorNames[offer.creator_account_id] || formatDisplayId(offer.creator_account_id)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#eaecef] font-bold text-sm">
+                      {creatorNames[offer.creator_account_id] || formatDisplayId(offer.creator_account_id)}
+                    </span>
+                    {offer.min_reputation && offer.min_reputation !== 'unverified' && (
+                      <span className={`text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider ${
+                        offer.min_reputation === 'top_trader' ? 'text-purple-400 bg-purple-500/10 border border-purple-500/20' :
+                        offer.min_reputation === 'trusted' ? 'text-blue-400 bg-blue-500/10 border border-blue-500/20' :
+                        'text-green-400 bg-green-500/10 border border-green-500/20'
+                      }`}>🔒 {offer.min_reputation}</span>
+                    )}
+                    {offer.visibility === 'private' && (
+                      <span className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-sm uppercase bg-[#f97316]/10 text-[#f97316] border border-[#f97316]/20">🔒 Private</span>
+                    )}
+                  </div>
                   <span className="text-[10px] text-[#848e9c] font-medium uppercase mt-0.5">
                     {offer.id ? formatDisplayId(offer.public_id || offer.id) : ''}
                   </span>

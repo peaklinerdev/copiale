@@ -209,6 +209,8 @@ export type CreateOfferRequest = {
   escrow_deposit_time_limit?: string | { minutes: number };
   fiat_payment_time_limit?: string | { minutes: number };
   payment_methods?: string[];
+  visibility?: 'public' | 'private';
+  min_reputation?: 'unverified' | 'verified' | 'trusted' | 'top_trader';
 };
 
 export const createOffer = (data: CreateOfferRequest) =>
@@ -502,6 +504,9 @@ export const getPrices = () => api.get<PricesResponse>('/prices');
 
 export const getActiveCurrencies = () =>
   api.get<{ fiat_currency: string; offer_count: string }[]>('/currencies');
+
+export const getReputation = (accountId: number) =>
+  api.get<{ score: number; tier: string; trade_count: number; completion_rate: number; account_age_days: number }>(`/accounts/${accountId}/reputation`);
 
 // Health API
 //

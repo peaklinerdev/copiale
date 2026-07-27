@@ -43,6 +43,9 @@ export interface Offer {
   fiat_payment_time_limit: { minutes: number } | string;
   fiat_currency: string;
   payment_methods?: string[];
+  visibility?: string;
+  min_reputation?: string;
+  public_id?: string | null;
   created_at: string;
   updated_at: string;
 }

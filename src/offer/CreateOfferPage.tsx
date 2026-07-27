@@ -114,6 +114,8 @@ interface FormState {
   fiat_payment_time_limit: string;
   fiat_currency: string;
   payment_methods: string[];
+  visibility: string;
+  min_reputation: string;
 }
 
 // ===== Preview card =====
@@ -193,6 +195,8 @@ const INITIAL_FORM: FormState = {
   fiat_payment_time_limit: '30 minutes',
   fiat_currency: 'ETB',
   payment_methods: [],
+  visibility: 'public',
+  min_reputation: 'unverified',
 };
 
 interface CreateOfferPageProps {
@@ -380,6 +384,8 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
         fiat_payment_time_limit: '30 minutes',
         fiat_currency: formData.fiat_currency,
         payment_methods: formData.payment_methods,
+        visibility: formData.visibility || 'public',
+        min_reputation: formData.min_reputation || 'unverified',
       };
 
       const response = await createOffer(data);
@@ -699,6 +705,63 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
                     onChange={e => update({ terms: e.target.value })}
                   />
                   <FieldTip>Optional terms displayed on your ad. Be clear and specific to avoid disputes.</FieldTip>
+                </div>
+              </div>
+
+              {/* Visibility + Reputation tier */}
+              <div className="p-5 bg-[#0b0e11] border border-[#2b3139] rounded-sm space-y-4">
+                <h3 className="text-xs font-black text-[#FF6B00] uppercase tracking-widest">Visibility & Safety</h3>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-[#848e9c] uppercase">Listing Type</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => update({ visibility: 'public' })}
+                      className={`rounded-sm font-bold py-3 px-4 border text-left transition ${
+                        formData.visibility === 'public'
+                          ? 'border-[#02c076]/40 bg-[#02c076]/10 text-[#02c076]'
+                          : 'border-[#2b3139] text-[#848e9c] hover:border-[#3b4252]'
+                      }`}
+                    >
+                      <div className="text-sm font-mono">Public</div>
+                      <div className="text-[10px] opacity-70 mt-0.5">Visible in marketplace search</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => update({ visibility: 'private' })}
+                      className={`rounded-sm font-bold py-3 px-4 border text-left transition ${
+                        formData.visibility === 'private'
+                          ? 'border-[#f97316]/40 bg-[#f97316]/10 text-[#f97316]'
+                          : 'border-[#2b3139] text-[#848e9c] hover:border-[#3b4252]'
+                      }`}
+                    >
+                      <div className="text-sm font-mono">Private</div>
+                      <div className="text-[10px] opacity-70 mt-0.5">Only via direct link</div>
+                    </button>
+                  </div>
+                </div>
+
+                {formData.visibility === 'public' && (
+                  <div className="bg-[#f97316]/5 border border-[#f97316]/10 rounded-sm p-3 text-[11px] font-mono text-[#f97316] leading-relaxed">
+                    ⚠️ Public listing — Your payment details will be visible to anyone who trades with you. 
+                    This may expose your real-world identity. Consider Private Listing for sensitive trades.
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-[#848e9c] uppercase">Minimum Trader Reputation</label>
+                  <select
+                    value={formData.min_reputation}
+                    onChange={e => update({ min_reputation: e.target.value })}
+                    className="w-full bg-[#0b0e11] border border-[#2b3139] rounded-sm px-3 py-2 text-sm font-mono text-white"
+                  >
+                    <option value="unverified">Anyone (Unverified)</option>
+                    <option value="verified">Verified (5+ trades, 30+ days)</option>
+                    <option value="trusted">Trusted (20+ trades, 90+ days)</option>
+                    <option value="top_trader">Top Trader (50+ trades, 180+ days)</option>
+                  </select>
+                  <FieldTip>Only traders with this reputation tier or higher can trade with you. Higher = safer, but fewer potential buyers.</FieldTip>
                 </div>
               </div>
             )}

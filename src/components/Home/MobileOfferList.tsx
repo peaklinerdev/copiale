@@ -46,7 +46,7 @@ const MobileOfferList: React.FC<MobileOfferListProps> = ({
               <span className="text-[#eaecef] font-bold">
                 {creatorNames[offer.creator_account_id] || formatDisplayId(offer.creator_account_id)}
               </span>
-              <span className="text-[10px] text-[#848e9c] uppercase font-bold">{offer.id ? formatDisplayId(offer.id) : ''}</span>
+              <span className="text-[10px] text-[#848e9c] uppercase font-bold">{offer.id ? formatDisplayId(offer.public_id || offer.id) : ''}</span>
             </div>
             <div className="flex flex-col items-end">
               <span className="text-lg font-extrabold text-[#eaecef] leading-none">{formatRate(offer.rate_adjustment)}</span>

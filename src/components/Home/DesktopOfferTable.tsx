@@ -65,7 +65,7 @@ const DesktopOfferTable: React.FC<DesktopOfferTableProps> = ({
                     {creatorNames[offer.creator_account_id] || formatDisplayId(offer.creator_account_id)}
                   </span>
                   <span className="text-[10px] text-[#848e9c] font-medium uppercase mt-0.5">
-                    {offer.id ? formatDisplayId(offer.id) : ''}
+                    {offer.id ? formatDisplayId(offer.public_id || offer.id) : ''}
                   </span>
                 </div>
               </TableCell>

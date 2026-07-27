@@ -29,6 +29,7 @@ export interface Account {
 
 export interface Offer {
   id: number;
+  public_id?: string | null;
   creator_account_id: number;
   network_id?: number;
   offer_type: 'BUY' | 'SELL';

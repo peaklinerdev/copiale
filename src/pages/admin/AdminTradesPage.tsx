@@ -49,7 +49,7 @@ export default function AdminTradesPage() {
             {trades.map((t) => (
               <tr key={t.id} className="border-b border-[#2d333b] hover:bg-[#22272e]">
                 <td className="p-3">
-                  <Link to={`/trade/${t.id}`} className="text-[#539bf5] hover:underline">
+                  <Link to={`/trade/${t.public_id || t.id}`} className="text-[#539bf5] hover:underline">
                     #{t.id}
                   </Link>
                 </td>

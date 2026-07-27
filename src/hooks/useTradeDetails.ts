@@ -18,7 +18,7 @@ interface UseTradeDetailsResult {
  * @param tradeId The ID of the trade to fetch
  * @returns Trade details and related data
  */
-export function useTradeDetails(tradeId: number | null): UseTradeDetailsResult {
+export function useTradeDetails(tradeId: string | number | null): UseTradeDetailsResult {
   const [trade, setTrade] = useState<Trade | null>(null);
   const [offer, setOffer] = useState<Offer | null>(null);
   const [creator, setCreator] = useState<Account | null>(null);

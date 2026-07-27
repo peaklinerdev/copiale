@@ -221,11 +221,11 @@ function MyTradesPage({ account }: MyTradesPageProps) {
               <div className="md:hidden space-y-4">
                 {myTrades.map(trade => (
                   <div
-                    key={trade.id}
+                    key={public_id}
                     className="border border-neutral-200 rounded-lg p-4 hover:bg-[#2b3139]"
                   >
                     <div className="flex justify-between items-start mb-3">
-                      <div className="font-medium">{formatDisplayId(trade.id)}</div>
+                      <div className="font-medium">{formatDisplayId(public_id)}</div>
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
                           trade.leg1_state || 'UNKNOWN'
@@ -258,7 +258,7 @@ function MyTradesPage({ account }: MyTradesPageProps) {
                           variant="outline"
                           className="border-[#FF6B00]/50 text-[#FF6B00] hover:text-[#FF6B00] hover:border-[#FF6B00] w-full"
                         >
-                          <Link to={`/trade/${trade.id}`} className="w-full block">
+                          <Link to={`/trade/${public_id}`} className="w-full block">
                             Details
                           </Link>
                         </Button>
@@ -283,8 +283,8 @@ function MyTradesPage({ account }: MyTradesPageProps) {
                   </TableHeader>
                   <TableBody>
                     {myTrades.map(trade => (
-                      <TableRow key={trade.id} className="hover:bg-[#2b3139]">
-                        <TableCell className="font-medium">{formatDisplayId(trade.id)}</TableCell>
+                      <TableRow key={public_id} className="hover:bg-[#2b3139]">
+                        <TableCell className="font-medium">{formatDisplayId(public_id)}</TableCell>
                         <TableCell>{trade.leg1_crypto_token}</TableCell>
                         <TableCell>{trade.leg1_crypto_amount}</TableCell>
                         <TableCell>
@@ -305,7 +305,7 @@ function MyTradesPage({ account }: MyTradesPageProps) {
                               variant="outline"
                               className="border-[#FF6B00]/50 text-[#FF6B00] hover:text-[#FF6B00] hover:border-[#FF6B00] text-sm px-3 py-1 h-8"
                             >
-                              <Link to={`/trade/${trade.id}`}>Details</Link>
+                              <Link to={`/trade/${public_id}`}>Details</Link>
                             </Button>
                           </div>
                         </TableCell>

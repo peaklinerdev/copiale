@@ -56,7 +56,7 @@ function TradePage() {
   const { id } = useParams<{ id: string }>();
   const { primaryWallet } = useDynamicContext();
   const navigate = useNavigate();
-  const tradeId = id ? parseInt(id) : 0;
+  const tradeId = id || ''; // UUID from URL — passed to API as-is
 
   // Custom hooks
   const { trade, offer, creator, buyerAccount, sellerAccount, loading, setTrade } =

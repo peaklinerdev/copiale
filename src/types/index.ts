@@ -48,6 +48,7 @@ export interface Offer {
 
 export interface Trade {
   id: number;
+  public_id?: string | null;
   leg1_offer_id: number;
   leg2_offer_id?: number | null;
   overall_status: 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'DISPUTED';

@@ -97,7 +97,7 @@ interface StartTradeParams {
   fiatAmount?: number;
   offer: Offer;
   primaryWallet: { address?: string } | null;
-  onSuccess: (tradeId: number) => void;
+  onSuccess: (tradeId: string) => void;
   onError: (error: Error) => void;
 }
 
@@ -135,7 +135,7 @@ export const startTrade = async ({
       tradeData as unknown as Parameters<typeof createTrade>[0]
     );
 
-    const tradeId = tradeResponse.data.trade.id;
+    const tradeId = tradeResponse.data.trade.public_id || String(tradeResponse.data.trade.id);
 
     if (primaryWallet) {
       onSuccess(tradeId);

@@ -152,7 +152,7 @@ function HomePage() {
             </div>
             {primaryWallet && (
               <div className="flex items-center gap-3">
-                <Link to="/otc" className="text-sm font-medium text-[#f97316]/80 hover:text-[#f97316] transition-colors flex items-center gap-1">
+                <Link to="/cotc" className="text-sm font-medium text-[#f97316]/80 hover:text-[#f97316] transition-colors flex items-center gap-1">
                   + COTC
                 </Link>
                 <Link to="/create-offer" className="text-sm font-medium text-[#FF6B00] hover:text-[#ff8033] transition-colors flex items-center gap-1">

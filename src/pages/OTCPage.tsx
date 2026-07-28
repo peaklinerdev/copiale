@@ -5,7 +5,7 @@ import { ArrowRight, Shield, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import Container from '@/components/ui/container';
+import Container from '@/components/Shared/Container';
 import api from '@/api';
 import { toast } from 'sonner';
 
@@ -50,7 +50,7 @@ export default function OTCPage() {
         <CardHeader>
           <CardTitle className="text-[#eaecef] font-bold flex items-center gap-2">
             <Shield className="w-5 h-5 text-[#f97316]" />
-            Direct OTC Escrow
+            Direct COTC Escrow
           </CardTitle>
         </CardHeader>
         <CardContent>

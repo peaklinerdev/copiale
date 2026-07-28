@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getTradeById, Trade } from '@/api';
 import { Shield, ArrowRight, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import Container from '@/components/ui/container';
+import Container from '@/components/Shared/Container';
 import { toast } from 'sonner';
 
 export default function OTCViewPage() {

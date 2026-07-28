@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
-import { getTradeById, Trade } from '@/api';
+import api, { Trade } from '@/api';
 import { Shield, ArrowRight, Copy, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Container from '@/components/Shared/Container';
@@ -16,7 +16,7 @@ export default function COTCViewPage() {
 
   useEffect(() => {
     if (!id) return;
-    getTradeById(id as any).then(res => setTrade(res.data.trade)).catch(() => {}).finally(() => setLoading(false));
+    api.get(`/cotc/${id}`).then(res => setTrade(res.data.trade)).catch(() => {}).finally(() => setLoading(false));
   }, [id]);
 
   const copyLink = () => { navigator.clipboard.writeText(window.location.href); toast.success('Link copied'); };

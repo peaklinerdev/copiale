@@ -694,8 +694,6 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
                     onSelect={methods => update({ payment_methods: methods })}
                   />
 
-                </div>
-
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-[#848e9c] uppercase">Additional Trade Terms</label>
                   <textarea

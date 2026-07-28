@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Copy, Check } from 'lucide-react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import {
   getOfferById,
@@ -44,6 +45,7 @@ function OfferDetailPage() {
   const [userAccount, setUserAccount] = useState<Account | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isTradeDialogOpen, setIsTradeDialogOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const { handleDeleteOffer: performDelete, isDeleting: isDeletingOffer } = useOfferDeletion({
     onSuccess: message => {
@@ -211,6 +213,19 @@ function OfferDetailPage() {
                 <Link to="/offers">
                   <Button variant="outline">Back to Offers</Button>
                 </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const url = `${window.location.origin}/#/offer/${offer.id}`;
+                    navigator.clipboard.writeText(url);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                >
+                  {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
+                  {copied ? 'Copied' : 'Copy Link'}
+                </Button>
                 {isOwner && (
                   <Link to={`/edit-offer/${offer.id}`}>
                     <Button

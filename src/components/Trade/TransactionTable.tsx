@@ -69,7 +69,7 @@ export function TransactionTable({ tradeId }: TransactionTableProps) {
     }
   }, [tradeId]);
 
-  useEffect(() => { fetch(); const iv = setInterval(fetch, 60000); return () => clearInterval(iv); }, [fetch]);
+  useEffect(() => { fetch(); const iv = setInterval(fetch, 10000); return () => clearInterval(iv); }, [fetch]);
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);

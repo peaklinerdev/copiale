@@ -1,4 +1,4 @@
-import { RefreshCw, ExternalLink, Copy, Check, Info, Shield } from 'lucide-react';
+import { RefreshCw, ExternalLink, Copy, Check, ChevronDown, Shield } from 'lucide-react';
 import { microToUsdcString } from '@/utils/amounts';
 import { formatDistanceToNow } from 'date-fns';
 import { TransactionTable } from './TransactionTable';
@@ -10,6 +10,7 @@ interface EscrowDetailsTabProps {
   escrowLoading: boolean;
   escrowError: Error | null;
   tradeId: number;
+  tradeState?: string;
   cryptoAmount?: string;
   onSwitchToChat: () => void;
   onRefresh: () => void;
@@ -27,7 +28,7 @@ function formatAddr(addr: string): string {
 
 export function EscrowDetailsTab({
   escrowAddress, escrowDetails, balance, escrowLoading, escrowError,
-  tradeId, cryptoAmount, onRefresh,
+  tradeId, tradeState, cryptoAmount, onRefresh,
 }: EscrowDetailsTabProps) {
   const stateStr = escrowDetails
     ? (typeof escrowDetails.state === 'string' ? escrowDetails.state : ['Created', 'Funded', 'FiatPaid', 'Released', 'Cancelled', 'Disputed'][Number(escrowDetails.state)] || 'Unknown')
@@ -55,19 +56,27 @@ export function EscrowDetailsTab({
         {escrowError ? (
           <div className="text-center py-8 space-y-3">
             <Shield className="w-10 h-10 text-muted mx-auto" />
-            <p className="text-sm font-mono text-muted">Unable to sync escrow data</p>
-            <button onClick={onRefresh}
-              className="text-xs font-mono font-bold text-[#f97316] hover:underline">
-              Retry
-            </button>
-            <details className="mt-4 text-left">
-              <summary className="text-[9px] font-mono text-muted cursor-pointer hover:text-white">
-                Debug info
-              </summary>
-              <pre className="mt-2 text-[9px] font-mono text-muted bg-[#0a0a0a] p-2 rounded-sm overflow-x-auto max-h-[150px]">
-                {escrowError.message}
-              </pre>
-            </details>
+            <p className="text-sm font-mono text-muted">
+              {tradeState === 'RELEASED' || tradeState === 'CANCELLED'
+                ? 'Escrow closed'
+                : escrowAddress ? 'Unable to sync escrow data' : 'No escrow created yet'}
+            </p>
+            {!['RELEASED', 'CANCELLED'].includes(tradeState || '') && !escrowAddress && (
+              <p className="text-[10px] font-mono text-muted opacity-60">
+                Create escrow on-chain to see details here.
+              </p>
+            )}
+            {(tradeState === 'RELEASED' || tradeState === 'CANCELLED') && (
+              <p className="text-[10px] font-mono text-muted opacity-60">
+                This trade is complete. Escrow account has been closed on-chain.
+              </p>
+            )}
+            {!['RELEASED', 'CANCELLED'].includes(tradeState || '') && (
+              <button onClick={onRefresh}
+                className="text-xs font-mono font-bold text-[#f97316] hover:underline">
+                Retry
+              </button>
+            )}
           </div>
         ) : escrowLoading && !escrowDetails ? (
           <div className="flex items-center justify-center py-8">
@@ -95,70 +104,60 @@ export function EscrowDetailsTab({
               </div>
             </div>
 
-            {/* Key info grid */}
-            <div>
-              <p className="text-[9px] font-mono font-bold text-muted tracking-[0.15em] uppercase mb-3">
-                Escrow Data
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {[
-                  ['Escrow ID', escrowDetails.escrowId.toString()],
-                  ['Trade ID', escrowDetails.tradeId.toString()],
-                  ['Fiat Paid', escrowDetails.fiatPaid ? 'Yes' : 'No'],
-                  ['Sequential', escrowDetails.sequential ? 'Yes' : 'No'],
-                  ['Network', 'Solana Devnet'],
-                  ['Token', 'USDC'],
-                ].map(([label, value]) => (
-                  <div key={label} className="bg-[#111111] border border-[#1f1f1f] rounded-sm px-3 py-2.5">
-                    <p className="text-[9px] font-mono text-muted">{label}</p>
-                    <p className="text-[11px] font-mono font-bold text-white mt-0.5">{value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Addresses */}
-            <div>
-              <p className="text-[9px] font-mono font-bold text-muted tracking-[0.15em] uppercase mb-3">
-                Addresses
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {[
-                  ...(escrowAddress ? [['Escrow PDA', escrowAddress]] : []),
-                  ['Seller', escrowDetails.seller],
-                  ['Buyer', escrowDetails.buyer],
-                  ['Arbitrator', escrowDetails.arbitrator],
-                ].map(([label, addr]) => (
-                  <div key={label} className="flex items-center gap-2 bg-[#111111] border border-[#1f1f1f] rounded-sm px-3 py-2 group">
-                    <span className="text-[9px] font-mono text-muted w-20 shrink-0">{label}</span>
-                    <code className="text-[10px] font-mono text-white truncate flex-1">{formatAddr(addr)}</code>
-                    <button onClick={() => handleCopy(addr)} title="Copy" className="text-muted hover:text-white opacity-0 group-hover:opacity-100 shrink-0">
-                      <Copy className="w-3 h-3" />
-                    </button>
-                    <a href={explorerUrl(addr)} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 opacity-0 group-hover:opacity-100 shrink-0">
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Transaction table (full width) */}
-            <div>
-              <p className="text-[9px] font-mono font-bold text-muted tracking-[0.15em] uppercase mb-3">
-                Transaction History
-              </p>
-              <TransactionTable tradeId={tradeId} />
-            </div>
-
-            {/* Debug details */}
+            {/* Trade Details (collapsible) */}
             <details className="group">
-              <summary className="text-[9px] font-mono text-muted cursor-pointer hover:text-white flex items-center gap-1">
-                <Info className="w-3 h-3" /> Debug info
+              <summary className="text-[9px] font-mono font-bold text-muted tracking-[0.15em] uppercase cursor-pointer hover:text-white flex items-center gap-1 mb-3">
+                <ChevronDown className="w-3 h-3 group-open:rotate-180 transition-transform" />
+                Trade Details
               </summary>
-              <pre className="mt-2 text-[9px] font-mono text-muted bg-[#0a0a0a] p-2 rounded-sm overflow-x-auto max-h-[200px]">
-                {JSON.stringify({ ...escrowDetails, state: stateStr }, (_, v) => typeof v === 'bigint' ? v.toString() : v, 2)}
-              </pre>
+
+              {/* Key info grid */}
+              <div>
+                <p className="text-[8px] font-mono text-muted tracking-[0.10em] uppercase mb-2 mt-2">
+                  Escrow Data
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {[
+                    ['Escrow ID', escrowDetails.escrowId.toString()],
+                    ['Trade ID', escrowDetails.tradeId.toString()],
+                    ['Fiat Paid', escrowDetails.fiatPaid ? 'Yes' : 'No'],
+                    ['Sequential', escrowDetails.sequential ? 'Yes' : 'No'],
+                    ['Network', 'Solana Devnet'],
+                    ['Token', 'USDC'],
+                  ].map(([label, value]) => (
+                    <div key={label} className="bg-[#111111] border border-[#1f1f1f] rounded-sm px-3 py-2.5">
+                      <p className="text-[9px] font-mono text-muted">{label}</p>
+                      <p className="text-[11px] font-mono font-bold text-white mt-0.5">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Addresses */}
+              <div className="mt-4">
+                <p className="text-[8px] font-mono text-muted tracking-[0.10em] uppercase mb-2">
+                  Addresses
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {[
+                    ...(escrowAddress ? [['Escrow PDA', escrowAddress]] : []),
+                    ['Seller', escrowDetails.seller],
+                    ['Buyer', escrowDetails.buyer],
+                    ['Arbitrator', escrowDetails.arbitrator],
+                  ].map(([label, addr]) => (
+                    <div key={label} className="flex items-center gap-2 bg-[#111111] border border-[#1f1f1f] rounded-sm px-3 py-2 group">
+                      <span className="text-[9px] font-mono text-muted w-20 shrink-0">{label}</span>
+                      <code className="text-[10px] font-mono text-white truncate flex-1">{formatAddr(addr)}</code>
+                      <button onClick={() => handleCopy(addr)} title="Copy" className="text-muted hover:text-white opacity-0 group-hover:opacity-100 shrink-0">
+                        <Copy className="w-3 h-3" />
+                      </button>
+                      <a href={explorerUrl(addr)} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 opacity-0 group-hover:opacity-100 shrink-0">
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </details>
           </>
         ) : (
@@ -183,7 +182,7 @@ export function EscrowDetailsTab({
 
       {/* Footer */}
       <div className="border-t border-[#1f1f1f] px-4 py-2 flex items-center justify-between shrink-0">
-        <span className="text-[9px] font-mono text-muted">Auto-refreshes every 60s</span>
+        <span className="text-[9px] font-mono text-muted">Auto-refreshes every 10s</span>
         <button onClick={onRefresh} className="text-muted hover:text-white p-1 rounded-sm">
           <RefreshCw className="w-3.5 h-3.5" />
         </button>

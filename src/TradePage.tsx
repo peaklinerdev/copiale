@@ -501,6 +501,7 @@ function TradePage() {
             escrowLoading={escrowLoading}
             escrowError={escrowError}
             tradeId={tradeId}
+            tradeState={trade?.leg1_state}
             cryptoAmount={trade?.leg1_crypto_amount}
             onSwitchToChat={() => setMainTab('chat')}
             onRefresh={refreshEscrow}

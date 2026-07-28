@@ -85,7 +85,7 @@ export const TransactionHistory = ({ tradeId, className = '', alwaysExpanded = f
   useEffect(() => {
     setLoading(true);
     fetch();
-    const iv = setInterval(fetch, 60000);
+    const iv = setInterval(fetch, 10000);
     return () => clearInterval(iv);
   }, [fetch]);
 

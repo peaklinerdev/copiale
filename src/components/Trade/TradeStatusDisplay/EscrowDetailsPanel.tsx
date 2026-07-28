@@ -224,15 +224,7 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole, onExpand }:
               </div>
             )}
 
-            {/* Debug (collapsible) */}
-            <details className="group">
-              <summary className="text-[9px] font-mono text-muted cursor-pointer hover:text-white flex items-center gap-1">
-                <Info className="w-3 h-3" /> Debug info
-              </summary>
-              <pre className="mt-2 text-[9px] font-mono text-muted bg-[#0a0a0a] p-2 rounded-sm overflow-x-auto max-h-[200px]">
-                {JSON.stringify({ ...escrowDetails, state: stateStr }, (_, v) => typeof v === 'bigint' ? v.toString() : v, 2)}
-              </pre>
-            </details>
+
           </>
         ) : null}
       </div>
@@ -240,7 +232,7 @@ export function EscrowDetailsPanel({ escrowAddress, trade, userRole, onExpand }:
       {/* Footer */}
       <div className="border-t border-[#1f1f1f] px-4 py-2 flex items-center justify-between">
         <span className="text-[9px] font-mono text-muted">
-          Auto-refreshes every 60s
+          Auto-refreshes every 10s
         </span>
         <button onClick={() => setExpanded(false)}
           className="text-[10px] font-mono font-bold text-[#f97316] hover:underline">

@@ -4,10 +4,11 @@ import { getAccount, Account, CreateOfferRequest } from '@/api';
 import { PaymentMethodsModal } from '@/components/PaymentMethodsModal';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { Settings, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { toUsdcString } from '@/utils/amounts';
 import { compareUsdcStrings } from '@/utils/money-display';
 import { useSolanaDevnetOffers } from '@/hooks/useNetworkAwareAPI';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
@@ -207,11 +208,11 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
   const [internalAccount, setInternalAccount] = useState<Account | null>(null);
   const { primaryWallet } = useDynamicContext();
   const { createOffer } = useSolanaDevnetOffers();
+  const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormState>(INITIAL_FORM);
   const [fieldError, setFieldError] = useState('');
-  const [success, setSuccess] = useState('');
   const [error, setError] = useState<string | ApiError | ''>('');
   const [fallbackPrices, setFallbackPrices] = useState<PricesResponse | null>(null);
   const [fiatPriceInput, setFiatPriceInput] = useState('');
@@ -330,7 +331,6 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
     if (e) e.preventDefault();
     if (step !== TOTAL_STEPS) return;
     setError('');
-    setSuccess('');
 
     let accountId: number;
     if (typeof account?.id === 'string') {
@@ -392,9 +392,8 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
       const offerId = response.data?.offer?.id;
       if (!offerId) { setError('Failed to create offer - no ID returned'); return; }
 
-      setSuccess(`Offer created successfully with ID: ${offerId}.`);
-      setFormData({ ...INITIAL_FORM, creator_account_id: accountId.toString() });
-      setStep(1);
+      toast.success('Offer created successfully');
+      navigate(`/offer/${offerId}`, { replace: true });
     } catch (err) {
       setError(toApiError(err));
       console.error('Create offer error:', err);
@@ -420,34 +419,6 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
   }
 
   // ---- Success state ----
-  if (success) {
-    return (
-      <Container className="max-w-2xl">
-        <Card className="rounded-sm border border-[#2b3139] bg-[#111318] shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
-          <CardHeader className="px-6 pt-6 pb-4 border-b border-[#2b3139]">
-            <CardTitle className="text-[#eaecef] font-bold">Ad Posted!</CardTitle>
-          </CardHeader>
-          <CardContent className="px-6 pb-6">
-            <Alert className="mb-6 bg-[#02c076]/10 border-[#02c076]/20 rounded-sm">
-              <AlertDescription className="text-[#02c076]">
-                <span>
-                  {success}{' '}
-                  <Link to="/offers" className="inline underline font-bold">View My Ads</Link>
-                </span>
-              </AlertDescription>
-            </Alert>
-            <Button
-              onClick={() => { setSuccess(''); setFormData(INITIAL_FORM); setStep(1); }}
-              className="w-full bg-[#FF6B00] hover:opacity-90 text-[#0b0e11] font-bold h-12 rounded-sm"
-            >
-              Post Another Ad
-            </Button>
-          </CardContent>
-        </Card>
-      </Container>
-    );
-  }
-
   // ---- Main form ----
   return (
     <Container className="max-w-2xl">
@@ -762,6 +733,7 @@ function CreateOfferPage({ account: propAccount }: CreateOfferPageProps) {
                   <FieldTip>Only traders with this reputation tier or higher can trade with you. Higher = safer, but fewer potential buyers.</FieldTip>
                 </div>
               </div>
+            </div>
             )}
 
             {/* ======== STEP 4: Review & Confirm ======== */}

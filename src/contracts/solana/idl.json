@@ -8,207 +8,6 @@
   },
   "instructions": [
     {
-      "name": "activate_escrow",
-      "discriminator": [
-        115,
-        212,
-        170,
-        162,
-        146,
-        138,
-        115,
-        138
-      ],
-      "accounts": [
-        {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "escrow",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "_escrow_id"
-              },
-              {
-                "kind": "arg",
-                "path": "_trade_id"
-              }
-            ]
-          }
-        },
-        {
-          "name": "escrow_token_account",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "escrow"
-              }
-            ]
-          }
-        },
-        {
-          "name": "token_mint"
-        },
-        {
-          "name": "config",
-          "optional": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
-              }
-            ]
-          }
-        }
-      ],
-      "args": [
-        {
-          "name": "_escrow_id",
-          "type": "u64"
-        },
-        {
-          "name": "_trade_id",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "arbitrator_cancel",
-      "discriminator": [
-        133,
-        217,
-        157,
-        45,
-        139,
-        155,
-        118,
-        59
-      ],
-      "accounts": [
-        {
-          "name": "seller",
-          "writable": true
-        },
-        {
-          "name": "arbitrator",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "escrow",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "escrow.escrow_id",
-                "account": "Escrow"
-              },
-              {
-                "kind": "account",
-                "path": "escrow.trade_id",
-                "account": "Escrow"
-              }
-            ]
-          }
-        },
-        {
-          "name": "escrow_token_account",
-          "writable": true,
-          "optional": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "escrow"
-              }
-            ]
-          }
-        },
-        {
-          "name": "seller_token_account",
-          "writable": true,
-          "optional": true
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "auto_cancel",
       "discriminator": [
         83,
@@ -488,18 +287,6 @@
           "type": {
             "option": "pubkey"
           }
-        },
-        {
-          "name": "sequential_escrow_id",
-          "type": {
-            "option": "u64"
-          }
-        },
-        {
-          "name": "sequential_trade_id",
-          "type": {
-            "option": "u64"
-          }
         }
       ]
     },
@@ -518,10 +305,6 @@
       "accounts": [
         {
           "name": "seller",
-          "writable": true
-        },
-        {
-          "name": "buyer",
           "writable": true
         },
         {
@@ -653,97 +436,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "drain_created_vault",
-      "discriminator": [
-        156,
-        77,
-        237,
-        186,
-        25,
-        224,
-        92,
-        79
-      ],
-      "accounts": [
-        {
-          "name": "arbitrator",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "seller",
-          "writable": true
-        },
-        {
-          "name": "escrow",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "escrow.escrow_id",
-                "account": "Escrow"
-              },
-              {
-                "kind": "account",
-                "path": "escrow.trade_id",
-                "account": "Escrow"
-              }
-            ]
-          }
-        },
-        {
-          "name": "escrow_token_account",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "escrow"
-              }
-            ]
-          }
-        },
-        {
-          "name": "seller_token_account",
-          "writable": true
         },
         {
           "name": "token_program",
@@ -845,10 +537,6 @@
           "writable": true
         },
         {
-          "name": "arbitrator_token_account",
-          "writable": true
-        },
-        {
           "name": "buyer_bond_account",
           "writable": true,
           "pda": {
@@ -906,46 +594,6 @@
         {
           "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "finalize_arbitrator",
-      "discriminator": [
-        110,
-        216,
-        250,
-        210,
-        201,
-        248,
-        128,
-        163
-      ],
-      "accounts": [
-        {
-          "name": "new_arbitrator",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "config",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
-              }
-            ]
-          }
         }
       ],
       "args": []
@@ -1049,55 +697,6 @@
         }
       ],
       "args": []
-    },
-    {
-      "name": "force_update_config",
-      "discriminator": [
-        226,
-        108,
-        174,
-        113,
-        3,
-        42,
-        112,
-        254
-      ],
-      "accounts": [
-        {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "config",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
-              }
-            ]
-          }
-        }
-      ],
-      "args": [
-        {
-          "name": "new_arbitrator",
-          "type": "pubkey"
-        },
-        {
-          "name": "new_accepted_mint",
-          "type": "pubkey"
-        }
-      ]
     },
     {
       "name": "fund_escrow",
@@ -1375,124 +974,6 @@
       ]
     },
     {
-      "name": "initialize_escrow_token_account",
-      "discriminator": [
-        70,
-        199,
-        181,
-        236,
-        137,
-        64,
-        150,
-        243
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "escrow",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "_escrow_id"
-              },
-              {
-                "kind": "arg",
-                "path": "_trade_id"
-              }
-            ]
-          }
-        },
-        {
-          "name": "escrow_token_account",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "escrow"
-              }
-            ]
-          }
-        },
-        {
-          "name": "token_mint"
-        },
-        {
-          "name": "config",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        },
-        {
-          "name": "rent",
-          "address": "SysvarRent111111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "_escrow_id",
-          "type": "u64"
-        },
-        {
-          "name": "_trade_id",
-          "type": "u64"
-        }
-      ]
-    },
-    {
       "name": "initialize_seller_bond_account",
       "discriminator": [
         164,
@@ -1765,46 +1246,6 @@
       ]
     },
     {
-      "name": "pause_platform",
-      "discriminator": [
-        232,
-        46,
-        204,
-        130,
-        181,
-        0,
-        172,
-        57
-      ],
-      "accounts": [
-        {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "config",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
-              }
-            ]
-          }
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "release_escrow",
       "discriminator": [
         146,
@@ -1905,46 +1346,6 @@
       "args": []
     },
     {
-      "name": "reset_config",
-      "discriminator": [
-        81,
-        97,
-        49,
-        46,
-        19,
-        200,
-        8,
-        99
-      ],
-      "accounts": [
-        {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "config",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
-              }
-            ]
-          }
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "resolve_dispute_with_explanation",
       "discriminator": [
         189,
@@ -1964,10 +1365,6 @@
         },
         {
           "name": "seller",
-          "writable": true
-        },
-        {
-          "name": "buyer_rent",
           "writable": true
         },
         {
@@ -2245,46 +1642,6 @@
       ]
     },
     {
-      "name": "unpause_platform",
-      "discriminator": [
-        167,
-        253,
-        251,
-        188,
-        221,
-        230,
-        32,
-        165
-      ],
-      "accounts": [
-        {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "config",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
-              }
-            ]
-          }
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "update_arbitrator",
       "discriminator": [
         247,
@@ -2324,7 +1681,7 @@
       ],
       "args": [
         {
-          "name": "_new_arbitrator",
+          "name": "new_arbitrator",
           "type": "pubkey"
         }
       ]
@@ -2381,14 +1738,6 @@
         {
           "name": "new_address",
           "type": "pubkey"
-        },
-        {
-          "name": "sequential_escrow_id",
-          "type": "u64"
-        },
-        {
-          "name": "sequential_trade_id",
-          "type": "u64"
         }
       ]
     }
@@ -2689,46 +2038,6 @@
       "code": 6021,
       "name": "ReleaseDeadlineNotPassed",
       "msg": "Release deadline not yet passed"
-    },
-    {
-      "code": 6022,
-      "name": "InsufficientActivationBalance",
-      "msg": "Escrow token account balance insufficient for activation"
-    },
-    {
-      "code": 6023,
-      "name": "TokenAccountAlreadyInitialized",
-      "msg": "Escrow token account already initialized"
-    },
-    {
-      "code": 6024,
-      "name": "ArbitratorTimelockNotPassed",
-      "msg": "Arbitrator timelock period has not yet elapsed"
-    },
-    {
-      "code": 6025,
-      "name": "InvalidBuyerAddress",
-      "msg": "Buyer address is not a valid signer-capable (on-curve) address"
-    },
-    {
-      "code": 6026,
-      "name": "InvalidSequentialAddress",
-      "msg": "Sequential escrow address must be an off-curve (PDA) address"
-    },
-    {
-      "code": 6027,
-      "name": "VaultAlreadyFunded",
-      "msg": "Escrow token account already contains funds — cannot be used for funding"
-    },
-    {
-      "code": 6028,
-      "name": "PlatformPaused",
-      "msg": "Platform is paused — no new escrows can be created or funded"
-    },
-    {
-      "code": 6029,
-      "name": "NotCreatedState",
-      "msg": "Escrow is not in Created state"
     }
   ],
   "types": [
@@ -2874,10 +2183,6 @@
           {
             "name": "explanation_reference",
             "type": "string"
-          },
-          {
-            "name": "destination",
-            "type": "pubkey"
           }
         ]
       }

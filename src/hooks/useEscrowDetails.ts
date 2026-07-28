@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { blockchainService } from '../services/blockchainService.js';
 import { toast } from 'sonner';
 
@@ -42,7 +42,8 @@ export function useEscrowDetails(escrowAddress: string | null) {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Function to fetch escrow details
+  const lastAddressRef = useRef<string | null>(null);
+
   const fetchEscrowDetails = useCallback(
     async (showToast = false) => {
       if (!escrowAddress) {
@@ -53,21 +54,13 @@ export function useEscrowDetails(escrowAddress: string | null) {
       try {
         setIsRefreshing(true);
 
-
-        // Fetch escrow state from Solana program using the address directly
         const escrowState = await blockchainService.getEscrowStateByAddress(escrowAddress);
-
-        // Get the actual balance from the escrow using the address directly
         const escrowBalance = await blockchainService.getEscrowBalanceByAddress(escrowAddress);
 
-
-        // Invariant 4: smallest-unit calculations use BigInt. 
-        // Convert smallest-unit number to canonical 6dp decimal string.
         const balanceBigInt = BigInt(Math.floor(escrowBalance));
         const balanceString = (Number(balanceBigInt) / 1_000_000).toFixed(6);
         setBalance(balanceString);
 
-        // Convert the escrow state to our interface
         const details: EscrowDetails = {
           escrowId: escrowState.id,
           tradeId: escrowState.tradeId,
@@ -81,12 +74,12 @@ export function useEscrowDetails(escrowAddress: string | null) {
           sequential: escrowState.sequential || false,
           sequentialEscrowAddress: escrowState.sequentialEscrowAddress || '',
           fiatPaid: escrowState.fiatPaid || false,
-          counter: 0, 
-          disputeInitiator: '', 
-          disputeBondBuyer: '0', 
-          disputeBondSeller: '0', 
-          disputeTimestamp: 0, 
-          disputeEvidenceHash: '', 
+          counter: 0,
+          disputeInitiator: '',
+          disputeBondBuyer: '0',
+          disputeBondSeller: '0',
+          disputeTimestamp: 0,
+          disputeEvidenceHash: '',
         };
 
         setEscrowDetails(details);
@@ -97,12 +90,13 @@ export function useEscrowDetails(escrowAddress: string | null) {
           toast.success('Escrow details refreshed');
         }
       } catch (err) {
+        const isNewAddress = escrowAddress !== lastAddressRef.current;
+        if (isNewAddress) {
+          // Suppress error during initial bootstrap — account may not exist on-chain yet
+          return;
+        }
         console.error('Error fetching Solana escrow details:', err);
         setError(err instanceof Error ? err : new Error('Unknown error fetching escrow details'));
-
-        if (showToast) {
-          toast.error('Failed to refresh escrow details');
-        }
       } finally {
         setLoading(false);
         setIsRefreshing(false);
@@ -111,9 +105,11 @@ export function useEscrowDetails(escrowAddress: string | null) {
     [escrowAddress]
   );
 
-  // Initial fetch and polling setup
+  // Initial fetch with fast retry for new addresses, then steady polling
   useEffect(() => {
-    // Reset state when escrowAddress changes
+    const isNew = escrowAddress !== lastAddressRef.current;
+    lastAddressRef.current = escrowAddress;
+
     setLoading(true);
     setError(null);
     setEscrowDetails(null);
@@ -123,17 +119,32 @@ export function useEscrowDetails(escrowAddress: string | null) {
       return;
     }
 
-    // Initial fetch
-    fetchEscrowDetails();
+    let timeoutId: ReturnType<typeof setTimeout>;
+    let retry = 0;
+    const MAX_RETRIES = 8;
 
-    // Set up polling - every 60 seconds
-    const interval = setInterval(() => fetchEscrowDetails(), 60000);
+    const attempt = () => {
+      fetchEscrowDetails().then(() => {
+        if (!isNew || retry >= MAX_RETRIES) return;
+        // On success, clear any error state (fetchEscrowDetails already handles success)
+      }).catch(() => {}).finally(() => {
+        if (!isNew || retry >= MAX_RETRIES) return;
+        retry++;
+        const delay = Math.min(2000 * Math.pow(1.5, retry), 15000);
+        timeoutId = setTimeout(attempt, delay);
+      });
+    };
 
-    // Cleanup
-    return () => clearInterval(interval);
+    attempt();
+
+    const interval = setInterval(() => fetchEscrowDetails(), 10000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeoutId);
+    };
   }, [escrowAddress, fetchEscrowDetails]);
 
-  // Manual refresh function
   const refresh = useCallback(async () => {
     await fetchEscrowDetails(true);
   }, [fetchEscrowDetails]);

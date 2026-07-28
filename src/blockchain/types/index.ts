@@ -76,6 +76,8 @@ export interface CreateEscrowParams {
   fiatDeadline: number;
   sequential?: boolean;
   sequentialEscrowAddress?: string;
+  sequentialEscrowId?: number;
+  sequentialTradeId?: number;
   useRelay?: boolean;
 }
 

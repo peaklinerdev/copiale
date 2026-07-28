@@ -193,7 +193,9 @@ export class SolanaProgram implements SolanaProgramInterface {
           new BN(params.tradeId),
           new BN(params.amount),
           params.sequential || false,
-          params.sequentialEscrowAddress ? new PublicKey(params.sequentialEscrowAddress) : null
+          params.sequentialEscrowAddress ? new PublicKey(params.sequentialEscrowAddress) : null,
+          params.sequentialEscrowId ? new BN(params.sequentialEscrowId) : null,
+          params.sequentialTradeId ? new BN(params.sequentialTradeId) : null,
         )
         .accounts({
           seller: seller,

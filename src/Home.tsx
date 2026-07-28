@@ -151,9 +151,14 @@ function HomePage() {
               <span>Updated <span className="text-[#eaecef]">{new Date().toLocaleTimeString()}</span></span>
             </div>
             {primaryWallet && (
-              <Link to="/create-offer" className="text-sm font-medium text-[#FF6B00] hover:text-[#ff8033] transition-colors flex items-center gap-1">
-                <span className="text-base leading-none">+</span> Post Ad
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link to="/otc" className="text-sm font-medium text-[#f97316] hover:text-[#ff8033] transition-colors flex items-center gap-1">
+                  <span className="text-base leading-none">🛡</span> OTC
+                </Link>
+                <Link to="/create-offer" className="text-sm font-medium text-[#FF6B00] hover:text-[#ff8033] transition-colors flex items-center gap-1">
+                  <span className="text-base leading-none">+</span> Post Ad
+                </Link>
+              </div>
             )}
           </div>
         )}
